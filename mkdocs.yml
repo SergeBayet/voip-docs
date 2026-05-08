@@ -1,0 +1,25 @@
+site_name: VoIP Documentation
+site_description: Shared documentation about VoIP, SIP, Asterisk, Wazo, WebRTC and Odoo VoIP
+site_url: https://YOUR_ORG_OR_USER.github.io/voip-docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - SIP:
+      - Overview: sip.md
+  - Asterisk: asterisk.md
+  - Wazo: wazo.md
+  - Debugging: debugging.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.details
