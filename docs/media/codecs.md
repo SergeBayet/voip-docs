@@ -20,20 +20,20 @@ Choosing the right codec depends on the use case:
 
 ---
 
-# PCM Codecs (G.711)
+## PCM Codecs (G.711)
 
 These are the historical telephony codecs.
 
-## G.711 μ-law (u-law)
+### G.711 μ-law (u-law)
 
-64\ \text{kbps}
+**64 kbps**
 
 Mainly used in:
 
 * North America
 * Japan
 
-### Characteristics
+#### Characteristics
 
 | Property    | Value      |
 | ----------- | ---------- |
@@ -43,7 +43,7 @@ Mainly used in:
 | Latency     | Very low   |
 | CPU usage   | Minimal    |
 
-### Advantages
+#### Advantages
 
 * Excellent compatibility
 * Very low CPU usage
@@ -51,14 +51,14 @@ Mainly used in:
 * Widely supported by SIP providers
 * No transcoding needed in many PSTN environments
 
-### Drawbacks
+#### Drawbacks
 
 * Consumes significant bandwidth
 * Narrowband only
 * Poor resilience to packet loss
 * Audio quality lower than modern codecs
 
-### Typical Use Cases
+#### Typical Use Cases
 
 * SIP trunks
 * Legacy PBX
@@ -67,14 +67,14 @@ Mainly used in:
 
 ---
 
-## G.711 A-law (a-law)
+### G.711 A-law (a-law)
 
 Very similar to μ-law, but mainly used in:
 
 * Europe
 * Most of the world outside North America/Japan
 
-### Difference with μ-law
+#### Difference with μ-law
 
 The companding algorithm differs slightly.
 
@@ -83,7 +83,7 @@ In practice:
 * Audio quality is nearly identical
 * Devices/providers often support both
 
-### Advantages
+#### Advantages
 
 Same as μ-law:
 
@@ -92,7 +92,7 @@ Same as μ-law:
 * Reliable
 * Low latency
 
-### Drawbacks
+#### Drawbacks
 
 Same as μ-law:
 
@@ -101,15 +101,15 @@ Same as μ-law:
 
 ---
 
-# Compressed Narrowband Codecs
+## Compressed Narrowband Codecs
 
-## G.729
+### G.729
 
-8\ \text{kbps}
+**8 kbps**
 
 Historically extremely popular for WAN links.
 
-### Characteristics
+#### Characteristics
 
 | Property    | Value    |
 | ----------- | -------- |
@@ -118,13 +118,13 @@ Historically extremely popular for WAN links.
 | Compression | High     |
 | CPU usage   | Moderate |
 
-### Advantages
+#### Advantages
 
 * Very low bandwidth consumption
 * Good voice quality for its bitrate
 * Historically common in enterprise WANs
 
-### Drawbacks
+#### Drawbacks
 
 * Patent/licensing history
 * Worse quality than Opus
@@ -132,50 +132,50 @@ Historically extremely popular for WAN links.
 * More CPU intensive than G.711
 * Less common today
 
-### Typical Use Cases
+#### Typical Use Cases
 
 * Legacy low-bandwidth links
 * Older SIP infrastructures
 
 ---
 
-## G.723.1
+### G.723.1
 
 Very aggressive compression codec.
 
-### Characteristics
+#### Characteristics
 
 | Property | Value          |
 | -------- | -------------- |
 | Bitrate  | 5.3 / 6.3 kbps |
 | Latency  | High           |
 
-### Advantages
+#### Advantages
 
 * Extremely low bandwidth usage
 
-### Drawbacks
+#### Drawbacks
 
 * High latency
 * Noticeably degraded quality
 * Heavy CPU usage
 * Mostly obsolete today
 
-### Typical Use Cases
+#### Typical Use Cases
 
 * Rare legacy deployments
 
 ---
 
-# Wideband / HD Voice Codecs
+## Wideband / HD Voice Codecs
 
-## G.722
+### G.722
 
-64\ \text{kbps}
+**64 kbps**
 
 One of the most important HD voice codecs.
 
-### Characteristics
+#### Characteristics
 
 | Property    | Value    |
 | ----------- | -------- |
@@ -183,19 +183,19 @@ One of the most important HD voice codecs.
 | Audio range | Wideband |
 | Quality     | HD Voice |
 
-### Advantages
+#### Advantages
 
 * Excellent voice clarity
 * Widely supported by enterprise phones
 * Low CPU usage
 * Good interoperability
 
-### Drawbacks
+#### Drawbacks
 
 * Higher bandwidth than compressed codecs
 * Less efficient than Opus
 
-### Typical Use Cases
+#### Typical Use Cases
 
 * Enterprise VoIP
 * Modern SIP phones
@@ -203,9 +203,9 @@ One of the most important HD voice codecs.
 
 ---
 
-# Modern Internet Codec
+## Modern Internet Codec
 
-## Opus
+### Opus
 
 Probably the most important modern VoIP codec.
 
@@ -215,7 +215,7 @@ Created for:
 * Real-time internet communications
 * Gaming/streaming/VoIP
 
-### Characteristics
+#### Characteristics
 
 | Property             | Value                 |
 | -------------------- | --------------------- |
@@ -224,7 +224,7 @@ Created for:
 | Latency              | Extremely low         |
 | Packet loss handling | Excellent             |
 
-### Advantages
+#### Advantages
 
 * Outstanding audio quality
 * Extremely flexible bitrate
@@ -234,13 +234,13 @@ Created for:
 * Supports voice AND music
 * Mandatory in WebRTC
 
-### Drawbacks
+#### Drawbacks
 
 * Slightly higher CPU usage
 * Not universally supported by old SIP hardware
 * Some providers still prefer G.711
 
-### Typical Use Cases
+#### Typical Use Cases
 
 * WebRTC
 * Browser softphones
@@ -250,41 +250,41 @@ Created for:
 
 ---
 
-# Other Common Codecs
+## Other Common Codecs
 
-## GSM
+### GSM
 
 Old codec inspired by GSM mobile networks.
 
-### Advantages
+#### Advantages
 
 * Low bandwidth
 * Historically common
 
-### Drawbacks
+#### Drawbacks
 
 * Poor modern audio quality
 * Obsolete
 
 ---
 
-## iLBC
+### iLBC
 
 Internet Low Bitrate Codec.
 
 Designed specifically for packet loss resilience.
 
-### Advantages
+#### Advantages
 
 * Good resilience on unstable networks
 
-### Drawbacks
+#### Drawbacks
 
 * Largely replaced by Opus
 
 ---
 
-# Narrowband vs Wideband vs Fullband
+## Narrowband vs Wideband vs Fullband
 
 | Type       | Audio Range  | Perceived Quality  |
 | ---------- | ------------ | ------------------ |
@@ -294,7 +294,7 @@ Designed specifically for packet loss resilience.
 
 ---
 
-# Transcoding
+## Transcoding
 
 A PBX may need to transcode when:
 
@@ -313,7 +313,7 @@ WebRTC Client (Opus)
 SIP Provider (G.711 alaw)
 ```
 
-## Important
+### Important
 
 Transcoding increases:
 
@@ -325,7 +325,7 @@ Avoid unnecessary transcoding when possible.
 
 ---
 
-# Packet Loss Sensitivity
+## Packet Loss Sensitivity
 
 | Codec | Packet Loss Tolerance |
 | ----- | --------------------- |
@@ -337,7 +337,7 @@ Avoid unnecessary transcoding when possible.
 
 ---
 
-# WebRTC Reality
+## WebRTC Reality
 
 WebRTC almost always uses:
 
@@ -348,35 +348,35 @@ This is why many modern VoIP systems internally use Opus and transcode only when
 
 ---
 
-# Recommended Choices
+## Recommended Choices
 
-## Internal SIP infrastructure
+### Internal SIP infrastructure
 
 Recommended:
 
 * G.722
 * Opus
 
-## SIP Trunk Compatibility
+### SIP Trunk Compatibility
 
 Recommended:
 
 * G.711 alaw (Europe)
 * G.711 ulaw (US)
 
-## WebRTC
+### WebRTC
 
 Recommended:
 
 * Opus
 
-## Poor Networks / Mobile
+### Poor Networks / Mobile
 
 Recommended:
 
 * Opus
 
-## Legacy Hardware
+### Legacy Hardware
 
 Recommended:
 
@@ -385,7 +385,7 @@ Recommended:
 
 ---
 
-# Quick Comparison Table
+## Quick Comparison Table
 
 | Codec       | Quality   | Bandwidth     | CPU      | Packet Loss | Compatibility | Modern?    |
 | ----------- | --------- | ------------- | -------- | ----------- | ------------- | ---------- |
@@ -400,7 +400,7 @@ Recommended:
 
 ---
 
-# Practical Recommendation
+## Practical Recommendation
 
 Today, a very common modern architecture is:
 

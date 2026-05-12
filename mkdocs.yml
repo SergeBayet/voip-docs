@@ -9,10 +9,15 @@ theme:
     - navigation.expand
     - content.code.copy
 
+plugins:
+  - search
+
 nav:
   - Home: index.md
+  - Media:
+      - Codecs: media/codecs.md
   - SIP:
-      - Overview: sip.md
+      - SIP Trunk Configuration: sip/trunk.md
   - Asterisk: asterisk.md
   - Wazo: wazo.md
   - Debugging: debugging.md
@@ -21,5 +26,9 @@ markdown_extensions:
   - admonition
   - toc:
       permalink: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.details

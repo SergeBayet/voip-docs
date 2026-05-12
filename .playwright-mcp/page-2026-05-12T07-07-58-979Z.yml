@@ -1,0 +1,496 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#configuration-options-sip-trunk"
+  - banner [ref=e3]:
+    - navigation "Header" [ref=e4]:
+      - img [ref=e6] [cursor=pointer]
+      - generic [ref=e9]:
+        - generic [ref=e11]: VoIP Documentation
+        - generic:
+          - generic: SIP Trunk Configuration
+      - img [ref=e13] [cursor=pointer]
+      - dialog:
+        - search:
+          - generic:
+            - textbox "Search" [ref=e15]
+            - img [ref=e17] [cursor=pointer]
+            - navigation "Search":
+              - button "Clear":
+                - img
+          - generic [ref=e19]: Type to start searching
+  - generic [ref=e20]:
+    - main [ref=e21]:
+      - generic [ref=e22]:
+        - navigation "Navigation" [ref=e25]:
+          - generic [ref=e26] [cursor=pointer]:
+            - link "VoIP Documentation" [ref=e27]:
+              - /url: ../..
+              - img [ref=e28]
+            - text: VoIP Documentation
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "Home" [ref=e32] [cursor=pointer]:
+                - /url: ../..
+                - generic [ref=e33]: Home
+            - listitem [ref=e34]:
+              - generic [ref=e36]: Media
+              - navigation "Media" [ref=e38]:
+                - generic [ref=e39] [cursor=pointer]: Media
+                - list [ref=e41]:
+                  - listitem [ref=e42]:
+                    - link "Codecs" [ref=e43] [cursor=pointer]:
+                      - /url: ../../media/codecs/
+                      - generic [ref=e44]: Codecs
+            - listitem [ref=e45]:
+              - generic [ref=e47]: SIP
+              - navigation "SIP" [ref=e49]:
+                - generic [ref=e50] [cursor=pointer]: SIP
+                - list [ref=e52]:
+                  - listitem [ref=e53]:
+                    - generic [ref=e55]: SIP Trunk Configuration
+                    - navigation "Table of contents" [ref=e57]:
+                      - generic [ref=e58] [cursor=pointer]: Table of contents
+                      - list [ref=e60]:
+                        - listitem [ref=e61]:
+                          - link "Endpoint" [ref=e62] [cursor=pointer]:
+                            - /url: "#endpoint"
+                            - generic [ref=e63]: Endpoint
+                          - navigation "Endpoint" [ref=e64]:
+                            - list [ref=e65]:
+                              - listitem [ref=e66]:
+                                - link "100rel" [ref=e67] [cursor=pointer]:
+                                  - /url: "#100rel"
+                                  - generic [ref=e68]: 100rel
+                              - listitem [ref=e69]:
+                                - link "accept_multiple_sdp_answers" [ref=e70] [cursor=pointer]:
+                                  - /url: "#accept_multiple_sdp_answers"
+                                  - generic [ref=e71]: accept_multiple_sdp_answers
+                              - listitem [ref=e72]:
+                                - link "accountcode" [ref=e73] [cursor=pointer]:
+                                  - /url: "#accountcode"
+                                  - generic [ref=e74]: accountcode
+                              - listitem [ref=e75]:
+                                - link "acl" [ref=e76] [cursor=pointer]:
+                                  - /url: "#acl"
+                                  - generic [ref=e77]: acl
+                              - listitem [ref=e78]:
+                                - link "aggregate_mwi" [ref=e79] [cursor=pointer]:
+                                  - /url: "#aggregate_mwi"
+                                  - generic [ref=e80]: aggregate_mwi
+                              - listitem [ref=e81]:
+                                - link "allow" [ref=e82] [cursor=pointer]:
+                                  - /url: "#allow"
+                                  - generic [ref=e83]: allow
+                              - listitem [ref=e84]:
+                                - link "allow_overlap" [ref=e85] [cursor=pointer]:
+                                  - /url: "#allow_overlap"
+                                  - generic [ref=e86]: allow_overlap
+                              - listitem [ref=e87]:
+                                - link "allow_subscribe" [ref=e88] [cursor=pointer]:
+                                  - /url: "#allow_subscribe"
+                                  - generic [ref=e89]: allow_subscribe
+                              - listitem [ref=e90]:
+                                - link "allow_transfer" [ref=e91] [cursor=pointer]:
+                                  - /url: "#allow_transfer"
+                                  - generic [ref=e92]: allow_transfer
+            - listitem [ref=e93]:
+              - link "Asterisk" [ref=e94] [cursor=pointer]:
+                - /url: ../../asterisk/
+                - generic [ref=e95]: Asterisk
+            - listitem [ref=e96]:
+              - link "Wazo" [ref=e97] [cursor=pointer]:
+                - /url: ../../wazo/
+                - generic [ref=e98]: Wazo
+            - listitem [ref=e99]:
+              - link "Debugging" [ref=e100] [cursor=pointer]:
+                - /url: ../../debugging/
+                - generic [ref=e101]: Debugging
+        - article [ref=e103]:
+          - heading "Configuration options SIP trunk ¶" [level=1] [ref=e104]:
+            - text: Configuration options SIP trunk
+            - link "¶" [ref=e105] [cursor=pointer]:
+              - /url: "#configuration-options-sip-trunk"
+          - heading "Endpoint ¶" [level=2] [ref=e106]:
+            - text: Endpoint
+            - link "¶" [ref=e107] [cursor=pointer]:
+              - /url: "#endpoint"
+          - heading "100rel ¶" [level=3] [ref=e108]:
+            - text: 100rel
+            - link "¶" [ref=e109] [cursor=pointer]:
+              - /url: "#100rel"
+          - paragraph [ref=e110]:
+            - code [ref=e111]: "[no|yes|required|peer_supported]"
+            - text: "(default: yes)"
+          - paragraph [ref=e112]:
+            - code [ref=e113]: 100rel
+            - text: is about
+            - strong [ref=e114]: reliable provisional SIP responses
+            - text: . Normally, SIP temporary responses like 180 Ringing (“the phone is ringing”) are sent unreliably over UDP. With 100rel, these temporary responses must be acknowledged with a
+            - code [ref=e115]: PRACK
+            - text: (Provisional Response Acknowledgement) message, so both sides know they were received.
+          - paragraph [ref=e116]:
+            - code [ref=e117]: 100rel
+            - text: is about
+            - strong [ref=e118]: reliable provisional SIP responses
+            - text: . Normally, SIP temporary responses like
+            - code [ref=e119]: 180 Ringing
+            - text: (“the phone is ringing”) are sent unreliably over UDP. With
+            - code [ref=e120]: 100rel
+            - text: ", these temporary responses must be acknowledged with a"
+            - code [ref=e121]: PRACK
+            - text: message, so both sides know they were received.
+          - paragraph [ref=e122]: "The different values mean:"
+          - list [ref=e123]:
+            - listitem [ref=e124]:
+              - paragraph [ref=e125]:
+                - code [ref=e126]: "no"
+                - text: Do not support reliable provisional responses at all.
+            - listitem [ref=e127]:
+              - paragraph [ref=e128]:
+                - code [ref=e129]: "yes"
+                - text: Support them if the other side wants to use them.
+            - listitem [ref=e130]:
+              - paragraph [ref=e131]:
+                - code [ref=e132]: required
+                - text: Force the use of reliable provisional responses. Calls may fail if the peer does not support it.
+            - listitem [ref=e133]:
+              - paragraph [ref=e134]:
+                - code [ref=e135]: peer_supported
+                - text: Use reliable provisional responses only if the other side says it supports them. This is usually the safest and most compatible option.
+          - heading "accept_multiple_sdp_answers ¶" [level=3] [ref=e136]:
+            - text: accept_multiple_sdp_answers
+            - link "¶" [ref=e137] [cursor=pointer]:
+              - /url: "#accept_multiple_sdp_answers"
+          - paragraph [ref=e138]:
+            - code [ref=e139]: "[yes|no]"
+            - text: "(default: no)"
+          - paragraph [ref=e140]:
+            - code [ref=e141]: accept_multiple_sdp_answers
+            - text: allows Asterisk to accept updated SDP information during call setup.
+          - paragraph [ref=e142]: "Normally, SIP devices exchange SDP only once to decide:"
+          - list [ref=e143]:
+            - listitem [ref=e144]: which codec to use
+            - listitem [ref=e145]: which IP/port to send audio to
+          - paragraph [ref=e146]:
+            - text: But some SIP servers change their media settings during ringing (
+            - code [ref=e147]: 18x
+            - text: ) or when the call is answered (
+            - code [ref=e148]: 200 OK
+            - text: ).
+          - paragraph [ref=e149]: "Example:"
+          - list [ref=e150]:
+            - listitem [ref=e151]:
+              - text: first response → audio should go to port
+              - code [ref=e152]: "10000"
+            - listitem [ref=e153]:
+              - text: later response → audio should go to port
+              - code [ref=e154]: "12000"
+          - paragraph [ref=e155]: With this option enabled, Asterisk accepts the new SDP and updates the media destination.
+          - paragraph [ref=e156]: "This is useful with some providers that:"
+          - list [ref=e157]:
+            - listitem [ref=e158]: use a special port for ringback tones
+            - listitem [ref=e159]: move RTP streams during the call setup
+            - listitem [ref=e160]: change media parameters before the call is fully established
+          - paragraph [ref=e161]: "In simple terms:"
+          - list [ref=e162]:
+            - listitem [ref=e163]:
+              - paragraph [ref=e164]: "Disabled: “I only trust the first SDP answer.”"
+            - listitem [ref=e165]:
+              - paragraph [ref=e166]: "Enabled: “If the remote side changes media information during setup, I accept the update.”"
+          - heading "accountcode ¶" [level=3] [ref=e167]:
+            - text: accountcode
+            - link "¶" [ref=e168] [cursor=pointer]:
+              - /url: "#accountcode"
+          - paragraph [ref=e169]:
+            - code [ref=e170]: accountcode
+            - text: is used to associate calls with a billing or tracking identifier.
+          - paragraph [ref=e171]: When a call is made or received through this endpoint, Asterisk automatically attaches the specified account code to the channel.
+          - paragraph [ref=e172]: "This is commonly used for:"
+          - list [ref=e173]:
+            - listitem [ref=e174]: billing
+            - listitem [ref=e175]: call reporting
+            - listitem [ref=e176]: statistics
+            - listitem [ref=e177]: separating departments or customers
+          - paragraph [ref=e178]: "Example:"
+          - generic [ref=e180]:
+            - navigation [ref=e181]:
+              - button "Copy to clipboard" [ref=e182] [cursor=pointer]
+            - code [ref=e183]: accountcode = sales
+          - paragraph [ref=e184]:
+            - text: All calls from this endpoint will be marked with the account code
+            - code [ref=e185]: sales
+            - text: .
+          - paragraph [ref=e186]: "In simple terms:"
+          - list [ref=e187]:
+            - listitem [ref=e188]: It is like adding a label or tag to calls.
+            - listitem [ref=e189]: Useful for tracking who made calls or which group the calls belong to.
+          - heading "acl ¶" [level=3] [ref=e190]:
+            - text: acl
+            - link "¶" [ref=e191] [cursor=pointer]:
+              - /url: "#acl"
+          - paragraph [ref=e192]:
+            - code [ref=e193]: acl
+            - text: is used to control which IP addresses are allowed or denied for this endpoint.
+          - paragraph [ref=e194]:
+            - text: It references rules defined in the Asterisk configuration file
+            - code [ref=e195]: acl.conf
+            - text: .
+          - paragraph [ref=e196]: You can think of it as a firewall rule attached to the SIP endpoint.
+          - paragraph [ref=e197]: "Example:"
+          - generic [ref=e199]:
+            - navigation [ref=e200]:
+              - button "Copy to clipboard" [ref=e201] [cursor=pointer]
+            - code [ref=e202]: acl = office_ips, trusted_provider
+          - paragraph [ref=e203]:
+            - text: Asterisk will apply the rules from the
+            - code [ref=e204]: office_ips
+            - text: and
+            - code [ref=e205]: trusted_provider
+            - text: sections in
+            - code [ref=e206]: acl.conf
+            - text: .
+          - paragraph [ref=e207]: "This is useful to:"
+          - list [ref=e208]:
+            - listitem [ref=e209]: allow only trusted SIP servers or phones
+            - listitem [ref=e210]: block unknown IP addresses
+            - listitem [ref=e211]: improve security against SIP attacks
+          - paragraph [ref=e212]: "In simple terms:"
+          - list [ref=e213]:
+            - listitem [ref=e214]: “Only these IP addresses are allowed to use this endpoint.”
+          - heading "aggregate_mwi ¶" [level=3] [ref=e215]:
+            - text: aggregate_mwi
+            - link "¶" [ref=e216] [cursor=pointer]:
+              - /url: "#aggregate_mwi"
+          - paragraph [ref=e217]:
+            - code [ref=e218]: "[yes|no]"
+            - text: "(default: yes)"
+          - paragraph [ref=e219]:
+            - code [ref=e220]: aggregate_mwi
+            - text: controls how voicemail notifications (MWI = Message Waiting Indicator) are sent to the phone.
+          - paragraph [ref=e221]: "If a phone monitors multiple mailboxes:"
+          - list [ref=e222]:
+            - listitem [ref=e223]:
+              - paragraph [ref=e224]:
+                - text: Enabled (
+                - code [ref=e225]: "yes"
+                - text: ) Asterisk sends one combined notification for all mailboxes.
+            - listitem [ref=e226]:
+              - paragraph [ref=e227]:
+                - text: Disabled (
+                - code [ref=e228]: "no"
+                - text: ) Asterisk sends one separate notification per mailbox.
+          - paragraph [ref=e229]: "Example:"
+          - paragraph [ref=e230]: "A phone watches:"
+          - list [ref=e231]:
+            - listitem [ref=e232]: mailbox 1000
+            - listitem [ref=e233]: mailbox 1001
+            - listitem [ref=e234]: mailbox 1002
+          - paragraph [ref=e235]:
+            - text: With
+            - code [ref=e236]: aggregate_mwi=yes
+            - text: ":"
+          - list [ref=e237]:
+            - listitem [ref=e238]: the phone receives one global “you have voicemail” notification.
+          - paragraph [ref=e239]:
+            - text: With
+            - code [ref=e240]: aggregate_mwi=no
+            - text: ":"
+          - list [ref=e241]:
+            - listitem [ref=e242]: the phone receives three individual notifications.
+          - paragraph [ref=e243]: "This can affect:"
+          - list [ref=e244]:
+            - listitem [ref=e245]: compatibility with some phones
+            - listitem [ref=e246]: network traffic
+            - listitem [ref=e247]: how voicemail indicators are displayed
+          - paragraph [ref=e248]: "In simple terms:"
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - paragraph [ref=e251]: "Enabled: “Group all voicemail notifications together.”"
+            - listitem [ref=e252]:
+              - paragraph [ref=e253]: "Disabled: “Send one notification per mailbox.”"
+          - heading "allow ¶" [level=3] [ref=e254]:
+            - text: allow
+            - link "¶" [ref=e255] [cursor=pointer]:
+              - /url: "#allow"
+          - paragraph [ref=e256]:
+            - code [ref=e257]: allow
+            - text: defines which audio codecs this endpoint is allowed to use during calls.
+          - paragraph [ref=e258]: A codec is the format used to encode and compress audio.
+          - paragraph [ref=e259]: "Examples of codecs:"
+          - list [ref=e260]:
+            - listitem [ref=e261]:
+              - code [ref=e262]: ulaw
+            - listitem [ref=e263]:
+              - code [ref=e264]: alaw
+            - listitem [ref=e265]:
+              - code [ref=e266]: g722
+            - listitem [ref=e267]:
+              - code [ref=e268]: opus
+            - listitem [ref=e269]:
+              - code [ref=e270]: g729
+          - paragraph [ref=e271]: "Example:"
+          - generic [ref=e273]:
+            - navigation [ref=e274]:
+              - button "Copy to clipboard" [ref=e275] [cursor=pointer]
+            - code [ref=e276]: allow = ulaw,alaw,g722
+          - paragraph [ref=e277]: "This endpoint can use:"
+          - list [ref=e278]:
+            - listitem [ref=e279]:
+              - text: G.711 µ-law (
+              - code [ref=e280]: ulaw
+              - text: )
+            - listitem [ref=e281]:
+              - text: G.711 A-law (
+              - code [ref=e282]: alaw
+              - text: )
+            - listitem [ref=e283]: G.722 HD audio
+          - paragraph [ref=e284]: During call negotiation, Asterisk and the remote device choose a codec supported by both sides.
+          - paragraph [ref=e285]: "This affects:"
+          - list [ref=e286]:
+            - listitem [ref=e287]: audio quality
+            - listitem [ref=e288]: bandwidth usage
+            - listitem [ref=e289]: CPU usage (transcoding)
+          - paragraph [ref=e290]: "In simple terms:"
+          - list [ref=e291]:
+            - listitem [ref=e292]: “These are the audio formats this endpoint accepts.”
+          - paragraph [ref=e293]:
+            - link "See codecs section" [ref=e294] [cursor=pointer]:
+              - /url: ../../media/codecs/
+          - heading "allow_overlap ¶" [level=3] [ref=e295]:
+            - text: allow_overlap
+            - link "¶" [ref=e296] [cursor=pointer]:
+              - /url: "#allow_overlap"
+          - paragraph [ref=e297]:
+            - code [ref=e298]: "[yes|no]"
+            - text: "(default: yes)"
+          - paragraph [ref=e299]:
+            - code [ref=e300]: allow_overlap
+            - text: enables overlap dialing support.
+          - paragraph [ref=e301]: Normally, SIP sends the full phone number at once.
+          - paragraph [ref=e302]: With overlap dialing, digits can be sent one by one, like on old telephone systems.
+          - paragraph [ref=e303]: "Example:"
+          - list [ref=e304]:
+            - listitem [ref=e305]:
+              - text: user dials
+              - code [ref=e306]: "1"
+            - listitem [ref=e307]:
+              - text: then
+              - code [ref=e308]: "10"
+            - listitem [ref=e309]:
+              - text: then
+              - code [ref=e310]: "100"
+            - listitem [ref=e311]:
+              - text: then
+              - code [ref=e312]: "1002"
+          - paragraph [ref=e313]: Asterisk receives the number progressively instead of all at once.
+          - paragraph [ref=e314]: This is defined by SIP RFC3578.
+          - paragraph [ref=e315]: "This is mainly useful for:"
+          - list [ref=e316]:
+            - listitem [ref=e317]: interoperability with some telecom systems
+            - listitem [ref=e318]: old PBX systems
+            - listitem [ref=e319]: ISDN-style dialing behavior
+          - paragraph [ref=e320]: Most modern SIP systems do not need this.
+          - paragraph [ref=e321]: "In simple terms:"
+          - list [ref=e322]:
+            - listitem [ref=e323]:
+              - paragraph [ref=e324]: "Disabled: “Send the complete number immediately.”"
+            - listitem [ref=e325]:
+              - paragraph [ref=e326]: "Enabled: “Allow numbers to arrive digit by digit.”"
+          - heading "allow_subscribe ¶" [level=3] [ref=e327]:
+            - text: allow_subscribe
+            - link "¶" [ref=e328] [cursor=pointer]:
+              - /url: "#allow_subscribe"
+          - paragraph [ref=e329]:
+            - code [ref=e330]: "[yes|no]"
+            - text: "(default: yes)"
+          - paragraph [ref=e331]:
+            - code [ref=e332]: allow_subscribe
+            - text: controls whether this endpoint is allowed to send SIP
+            - code [ref=e333]: SUBSCRIBE
+            - text: requests to Asterisk.
+          - paragraph [ref=e334]:
+            - code [ref=e335]: SUBSCRIBE
+            - text: is used to ask for status updates.
+          - paragraph [ref=e336]: "Common examples:"
+          - list [ref=e337]:
+            - listitem [ref=e338]: BLF (Busy Lamp Field)
+            - listitem [ref=e339]: extension presence
+            - listitem [ref=e340]: voicemail status
+            - listitem [ref=e341]: phone status monitoring
+          - paragraph [ref=e342]: "Example:"
+          - list [ref=e343]:
+            - listitem [ref=e344]:
+              - text: a phone subscribes to extension
+              - code [ref=e345]: "1001"
+            - listitem [ref=e346]:
+              - text: Asterisk sends notifications when
+              - code [ref=e347]: "1001"
+              - text: becomes busy, ringing, or available
+          - paragraph [ref=e348]: "If disabled:"
+          - list [ref=e349]:
+            - listitem [ref=e350]: the endpoint cannot monitor statuses through subscriptions
+          - paragraph [ref=e351]: "This is commonly used for:"
+          - list [ref=e352]:
+            - listitem [ref=e353]: receptionist phones
+            - listitem [ref=e354]: sidecar/BLF buttons
+            - listitem [ref=e355]: presence features
+          - paragraph [ref=e356]: "In simple terms:"
+          - list [ref=e357]:
+            - listitem [ref=e358]:
+              - paragraph [ref=e359]: "Enabled: “This phone can ask Asterisk for status updates.”"
+            - listitem [ref=e360]:
+              - paragraph [ref=e361]: "Disabled: “This phone is not allowed to monitor statuses.”"
+          - heading "allow_transfer ¶" [level=3] [ref=e362]:
+            - text: allow_transfer
+            - link "¶" [ref=e363] [cursor=pointer]:
+              - /url: "#allow_transfer"
+          - paragraph [ref=e364]:
+            - code [ref=e365]: "[yes|no]"
+            - text: "(default: yes)"
+          - paragraph [ref=e366]:
+            - code [ref=e367]: allow_transfer
+            - text: controls whether this endpoint is allowed to use SIP call transfers with the
+            - code [ref=e368]: REFER
+            - text: method.
+          - paragraph [ref=e369]:
+            - text: A SIP
+            - code [ref=e370]: REFER
+            - text: "tells another device:"
+          - list [ref=e371]:
+            - listitem [ref=e372]: “Please call this other number instead.”
+          - paragraph [ref=e373]: This is how many SIP phones perform call transfers.
+          - paragraph [ref=e374]: "Example:"
+          - list [ref=e375]:
+            - listitem [ref=e376]: Alice calls Bob
+            - listitem [ref=e377]: Bob transfers Alice to Charlie
+            - listitem [ref=e378]:
+              - text: Bob sends a SIP
+              - code [ref=e379]: REFER
+          - paragraph [ref=e380]: "If enabled:"
+          - list [ref=e381]:
+            - listitem [ref=e382]: the endpoint can perform SIP transfers
+          - paragraph [ref=e383]: "If disabled:"
+          - list [ref=e384]:
+            - listitem [ref=e385]: transfer requests are rejected
+          - paragraph [ref=e386]: "This affects:"
+          - list [ref=e387]:
+            - listitem [ref=e388]: attended transfers (consult the recipient before transferring the call)
+          - list [ref=e390]:
+            - listitem [ref=e391]: blind transfers (immediate transfer, no verification)
+          - list [ref=e393]:
+            - listitem [ref=e394]: interoperability with SIP phones/providers
+          - paragraph [ref=e395]: "In simple terms:"
+          - list [ref=e396]:
+            - listitem [ref=e397]:
+              - paragraph [ref=e398]: "Enabled: “This endpoint can transfer calls.”"
+            - listitem [ref=e399]:
+              - paragraph [ref=e400]: "Disabled: “This endpoint cannot use SIP transfers.”"
+          - paragraph [ref=e401]: codec_prefs_incoming_offer codec_prefs_outgoing_offer codec_prefs_incoming_answer codec_prefs_outgoing_answer
+          - paragraph [ref=e402]: overlap_context aors auth callerid callerid_privacy callerid_tag context direct_media_glare_mitigation direct_media_method trust_connected_line send_connected_line connected_line_method direct_media disable_direct_media_on_nat disallow dtmf_mode media_address bind_rtp_to_media_address force_rport ice_support identify_by redirect_method follow_redirect_methods mailboxes mwi_subscribe_replaces_unsolicited voicemail_extension moh_suggest outbound_auth outbound_proxy rewrite_contact rtp_ipv6 rtp_symmetric send_diversion send_history_info send_pai send_rpid rpid_immediate tenantid timers_min_se timers timers_sess_expires transport trust_id_inbound trust_id_outbound use_ptime use_avpf force_avp media_use_received_transport media_encryption media_encryption_optimistic g726_non_standard inband_progress call_group pickup_group named_call_group named_pickup_group device_state_busy_at t38_udptl t38_udptl_ec t38_udptl_maxdatagram fax_detect fax_detect_timeout t38_udptl_nat t38_udptl_ipv6 t38_bind_udptl_to_media_address tone_zone language one_touch_recording record_on_feature record_off_feature rtp_engine allow_transfer user_eq_phone moh_passthrough sdp_owner sdp_session tos_audio tos_video cos_audio cos_video allow_subscribe sub_min_expiry from_user mwi_from_user from_domain dtls_verify dtls_rekey dtls_auto_generate_cert dtls_cert_file dtls_private_key dtls_cipher dtls_ca_file dtls_ca_path dtls_setup dtls_fingerprint srtp_tag_32 set_var message_context
+          - paragraph [ref=e403]: preferred_codec_only incoming_call_offer_pref outgoing_call_offer_pref rtp_keepalive rtp_timeout rtp_timeout_hold deny permit contact_acl contact_deny contact_permit subscribe_context contact_user asymmetric_rtp_codec rtcp_mux refer_blind_progress notify_early_inuse_ringing max_audio_streams max_video_streams bundle webrtc incoming_mwi_mailbox follow_early_media_fork
+          - paragraph [ref=e404]: suppress_q850_reason_headers ignore_183_without_sdp stir_shaken stir_shaken_profile allow_unauthenticated_options security_negotiation security_mechanisms geoloc_incoming_call_profile geoloc_outgoing_call_profile send_aoc suppress_moh_on_sendonly
+    - contentinfo [ref=e405]:
+      - generic [ref=e408]:
+        - text: Made with
+        - link "Material for MkDocs" [ref=e409] [cursor=pointer]:
+          - /url: https://squidfunk.github.io/mkdocs-material/
