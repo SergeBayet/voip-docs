@@ -1,6 +1,6 @@
 site_name: VoIP Documentation
 site_description: Shared documentation about VoIP, SIP, Asterisk, Wazo, WebRTC and Odoo VoIP
-site_url: https://YOUR_ORG_OR_USER.github.io/voip-docs/
+site_url: https://sergebayet.github.io/voip-docs/
 
 theme:
   name: material
