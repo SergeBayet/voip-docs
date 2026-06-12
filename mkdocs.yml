@@ -23,6 +23,8 @@ nav:
   - Asterisk: asterisk.md
   - Wazo: wazo.md
   - Debugging: debugging.md
+  - Kamailio:
+      - Installation: kamailio/installation.md
   - Awesome Resources: resources.md
 
 markdown_extensions:

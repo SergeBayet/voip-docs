@@ -11,6 +11,11 @@
 
 - [Asterisk Project Documentation](https://docs.asterisk.org/)
 
+## Kamailio SIP Server
+
+- [Documentation Wiki](https://www.kamailio.org/wikidocs/)
+- [Modules Documentation Reference](https://kamailio.org/docs/modules/)
+
 ## Other
 
 ### VoIP concepts simply explained
