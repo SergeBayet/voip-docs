@@ -13,16 +13,16 @@
 
 ## Other
 
-- VoIP concepts simply explained
-  - [What is Voice over IP (VoIP)?](https://www.youtube.com/watch?v=bTOlXJn_KSM)
-  - [What is Session Initiation Protocol (SIP)?](https://www.youtube.com/watch?v=HRoejedTl6A)
+### VoIP concepts simply explained
+- [What is Voice over IP (VoIP)?](https://www.youtube.com/watch?v=bTOlXJn_KSM)
+- [What is Session Initiation Protocol (SIP)?](https://www.youtube.com/watch?v=HRoejedTl6A)
 
-- Nice YouTube Channels worth to follow
-  - [telecomTech](https://www.youtube.com/@telecomTech.explained)
-  - [Official Asterisk YouTube Channel](https://www.youtube.com/@asteriskvideos)
-  - [Kamailio World](https://www.youtube.com/@KamailioWorld)
-  - [Fred Posner](https://www.youtube.com/@FredPosner)
+### Nice YouTube Channels worth to follow
+- [telecomTech](https://www.youtube.com/@telecomTech.explained)
+- [Official Asterisk YouTube Channel](https://www.youtube.com/@asteriskvideos)
+- [Kamailio World](https://www.youtube.com/@KamailioWorld)
+- [Fred Posner](https://www.youtube.com/@FredPosner)
 
-- Learn SIP Through Kamailio by [Keith Croxford](https://github.com/keithcroxford)
-  - [Udemy course](https://www.udemy.com/course/learn-sip-through-kamailio)
-  - [Course repo](https://github.com/keithcroxford/kamailio-course)
+### Learn SIP Through Kamailio, a course by [Keith Croxford](https://github.com/keithcroxford)
+- [Udemy course](https://www.udemy.com/course/learn-sip-through-kamailio)
+- [Course repo](https://github.com/keithcroxford/kamailio-course)
