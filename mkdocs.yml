@@ -16,6 +16,8 @@ nav:
   - Home: index.md
   - Media:
       - Codecs: media/codecs.md
+      - SDP: media/sdp.md
+      - RTP profiles: media/rtp_profiles.md
   - SIP:
       - SIP Trunk Configuration: sip/trunk.md
   - Asterisk: asterisk.md
