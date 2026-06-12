@@ -26,3 +26,6 @@
 ### Learn SIP Through Kamailio, a course by [Keith Croxford](https://github.com/keithcroxford)
 - [Udemy course](https://www.udemy.com/course/learn-sip-through-kamailio)
 - [Course repo](https://github.com/keithcroxford/kamailio-course)
+
+### Dev Music
+- [Back to 1984 - 24/7 Vaporwave Dev Stream](https://www.youtube.com/watch?v=knbaRZMVD1s)
