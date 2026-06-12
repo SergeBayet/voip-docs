@@ -1,0 +1,5 @@
+[tools]
+python = { version = "3.12", postinstall = "python -m pip install -r requirements.txt" }
+
+[env]
+_.python.venv = { path = ".venv", create = true }

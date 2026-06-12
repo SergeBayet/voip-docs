@@ -1,0 +1,4 @@
+inotify
+mkdocs
+mkdocs-material
+pymdown-extensions
