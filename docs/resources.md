@@ -15,6 +15,7 @@
 
 - [Documentation Wiki](https://www.kamailio.org/wikidocs/)
 - [Modules Documentation Reference](https://kamailio.org/docs/modules/)
+- [Nick vs Networking's Kamailio Category](https://nickvsnetworking.com/category/voip/kamailio/)
 
 ## Other
 
