@@ -40,6 +40,8 @@ nav:
   - Debugging: debugging.md
   - Kamailio:
       - Installation: kamailio/installation.md
+  - Swiss Knives:
+      - Troubleshooting Tools: swiss-knives/troubleshoot.md
   - Awesome Resources: resources.md
 
 markdown_extensions:
