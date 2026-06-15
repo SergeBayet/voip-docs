@@ -27,6 +27,14 @@ plugins:
   - search
   - include-markdown
 
+# Local-only working docs that are intentionally not part of the published site:
+# - superpowers/  : gitignored design specs/plans (and contain Jinja-like
+#                   directives that the include-markdown plugin would choke on).
+# - kamailio/_test/: internal P0 verification runbook + sipexer templates.
+exclude_docs: |
+  superpowers/
+  kamailio/_test/
+
 nav:
   - Home: index.md
   - Media:
