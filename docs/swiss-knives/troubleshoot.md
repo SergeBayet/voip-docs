@@ -48,9 +48,25 @@ Then you can analyze the pcap file with i.e. Wireshark.
     sip.Call-ID == "xxxx"
     ```
 
+### sngrep
+
+It is an interactive and live SIP capture Rolls Royce.
+
+!!! info "[Github](https://github.com/irontec/sngrep)"
+
+!!! example "Start listening with `sngrep`"
+
+!!! example "Start listening on specific port with `sngrep -p 5060`"
+
+!!! example "Read a pcap file with `sngrep -I file.pcap`"
+
+!!! example "Write a pcap file with `sngrep -o trace.pcap`"
+
 ### Homer / SIPCAPTURE
 
 This is the *de facto* standard nowadays for SIP observability.
+
+!!! info "[Github](https://github.com/SIPp/sipp), [Main Website](https://sipcapture.org/), [Homer 11 Docs](https://sipcapture.github.io/homer/)"
 
 Architecture:
 ```
@@ -81,6 +97,8 @@ loadmodule "hep.so"
     ```cfg
     sip_capture(); // add in the routes you want to capture
     ```
+
+!!! info "Examples: [Kamailio](https://github.com/sipcapture/homer/wiki/Examples%3A-Kamailio), [Asterisk](https://github.com/sipcapture/homer/wiki/Examples%3A-Asterisk)", [sngrep](https://github.com/sipcapture/homer/wiki/Examples%3A-sngrep)
 
 ## SIP Testing Tools
 
