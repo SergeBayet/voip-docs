@@ -32,7 +32,7 @@ apt update
 ## Package Installation
 
 ```bash
-apt install kamailio kamailio-websocket-modules
+apt install kamailio
 ```
 
 There are many Kamailio packages specific for various modules. You can see all available with:

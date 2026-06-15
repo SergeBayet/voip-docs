@@ -40,6 +40,8 @@ nav:
   - Debugging: debugging.md
   - Kamailio:
       - Installation: kamailio/installation.md
+      - Modules:
+          - Websocket: kamailio/modules/websocket.md
   - Swiss Knives:
       - Troubleshooting Tools: swiss-knives/troubleshoot.md
       - HOMER Setup: swiss-knives/homer.md
