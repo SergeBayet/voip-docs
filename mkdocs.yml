@@ -42,6 +42,7 @@ nav:
       - Installation: kamailio/installation.md
   - Swiss Knives:
       - Troubleshooting Tools: swiss-knives/troubleshoot.md
+      - HOMER Setup: swiss-knives/homer.md
   - Awesome Resources: resources.md
 
 markdown_extensions:
