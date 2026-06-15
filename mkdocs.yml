@@ -22,7 +22,6 @@ theme:
       bug: octicons/bug-16
       example: octicons/beaker-16
       quote: octicons/quote-16
-      code: octicons/terminal-16
 
 plugins:
   - search
