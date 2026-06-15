@@ -99,7 +99,10 @@ sipexer -t udp \
 
 **Expected:** INVITE relayed to `TELNYX_SIP_TARGET` with `From` unchanged.
 
-### 4b. CLI NOT owned by the tenant — From rewritten to tenant default
+### 4b. CLI NOT owned by the tenant — rejected (P0)
+
+> **P0 decision:** CLI replacement-with-tenant-default is deferred to P1. Until then, a CLI that
+> IAP resolves to a different tenant is hard-rejected to prevent caller-ID leakage.
 
 ```bash
 sipexer -t udp \
@@ -111,7 +114,7 @@ sipexer -t udp \
   "udp:<edge_ip>:5060"
 ```
 
-**Expected:** INVITE relayed with `From` rewritten to the tenant's default DID.
+**Expected:** `403 Caller ID not authorised for tenant`.
 
 ### 4c. Missing X-Tenant-ID — rejected
 
@@ -119,7 +122,21 @@ Send using the outbound template without the `tenant` field (or set it to empty)
 
 **Expected:** `403 Missing tenant assertion`.
 
-**In `sngrep` + `xlog` confirm:** tenant trust and CLI authorisation behave as specified for all three sub-cases.
+### 4d. Unknown CLI (not in IAP) — rejected (P0)
+
+```bash
+sipexer -t udp \
+  --template-file docs/kamailio/_test/sipexer/outbound-invite.tpl \
+  -fv "ruri:sip:+442071234567@sip.telnyx.com" \
+  -fv "touri:sip:+442071234567@sip.telnyx.com" \
+  -fv "cli:+10000000000" \
+  -fv "tenant:tenant-test-001" \
+  "udp:<edge_ip>:5060"
+```
+
+**Expected:** `403 Unknown caller ID`.
+
+**In `sngrep` + `xlog` confirm:** tenant trust and CLI authorisation behave as specified for all sub-cases.
 
 ---
 
