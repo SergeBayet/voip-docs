@@ -33,6 +33,8 @@ apt update
 
 ```bash
 apt install kamailio
+apt install kamailio-utils-modules curl # for http_client.so module
+apt install kamailio-extra-modules libjansson4 # for jansson.so module
 ```
 
 There are many Kamailio packages specific for various modules. You can see all available with:
