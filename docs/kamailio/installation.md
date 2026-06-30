@@ -42,7 +42,15 @@ There are many Kamailio packages specific for various modules. You can see all a
 apt search kamailio
 ```
 
+## Getting Started
+
+To understand the core principles of the Kamailio configuration, read the official [getting started guide](https://www.kamailio.org/wikidocs/tutorials/getting-started/main/).
+
 ## Configuration Files
+
+Kamailio configuration file is not just a set of 'parameter=value' line. It has active components for runtime, named routing blocks. A routing block is a group of actions that specify what should be done for each SIP message.
+
+The actions are exported by Kamailio core or modules and are like functions exported by a library. Those actions can be combined in conditional statements like IF and SWITCH or in loops like WHILE. Modularity is provided by the ability to execute a routing block from another routing block.
 
 !!! tip
     To copy all these configuration files, you can use:

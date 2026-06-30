@@ -44,6 +44,7 @@ nav:
   - SIP:
       - SIP Trunk Configuration: sip/trunk.md
   - Asterisk: asterisk.md
+  - HAProxy: haproxy.md
   - Wazo: wazo.md
   - Debugging: debugging.md
   - Kamailio:
