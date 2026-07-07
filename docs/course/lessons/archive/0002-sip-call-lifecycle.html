@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 · The SIP call lifecycle</title>
+<style>
+  :root{
+    --ink:#1c1a17;--muted:#6b655c;--faint:#9a948a;--rule:#e4ded3;--paper:#fbf9f4;
+    --parrot:#1a7a4c;--parrot-deep:#0f5a37;--accent-bg:#eef3ec;
+    --sig:#1f6f8b;--sig-bg:#e8f1f4;--med:#b5532a;--med-bg:#f6ebe3;--both:#5a4b86;--both-bg:#eee9f5;
+    --good:#1a7a4c;--bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h2{font-size:1.4rem;margin:2.4rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.5rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .kidbox{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .kidbox .tag{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--parrot-deep)}
+  .mermaid{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1rem;margin:1.2rem 0;text-align:center;overflow-x:auto}
+  figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin:.3rem 0 0;text-align:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .callout{border-left:3px solid var(--sig);background:var(--sig-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{border-left:3px solid var(--both);background:var(--both-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.95rem}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.5rem 0}
+  .exercise h3{margin-top:0}
+  .cards{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+  .card{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;border:1px solid var(--rule);background:var(--paper);
+    padding:.45rem .7rem;border-radius:8px;cursor:pointer;transition:.12s;position:relative}
+  .card:hover{border-color:var(--parrot)}
+  .card .sub{display:block;font-size:.7rem;color:var(--faint)}
+  .card.done{background:var(--accent-bg);border-color:var(--good);color:var(--good);cursor:default}
+  .card.done .num{position:absolute;top:-9px;left:-9px;background:var(--good);color:#fff;border-radius:99px;width:20px;height:20px;
+    display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700}
+  .card.bad{animation:shake .3s;border-color:var(--bad);background:#f6e7e4}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .fbline{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);min-height:1.2rem;margin-top:.5rem}
+  .fbline b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)} .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .qfb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);margin:.2rem 0 0;display:none}
+  .qfb.show{display:block}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:12rem}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;background:#fff7e6;border:1px solid #e6d8b8;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.4rem">📦 <b>Archived lesson</b> — kept from the pre-course personal arc; some facts predate the DB→IAP→WAZO refactor. The up-to-date version is <a href="../0003-sip-call-lifecycle.html">Lesson 3 · The SIP call lifecycle</a> · <a href="../../index.html">🦜 course home</a>.</div>
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP · Lesson 2 of the arc</div>
+  <h1>The SIP call lifecycle</h1>
+  <p class="lede">What actually travels on the signaling lane — from "I'm online" to "goodbye" — in plain words first, then the real SIP names.</p>
+  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Trace a call hop-by-hop and name every message</span><span>↩ builds on Lesson 1 (two planes)</span></div>
+</header>
+
+<div class="kidbox">
+  <span class="tag">Start simple 🧒</span>
+  <p style="margin:.4rem 0 0">Imagine you want to talk to your friend <strong>Sara</strong> through a hotel with a <strong>front desk operator</strong>. Three things have to happen, in order:</p>
+  <ol style="margin:.5rem 0 0">
+    <li>You tell the front desk <em>"I'm in room 12, send my calls here."</em></li>
+    <li>You ask <em>"please connect me to Sara"</em> — her phone rings — she picks up — you both say "ok!"</li>
+    <li>You <strong>talk</strong>. When you're done, someone says <em>"bye"</em> and the line drops.</li>
+  </ol>
+  <p style="margin:.5rem 0 0">That's a phone call. <strong>SIP</strong> is just the polite back-and-forth that arranges steps 1, 2 and the goodbye. The actual <em>talking</em> in step 3 is the <strong>media plane</strong> from Lesson 1 — a different lane entirely.</p>
+</div>
+
+<h2>The whole conversation, as a picture</h2>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  actor You as You (softphone)
+  participant PBX as 🏢 PBX (front desk)
+  actor Sara
+  Note over You,PBX: 1 — say where you are
+  You->>PBX: I am online, ring me here
+  PBX-->>You: noted
+  Note over You,Sara: 2 — set up the call
+  You->>PBX: connect me to Sara (I speak Opus)
+  PBX->>Sara: call for you (they speak Opus)
+  Sara-->>PBX: ringing...
+  PBX-->>You: ring ring (you hear ringback)
+  Sara-->>PBX: hello (I will speak Opus too)
+  PBX-->>You: Sara answered
+  You->>PBX: great, got it
+  Note over You,Sara: 3 — now you actually talk = MEDIA plane (Lesson 1)
+  You->>PBX: bye
+  PBX-->>You: line dropped
+</pre>
+<figcaption>Every arrow except the "talk" step is signaling (SIP). The talking itself rides the other lane (RTP/SRTP).</figcaption>
+</figure>
+
+<h2>Now the real words 🧑‍💼</h2>
+<p>Each plain sentence above has an official SIP name. Same conversation, professional vocabulary — this is the language your colleagues will actually use:</p>
+
+<table>
+  <thead><tr><th>Plain words</th><th>SIP message</th><th>Lane</th></tr></thead>
+  <tbody>
+    <tr><td>"I'm online — ring me here"</td><td><strong>REGISTER</strong></td><td><span class="pill p-sig">signaling</span></td></tr>
+    <tr><td>"Connect me to Sara (here are my codecs)"</td><td><strong>INVITE</strong> + <code>SDP</code> offer</td><td><span class="pill p-sig">signaling</span></td></tr>
+    <tr><td>"Her phone is ringing"</td><td><strong>180 Ringing</strong></td><td><span class="pill p-sig">signaling</span></td></tr>
+    <tr><td>"She picked up (here's my codec)"</td><td><strong>200 OK</strong> + <code>SDP</code> answer</td><td><span class="pill p-sig">signaling</span></td></tr>
+    <tr><td>"Great, got it — we're connected"</td><td><strong>ACK</strong></td><td><span class="pill p-sig">signaling</span></td></tr>
+    <tr><td><em>the actual talking</em></td><td><strong>RTP / SRTP</strong></td><td><span class="pill p-med">media</span></td></tr>
+    <tr><td>"Bye" (hang up)</td><td><strong>BYE</strong> (or <strong>CANCEL</strong> before answer)</td><td><span class="pill p-sig">signaling</span></td></tr>
+  </tbody>
+</table>
+
+<p>Two ideas worth pocketing:</p>
+<ul>
+  <li><strong>SDP is the codec handshake.</strong> The INVITE carries an <em>offer</em> ("I can speak Opus or G.711, send audio to this IP:port"); the 200 OK carries the <em>answer</em> ("let's use Opus"). That's how both sides agree where the audio lane goes.<a class="cite" href="https://www.rfc-editor.org/rfc/rfc3261.html" title="RFC 3261">RFC&nbsp;3261</a></li>
+  <li><strong>183 Session Progress</strong> is 180's cousin: it means "early media" — you hear a real announcement <em>before</em> answer ("the number you dialled is disconnected"). Same lane, just audio arriving early.</li>
+</ul>
+
+<h2>The same call, in <em>our</em> stack</h2>
+<p>Remember from Lesson 1 that the "PBX" is really two programs. Here's who carries those SIP messages in Parrot: the browser talks <strong>SIP over WSS</strong> to <strong>Kamailio</strong> (the edge), which passes them to <strong>Asterisk</strong> (the engine):</p>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  participant B as Softphone (browser)
+  participant K as Kamailio (edge, proxy)
+  participant A as Asterisk (engine, B2BUA)
+  participant T as Telnyx to PSTN
+  B->>K: INVITE over SIP/WSS
+  K->>A: INVITE (just forwards it)
+  A->>T: INVITE out the trunk
+  T-->>A: 200 OK
+  A-->>K: 200 OK
+  K-->>B: 200 OK
+  Note over B,T: then audio flows on the media lane (rtpengine - Telnyx)
+</pre>
+<figcaption>Kamailio <em>forwards</em> the messages (a proxy); Asterisk <em>runs</em> the call (a B2BUA). Exactly the L1 split, now in motion.</figcaption>
+</figure>
+
+<div class="codehook">
+  <strong>🔌 Where this lives in our code.</strong> When we fixed the wrong-caller-ID bug (Telnyx error D35), the fix was to add a <code>P-Asserted-Identity</code> header <em>onto the outbound INVITE</em> in <code>user_agent.js</code>. So "set the caller ID" literally means "put another line inside the INVITE message." Now that you can see the INVITE in the lifecycle, that fix has a home. <span class="cite">(Wazo Architecture Session §1)</span>
+</div>
+
+<!-- ===== INTERACTIVE 1: order the call ===== -->
+<div class="exercise" id="ex-order">
+  <h3>① Build the call — click the steps in order</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">From a cold start to hang-up. Click them in the right sequence; a wrong click shakes and tells you what comes next.</p>
+  <div class="cards" id="order-cards"></div>
+  <div class="fbline" id="order-fb"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2: quiz ===== -->
+<div class="exercise" id="ex-quiz">
+  <h3>② Three quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (watch / read one)</div>
+  <p style="margin:.3rem 0 0">For a friendly visual of a real SIP call, the <a href="https://en.wikipedia.org/wiki/Session_Initiation_Protocol">Wikipedia "Session Initiation Protocol"</a> diagram is a good 5-minute read. For ground truth, <a href="https://www.rfc-editor.org/rfc/rfc3261.html">RFC&nbsp;3261 §4 ("Overview of Operation")</a> walks the exact INVITE/200/ACK/BYE dance with a worked example.</p>
+</div>
+
+<div class="ask">
+  <b>I'm your teacher — interrupt me.</b> Try: "show me a real INVITE message line by line," "what's actually inside SDP?", "where does Kamailio decide where to send the INVITE?", or "what happens to this diagram for an <em>incoming</em> call from the outside world?" Ask and I'll draw it.
+</div>
+
+<div class="links">
+  <a href="../../reference/glossary.html">📑 Glossary</a>
+  <a href="../../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+  <a href="./0001-two-planes-signaling-vs-media.html">↩ Lesson 1 · The two planes</a>
+</div>
+
+<div class="nav-foot">
+  <a href="./0001-two-planes-signaling-vs-media.html"><span class="lbl">← Previous</span>Lesson 1 · The two planes</a>
+  <a href="#" onclick="return false" title="Coming next session"><span class="lbl">Next →</span>Lesson 3 · One whole call, end to end<br><span style="color:var(--faint);font-weight:400">inbound + outbound across all five players.</span></a>
+</div>
+
+</div>
+
+<script src="../../vendor/mermaid.min.js"></script>
+<script>
+  if(window.mermaid){ mermaid.initialize({startOnLoad:true, theme:"neutral", securityLevel:"loose", sequence:{mirrorActors:false}}); }
+</script>
+<script>
+/* ---------- Interactive 1: order the call ---------- */
+const STEPS=[
+  {order:1, label:'REGISTER', sub:'I am online, ring me here'},
+  {order:2, label:'INVITE (+SDP offer)', sub:'connect me to Sara, my codecs'},
+  {order:3, label:'180 Ringing', sub:'her phone is ringing'},
+  {order:4, label:'200 OK (+SDP answer)', sub:'she picked up, her codec'},
+  {order:5, label:'ACK', sub:'great, got it, connected'},
+  {order:6, label:'RTP / SRTP audio', sub:'now you actually talk (media)'},
+  {order:7, label:'BYE', sub:'hang up, drop the line'}
+];
+const order=[...STEPS].sort((a,b)=> (a.label.length*7+a.order*13)%5 - (b.label.length*7+b.order*13)%5 ); // deterministic shuffle
+const cardsEl=document.getElementById('order-cards');
+const ofb=document.getElementById('order-fb');
+let expected=1;
+order.forEach(s=>{
+  const c=document.createElement('button'); c.className='card';
+  c.innerHTML='<span>'+s.label+'</span><span class="sub">'+s.sub+'</span>';
+  c.onclick=()=>{
+    if(c.classList.contains('done')) return;
+    if(s.order===expected){
+      c.classList.add('done');
+      const n=document.createElement('span'); n.className='num'; n.textContent=expected; c.appendChild(n);
+      expected++;
+      if(expected>STEPS.length){ ofb.innerHTML='<b>✓ Perfect — that is a full SIP call.</b> Notice step 6 is the only one on the media lane. 🦜'; }
+      else { ofb.innerHTML='Good. Next: <b>'+STEPS[expected-1].sub+'</b>'; }
+    } else {
+      c.classList.add('bad'); setTimeout(()=>c.classList.remove('bad'),320);
+      ofb.innerHTML='Not yet — we still need: <b>'+STEPS[expected-1].sub+'</b> ('+STEPS[expected-1].label+')';
+    }
+  };
+  cardsEl.appendChild(c);
+});
+
+/* ---------- Interactive 2: quiz ---------- */
+const QUIZ=[
+  {stem:'Which message carries the codec offer (where the audio should go)?',
+   choices:[
+     {t:'The INVITE — it carries the SDP offer describing codecs and ports', ok:true},
+     {t:'The REGISTER — it tells the server which codecs you will use', ok:false},
+     {t:'The 180 Ringing — it announces the chosen codec to the caller', ok:false},
+     {t:'The BYE — it confirms which codec the two sides finally used', ok:false}
+   ],
+   why:'INVITE + SDP offer proposes the media; the 200 OK + SDP answer accepts it.'},
+  {stem:'You hear ringback (the "brrr-brrr") BEFORE the other side answers. Which message?',
+   choices:[
+     {t:'180 Ringing — a provisional reply sent before the 200 OK answer', ok:true},
+     {t:'200 OK — the final reply that means the callee has answered now', ok:false},
+     {t:'ACK — the caller confirming the call is fully connected already', ok:false},
+     {t:'REGISTER — the phone announcing its location to the SIP server', ok:false}
+   ],
+   why:'180 Ringing (or 183 for early media) is provisional — it precedes the 200 OK.'},
+  {stem:'In our stack, the browser sends its INVITE first to which component?',
+   choices:[
+     {t:'Kamailio — the SIP edge that terminates the WSS and forwards it', ok:true},
+     {t:'Asterisk — the call engine, which the browser connects to directly', ok:false},
+     {t:'rtpengine — because the media must be set up before any signaling', ok:false},
+     {t:'Telnyx — the carrier receives the browser INVITE before the PBX', ok:false}
+   ],
+   why:'Browser → Kamailio (edge, over SIP/WSS) → Asterisk (engine). The L1 split, in motion.'}
+];
+const quizEl=document.getElementById('quiz'); let qDone=0,qRight=0;
+QUIZ.forEach((q,i)=>{
+  const wrap=document.createElement('div'); wrap.className='q';
+  const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+  const fb=document.createElement('div'); fb.className='qfb'; fb.id='qfb'+i;
+  q.choices.forEach(c=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+    b.onclick=()=>{
+      if(wrap.dataset.done) return; wrap.dataset.done='1'; qDone++;
+      if(c.ok){b.classList.add('correct'); qRight++;}
+      else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+      [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent='Score: '+qRight+'/'+QUIZ.length+'. '+(qRight===QUIZ.length?'You can narrate a call now. 🦜':'Revisit the picture above for the one you missed.');
+    };
+    wrap.appendChild(b);
+  });
+  wrap.appendChild(fb); quizEl.appendChild(wrap);
+});
+</script>
+</body>
+</html>

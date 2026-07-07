@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 13 · Following the money — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 13 of 13</div>
+  <h1>Following the money</h1>
+  <p class="lede">A nameless receipt arrives after every call. Twice-bridged, once-charged, never doubled — here's how.</p>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: trace one call.cost event from Telnyx to a cost line, naming every invariant</span><span>🧩 Builds on: Lessons 7, 9</span></div>
+</header>
+
+<p>Picture the shop one last time. It buys phone service <strong>wholesale</strong> from the phone
+company (Telnyx) and bills you <strong>retail</strong> (IAP credits, with a markup). But the phone
+company's receipts are maddening: they arrive <em>after</em> you hang up, they carry
+<strong>no name</strong> — no "from", no "to", just a cost — and if the mail truck hiccups, the
+same receipt shows up <strong>twice</strong>. A 12-year-old running this shop would double-charge
+someone by Friday. This lesson is how Parrot's shop never does: every receipt finds its owner,
+lands exactly once on the customer's tab, and never gets lost — even when everything retries.</p>
+
+<h2>One call becomes one charge</h2>
+
+<figure>
+<div class="mermaid">
+sequenceDiagram
+    participant T as Telnyx 🌍
+    participant S as IAP shop 🏪
+    participant I as IAP credits 🫙
+    participant E as Enterprise DB 🗄️
+    Note over T,S: during the call
+    T->>S: call.initiated / answered / hangup (Ed25519-signed)
+    S->>S: record correlation row —<br/>call_control_id → client, from/to, direction (12 h)
+    Note over T,S: after hangup
+    T->>S: call.cost — ANONYMOUS (no from/to, no client)
+    S->>S: join by call_control_id<br/>(no client resolvable yet ⇒ reply 503, Telnyx redelivers)
+    S->>S: keep sip-trunking parts only × markup (≥ 1), 4 dp<br/>zero after filtering ⇒ swallowed
+    S->>E: forward HMAC-signed (data + meta)
+    S->>S: UNIQUE(event_id) row gates the charge —<br/>payment._reserve, UNIQUE(reference_type, reference_id)
+    S->>I: capture with allow_negative_balance=True (post-paid)
+    E->>E: voip.call.cost.line (dedupe by event_id)<br/>then heuristic match to its voip.call
+</div>
+<figcaption>The money pipeline. Left half is the shop bridging the first identifier gap;
+the last line is the enterprise bridging the second.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide §12 — Paying the bill">§12</a></figcaption>
+</figure>
+
+<p>Walk it hop by hop, in the receipts language:</p>
+<ol>
+  <li><strong>The shop keeps a guest book.</strong> During the call, Telnyx sends lifecycle events
+    (<code>call.initiated/bridged/answered/hangup</code>), Ed25519-signature-verified. They are never forwarded —
+    each just records a <code>phone_service.telnyx.call</code> row mapping <code>call_control_id</code> →
+    client + from/to/direction. The client is found via the DID (your number is <code>from</code> on outgoing,
+    <code>to</code> on incoming). Rows are garbage-collected after 12 hours.<a class="cite" href="../reference/onboarding.html" title="Onboarding §12 step 1; utils/telnyx_events.py">§12</a></li>
+  <li><strong>The anonymous receipt arrives.</strong> After hangup, the sip-trunking <code>call.cost</code>
+    event lands — no parties, no client, just a cost keyed by <code>call_control_id</code>. The shop joins it
+    to the guest book. If no client is resolvable yet, it answers <strong>503</strong> — Telnyx redelivers
+    later. No local retry queue was built; the carrier already has one.</li>
+  <li><strong>Retail pricing.</strong> Only <code>sip-trunking</code> cost parts are customer-billable
+    (<code>_CUSTOMER_BILLABLE_CALL_PARTS</code>); anything else is absorbed by Odoo. Each kept part is
+    multiplied by the markup ICP (floored at 1.0) and the total rounded to 4 decimals. Zero after
+    filtering ⇒ swallowed end-to-end: not forwarded, not charged.</li>
+  <li><strong>Charge exactly once.</strong> One <code>phone_service.webhook.event</code> row per
+    <code>event_id</code> (UNIQUE + savepoint) gates everything: only a fresh event forwards the
+    HMAC-signed payload and calls <code>payment._reserve(client, "call_cost", event_id, …)</code> —
+    itself protected by <code>UNIQUE(reference_type, reference_id)</code>. A redelivered receipt hits the
+    unique key and does nothing.</li>
+  <li><strong>The capture always lands.</strong> Call costs are <strong>post-paid</strong>: the IAP capture
+    passes <code>allow_negative_balance=True</code>, so it succeeds even into a negative balance, flagging
+    the payment <code>overdrawn</code>. The minutes were already consumed — refusing wouldn't undo the call.</li>
+  <li><strong>The enterprise's copy.</strong> The forwarded event hits <code>/voip/api/event</code>
+    (HMAC-verified), which dedupes by <code>event_id</code> and creates a <code>voip.call.cost.line</code>
+    storing the <strong>marked-up</strong> credits — the customer's price, never Telnyx's.</li>
+</ol>
+
+<h2>The identifier gap, bridged twice</h2>
+
+<div class="big-idea"><strong>Big idea: nobody in this pipeline shares an id, so the id gets rebuilt twice.</strong>
+The Telnyx billing leg, the Wazo call your PBX handled, and the Odoo call record are three worlds
+that never exchanged a common key. The shop bridges gap one <em>deterministically</em>; the
+enterprise bridges gap two <em>heuristically</em> — and both are deliberate designs, not bugs.</div>
+
+<div class="planes">
+  <div class="plane sig"><h4>Bridge 1 — shop side (exact)</h4>
+    <ul><li>Anonymous <code>call.cost</code> ↔ guest book, joined on <code>call_control_id</code></li>
+    <li>Works because Telnyx stamps <em>its own</em> id on both the lifecycle events and the cost event</li>
+    <li>Failure mode: correlation row missing ⇒ 503 ⇒ Telnyx redelivers within the 12 h window</li></ul></div>
+  <div class="plane med"><h4>Bridge 2 — enterprise side (best-effort)</h4>
+    <ul><li>Cost line ↔ <code>voip.call</code>: direction + last-9-digit number match + time window</li>
+    <li>Multiple candidates ⇒ closest end-time wins (with a warning log)</li>
+    <li>No match ⇒ orphan; a 30-min cron re-matches orphans up to 24 h old</li></ul></div>
+</div>
+
+<p>Why can't bridge 2 be exact? Telnyx bills its own leg of the call, identified by <code>call_control_id</code>. The call your enterprise recorded is the <em>Wazo/SIP</em> conversation — born on the PBX, with its own SIP identifiers. Nothing in the SIP exchange carries the Telnyx id back, and nothing in the cost event carries the SIP one forward. So the enterprise matches on the only shared physics: the same two numbers talked in the same direction at about the same time (<code>occurred_at − billed seconds − 5 min … occurred_at + 1 min</code>). The orphan cron exists mostly for one race: the cost webhook can land <em>before</em> the call record even exists.<a class="cite" href="../reference/onboarding.html" title="Onboarding §12 step 5; voip/models/voip_call_cost_line.py">§12</a></p>
+
+<h2>When the charge fails: retries and the bouncer</h2>
+
+<p>A capture can fail (IAP down, transient errors). The <strong>recover-payments cron</strong> (every 10 min) retries pending payments older than 10 min and failed ones whose <code>next_attempt_at</code> has passed, with <strong>exponential backoff</strong>: 30 min × 2<sup>tries</sup>, capped at 1 day. At ≥ 5 tries the client counts as <strong>delinquent</strong>. Enforcement is a separate robot: the <strong>reconcile cron</strong> (every minute) recomputes the "disabled" intent from the <em>live</em> IAP balance — falling back to the overdrawn/delinquent snapshots when IAP is unreachable — and drives reality to match: Telnyx connection detached (inbound goes dead), tenant trunk unbound, numbers suspended. Re-enabling is symmetric: balance back ≥ 0 flips <code>suspended → active</code>. Numbers still suspended on the 25th are released. Monthly number fees ride the <em>same</em> payment ledger; a rotation cursor spreads that cron's load across clients.<a class="cite" href="../reference/onboarding.html" title="Onboarding §12 flowchart + §15 robots">§12,§15</a></p>
+
+<div class="callout"><strong>Design taste worth copying:</strong> nowhere in this pipeline is there a
+home-grown retry queue for webhooks. Failure ⇒ non-2xx ⇒ the <em>sender</em> redelivers; unique keys
+absorb the replays. The retry machinery you don't build is the retry machinery you never debug.</div>
+
+<h2>The money invariants</h2>
+
+<table>
+  <tr><th>Invariant</th><th>Enforced by</th></tr>
+  <tr><td>"Charged to the client" ⇒ "charged to us by Telnyx"</td><td>Ordering: Telnyx DELETE <em>before</em> local <code>released</code>; final month billed <em>before</em> a drift-release<a class="cite" href="../reference/onboarding.html" title="Doctrine comment, iap phone_service_number.py:63-107">№.py</a></td></tr>
+  <tr><td>One payment per receipt, ever</td><td><code>UNIQUE(reference_type, reference_id)</code> on <code>phone_service.payment</code></td></tr>
+  <tr><td>One event row per hop</td><td><code>UNIQUE(event_id)</code> on <code>phone_service.webhook.event</code> <em>and</em> on <code>voip.call.cost.line</code></td></tr>
+  <tr><td>Zero-cost events never surface</td><td>Dropped after markup filtering — not forwarded, not charged, no line</td></tr>
+</table>
+
+<p>Two enterprise-side finishing touches: <code>voip.call.cost</code> is simply the sum of its cost lines, <code>cost_display</code> renders empty (not "0.0000 Credits") when zero, and every cost field is visible to VoIP admins only. And when a customer genuinely runs out of credits at purchase time, the shop's error arrives as a stable <code>insufficient_credits</code> key that the enterprise maps to a translated message — never the server's raw English text.</p>
+
+<div class="codehook">
+  <div class="kicker">⌨️ Where this lives in our code</div>
+  <p style="margin:.4rem 0 0"><strong>IAP shop</strong> (<code>iap-apps/…/phone_service/</code>):
+  <code>utils/telnyx_events.py</code> (enrichment + 503), <code>models/phone_service_webhook_event.py</code>
+  (<code>_deliver_and_charge</code>, markup, event dedupe), <code>models/phone_service_payment.py</code>
+  (<code>_reserve</code>, <code>_mark_failed</code> backoff), <code>models/phone_service_client.py</code>
+  (reconcile/enforcement), <code>models/phone_service_telnyx_call.py</code> (guest book).
+  <strong>Enterprise</strong>: <code>voip/models/voip_call_cost_line.py</code> (<code>_match_call</code>
+  heuristic + orphan cron), <code>voip/models/phone_service_api.py</code> (event intake).</p>
+</div>
+
+<div class="exercise">
+  <h3>🧩 Put the money pipeline in order</h3>
+  <p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;color:var(--muted)">Click the hops in the order they happen for one call.</p>
+  <div id="orderer"></div>
+  <div class="score" id="orderer-score"></div>
+</div>
+
+<div class="exercise">
+  <h3>🧠 Three whys</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><strong>Onboarding Guide §12 — "Story 8: Paying the bill"</strong>: the
+  flowchart plus the six-step "how a call becomes a charge" walkthrough this lesson traced. Then read
+  one comment in the code: the state-doctrine block at the top of the shop's
+  <code>phone_service_number.py</code> — the "charged to the client ⇒ charged to us" rule and the
+  Telnyx-before-local release ordering, in the author's own words.</p>
+</div>
+
+<div class="big-idea">
+  <strong>🦜 You made it.</strong> Thirteen lessons ago, "Odoo becomes a phone company" was a sentence.
+  Now you can trace all three of its stories end-to-end: a number gets <em>bought</em> (shop → Telnyx →
+  tenant), a call gets <em>carried</em> (SIP signaling, Wazo routing, inbound and outbound), and the
+  minutes get <em>billed</em> (anonymous receipt → exactly-one charge → cost line on the call). Two
+  spaced-retrieval moves before you close this tab: re-take the <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1 sorter</a> <em>from memory</em>,
+  and ask your agent for a mock design-discussion drill — defend the 503-redelivery choice and the
+  heuristic matcher against a skeptical reviewer.
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me where the markup ICP is read", "quiz me again, harder", "walk me through
+  <code>_deliver_and_charge</code> line by line". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0012-leaving-a-message-voicemail.html"><span class="lbl">← Previous</span>Lesson 12 · Leaving a message</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="../index.html"><span class="lbl">Finish →</span>Course complete → back to the map 🦜</a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+/* makeSorter(containerId, scoreId, planesArr, itemsArr)
+   planesArr: [{k:'sig',label:'Signaling'},...]   itemsArr: [{name, ans:'sig', why:'<b>..</b> ..'},...] */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+/* makeQuiz(containerId, scoreId, quizArr)
+   quizArr: [{stem, choices:[{t, ok}], why}] — keep every choice the SAME length (no format clues). */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+/* makeOrderer(containerId, scoreId, stepsArr) — "put the hops in order" exercise.
+   stepsArr: array of step strings in CORRECT order; they are shown shuffled. */
+function makeOrderer(containerId, scoreId, STEPS){
+  const el = document.getElementById(containerId);
+  const shuffled = STEPS.map((s,i)=>({s,i})).sort((a,b)=> (a.s.length%3 - b.s.length%3) || (b.i - a.i));
+  let expected = 0;
+  const status = document.getElementById(scoreId);
+  shuffled.forEach(({s,i})=>{
+    const b=document.createElement('button'); b.className='choice'; b.style.display='block'; b.style.width='100%';
+    b.textContent=s; b.dataset.idx=i;
+    b.onclick=()=>{
+      if(b.disabled) return;
+      if(+b.dataset.idx===expected){ b.classList.add('correct'); b.disabled=true; b.textContent=(expected+1)+'. '+s; expected++;
+        if(expected===STEPS.length) status.textContent='All '+STEPS.length+' hops in order. Locked in. 🦜';
+      } else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 600);
+        status.textContent='Not yet — which hop must happen before that one?'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+makeOrderer('orderer','orderer-score',[
+  'Lifecycle events recorded: call_control_id → client + from/to (12 h guest book)',
+  'The anonymous call.cost arrives after hangup — no from, no to, no client on it',
+  'Joined to its correlation row by call_control_id (no client yet ⇒ answer 503)',
+  'Filtered to sip-trunking parts and marked up (ICP ≥ 1), rounded to 4 decimals',
+  'Forwarded HMAC-signed and charged once (UNIQUE event_id gates the payment)',
+  'Enterprise dedupes by event_id and stores the marked-up credits as a cost line',
+  'Cost line heuristically attached to its voip.call (closest end-time wins)'
+]);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'A call.cost arrives but the shop cannot resolve a client for it yet. Why answer 503 instead of parking the event in a local retry queue?',
+   choices:[
+     {t:'Telnyx already redelivers on any non-2xx reply, so the carrier is the queue', ok:true},
+     {t:'A 503 makes Telnyx drop the event, so unattributable costs simply disappear', ok:false},
+     {t:'Local queue tables cannot hold payloads as large as the ones Telnyx delivers', ok:false},
+     {t:'The 503 path skips signature checks, letting delayed events through quicker', ok:false}],
+   why:'Failure ⇒ non-2xx ⇒ the sender redelivers, and UNIQUE(event_id) absorbs every replay. The shop gets retries with backoff for free — no queue table, no cron, nothing to babysit.'},
+  {stem:'Why does the call-cost capture pass allow_negative_balance=True instead of refusing when credits run out?',
+   choices:[
+     {t:'Calls are post-paid: the minutes were consumed, so the charge must always land', ok:true},
+     {t:'IAP rejects captures below a minimum amount and this flag disables that check', ok:false},
+     {t:'Blocking at zero would also block the monthly fees and break number ownership', ok:false},
+     {t:'The balance lookup is too slow to run inside the webhook request lifecycle', ok:false}],
+   why:'Telnyx will bill Odoo for those minutes regardless — refusing the capture would not undo the call, it would just lose the record. So the charge lands, overdrawn is flagged, and enforcement (disable, suspend) happens asynchronously via the reconcile cron.'},
+  {stem:'Why does the enterprise attach cost lines to calls heuristically (direction + number suffix + time window) rather than by an exact key?',
+   choices:[
+     {t:'Telnyx and the Wazo call never exchange ids, so there is no shared key to join', ok:true},
+     {t:'An exact match needs an index that the enterprise schema deliberately omits', ok:false},
+     {t:'Heuristic scans outperform key lookups at the scale of enterprise calling', ok:false},
+     {t:'The event_id changes between redeliveries, so exact joins would drop rows', ok:false}],
+   why:'The billing leg is identified by call_control_id; the recorded call by Wazo/SIP ids. Neither crosses over. Best-effort matching — last 9 digits + time window, closest end-time wins, orphan-rematch cron — is the deliberate design, logging a warning whenever it has to guess.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

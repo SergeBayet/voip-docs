@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrot VoIP — Glossary (canonical vocabulary)</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3;
+    --paper:#fbf9f4; --parrot:#1a7a4c; --parrot-deep:#0f5a37;
+    --sig:#1f6f8b; --med:#b5532a; --accent-bg:#eef3ec;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:3.2rem 1.4rem 5rem}
+  header.doc{border-bottom:2px solid var(--ink); padding-bottom:1rem; margin-bottom:1.6rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif; text-transform:uppercase; letter-spacing:.16em;
+    font-size:.7rem; color:var(--parrot); font-weight:700}
+  h1{font-size:2.05rem; line-height:1.1; margin:.35rem 0 .3rem}
+  .sub{color:var(--muted); font-size:1.02rem; margin:0}
+  nav.toc{font-family:ui-sans-serif,system-ui,sans-serif; font-size:.82rem; margin:1.4rem 0 0;
+    display:flex; flex-wrap:wrap; gap:.4rem .7rem}
+  nav.toc a{color:var(--parrot-deep); text-decoration:none; border:1px solid var(--rule);
+    padding:.22rem .55rem; border-radius:99px; background:#fff}
+  nav.toc a:hover{border-color:var(--parrot); background:var(--accent-bg)}
+  section{margin:2.4rem 0 0}
+  h2{font-size:1.28rem; margin:0 0 .2rem; padding-top:.6rem; border-top:1px solid var(--rule)}
+  h2 .em{font-family:ui-sans-serif,system-ui,sans-serif; font-size:.66rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); font-weight:700; margin-left:.5rem; vertical-align:.18em}
+  dl{margin:.9rem 0 0}
+  dt{font-weight:700; margin-top:1rem; font-size:1.02rem}
+  .tag{font-family:ui-sans-serif,system-ui,sans-serif; font-size:.62rem; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; padding:.12rem .42rem; border-radius:99px; vertical-align:.12em; margin-left:.45rem}
+  .t-sig{color:var(--sig); background:#e8f1f4}
+  .t-med{color:var(--med); background:#f6ebe3}
+  .t-both{color:#5a4b86; background:#eee9f5}
+  .t-ctrl{color:var(--parrot-deep); background:var(--accent-bg)}
+  dd{margin:.15rem 0 0; color:#2a2722}
+  dd code,p code,li code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:.82em;
+    background:#f0ece3; padding:.05rem .3rem; border-radius:4px}
+  .note{background:#fff; border:1px solid var(--rule); border-left:3px solid var(--parrot);
+    padding:.8rem 1rem; border-radius:4px; margin:1.1rem 0; font-size:.96rem; color:var(--muted)}
+  footer{margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule);
+    font-family:ui-sans-serif,system-ui,sans-serif; font-size:.8rem; color:var(--faint)}
+  footer a{color:var(--parrot-deep)}
+  .legend{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;color:var(--muted);margin:.8rem 0 0;display:flex;gap:.8rem;flex-wrap:wrap}
+  @media print{ body{background:#fff} nav.toc{display:none} .wrap{padding:0} a{color:var(--ink);text-decoration:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="doc">
+  <div class="kicker">🦜 Parrot VoIP · Reference</div>
+  <h1>Glossary — the canonical vocabulary</h1>
+  <p class="sub">One source of truth for the words we use across every lesson. Each term is tagged with the <strong>plane</strong> it lives on, so the vocabulary itself teaches the architecture.</p>
+  <nav class="toc" style="margin:1rem 0 0"><a href="../index.html">🦜 Course home</a><a href="./onboarding.html">📘 Onboarding Guide</a></nav>
+  <div class="legend">
+    <span><span class="tag t-sig">signaling</span> control: "ring, who, what codec, bye"</span>
+    <span><span class="tag t-med">media</span> the actual audio bytes</span>
+    <span><span class="tag t-both">both</span> touches each plane</span>
+    <span><span class="tag t-ctrl">config</span> management / REST, not a live call</span>
+  </div>
+  <nav class="toc">
+    <a href="#players">The five players</a>
+    <a href="#planes">The two planes</a>
+    <a href="#sip">SIP signaling</a>
+    <a href="#media">Media &amp; WebRTC</a>
+    <a href="#pbx">Kamailio · Asterisk · Wazo</a>
+    <a href="#telnyx">Telnyx</a>
+    <a href="#odoo">Odoo · IAP</a>
+  </nav>
+</header>
+
+<section id="players">
+  <h2>The five players <span class="em">who is in the room</span></h2>
+  <dl>
+    <dt>Softphone <span class="tag t-both">both</span></dt>
+    <dd>The dialer running as JS (SIP.js + WebRTC) inside the Odoo browser tab. Speaks <strong>SIP over WSS</strong> for signaling and <strong>WebRTC/SRTP</strong> for audio. Your handset.</dd>
+    <dt>enterprise <code>voip</code> module <span class="tag t-ctrl">config</span></dt>
+    <dd>The customer's Odoo DB: numbers, extensions, groups, queues, voicemail, call log, the buy-number wizard. Holds <em>zero</em> Telnyx or Wazo credentials — it asks the shop for outcomes (<code>/api/phone_service/1/pbx/&lt;op&gt;</code>). Your office.</dd>
+    <dt>IAP <code>phone_service</code> <span class="tag t-ctrl">config</span></dt>
+    <dd>Odoo-hosted broker ("the shop"). The <em>only</em> holder of Telnyx + Wazo master keys. Buys DIDs, bills in IAP credits, provisions tenants.</dd>
+    <dt>Wazo PBX <span class="tag t-both">both</span></dt>
+    <dd>Self-hosted IPBX = <strong>Asterisk + Kamailio + rtpengine</strong> + Python microservices. One server, one isolated <em>tenant</em> per customer. The switchboard.</dd>
+    <dt>Telnyx <span class="tag t-both">both</span></dt>
+    <dd>The carrier (CPaaS). Owns the real phone numbers and the wire to the worldwide phone network (PSTN). The phone company.</dd>
+  </dl>
+  <div class="note">Golden rules: the customer DB <strong>never</strong> talks to Telnyx (and never shows the word "Telnyx" in its UI) — and since the DB→IAP→WAZO refactor it never talks to Wazo either; the only direct customer↔PBX link is the browser's SIP/WSS media channel. In customer-facing code the PBX is called only "Odoo PBX". <em>(Onboarding §2)</em></div>
+</section>
+
+<section id="planes">
+  <h2>The two planes <span class="em">the spine of everything</span></h2>
+  <dl>
+    <dt>Control plane (signaling) <span class="tag t-sig">signaling</span></dt>
+    <dd>The negotiation: who is calling whom, ring it, what codec, hang up. Carried by <strong>SIP</strong>. Small text messages. Routes through proxies. <em>(RFC 3261)</em></dd>
+    <dt>Media plane <span class="tag t-med">media</span></dt>
+    <dd>The actual voice: a stream of audio packets (<strong>RTP</strong>, encrypted = <strong>SRTP</strong>). Takes its <em>own</em> path, usually more direct than the signaling. <em>(RFC 3261 separates the two.)</em></dd>
+    <dt>Config / management plane <span class="tag t-ctrl">config</span></dt>
+    <dd>Not part of a live call: REST + webhooks that set up users, numbers, dial rules, and report what happened (CDR). Odoo↔IAP↔Wazo live here.</dd>
+  </dl>
+</section>
+
+<section id="sip">
+  <h2>SIP signaling <span class="em">the language of "ring!"</span></h2>
+  <dl>
+    <dt>SIP <span class="tag t-sig">signaling</span></dt>
+    <dd>Session Initiation Protocol — the application-layer protocol that creates, modifies, and ends calls. <strong>Signaling only</strong>; it never carries audio. <em>(RFC 3261)</em></dd>
+    <dt>REGISTER <span class="tag t-sig">signaling</span></dt>
+    <dd>"I'm online — route my calls to me here." How the softphone tells the PBX where it is.</dd>
+    <dt>INVITE <span class="tag t-sig">signaling</span></dt>
+    <dd>"Start a call to X." Carries an <strong>SDP</strong> body proposing codecs/IPs/ports.</dd>
+    <dt>180 Ringing / 183 Session Progress <span class="tag t-sig">signaling</span></dt>
+    <dd>Provisional replies. 183 = early media (you hear ringback/announcements <em>before</em> answer).</dd>
+    <dt>200 OK / ACK <span class="tag t-sig">signaling</span></dt>
+    <dd>Answered, and the answer confirmed. The call is now up; media flows.</dd>
+    <dt>BYE / CANCEL <span class="tag t-sig">signaling</span></dt>
+    <dd>Hang up — after answer (BYE) or before (CANCEL).</dd>
+    <dt>SDP <span class="tag t-sig">signaling</span></dt>
+    <dd>Session Description Protocol — the body inside SIP messages listing codecs, IP addresses and ports. It's how the two sides agree on the <em>media</em> details.</dd>
+    <dt>SIP proxy <span class="tag t-sig">signaling</span></dt>
+    <dd>Forwards SIP messages without terminating the session; media flows past it. Routing + security. <strong>Kamailio's role.</strong></dd>
+    <dt>B2BUA <span class="tag t-both">both</span></dt>
+    <dd>Back-to-Back User Agent — terminates one call leg and creates another, sitting in the middle of <em>both</em> signaling and media. Runs call logic (IVR, transfer, bridge). <strong>Asterisk's role.</strong></dd>
+    <dt>Registrar <span class="tag t-sig">signaling</span></dt>
+    <dd>The component that accepts REGISTERs and remembers where each user is. At scale this is Kamailio's job, not Asterisk's.</dd>
+  </dl>
+</section>
+
+<section id="media">
+  <h2>Media &amp; WebRTC <span class="em">the audio itself</span></h2>
+  <dl>
+    <dt>RTP / SRTP <span class="tag t-med">media</span></dt>
+    <dd>Real-time Transport Protocol — the audio packets over UDP. SRTP = the encrypted variant.</dd>
+    <dt>WebRTC <span class="tag t-med">media</span></dt>
+    <dd>The browser's umbrella media stack. Inside it: signaling rides SIP-over-WSS, keys are negotiated by DTLS, audio rides SRTP/UDP. <em>"WebRTC audio" and "SRTP over UDP" are the same thing at different precision.</em></dd>
+    <dt>DTLS-SRTP <span class="tag t-med">media</span></dt>
+    <dd>The handshake (over UDP) that negotiates the SRTP encryption keys.</dd>
+    <dt>ICE / STUN / TURN <span class="tag t-med">media</span></dt>
+    <dd>NAT traversal: the algorithm (ICE) to find a working path, a public-IP lookup (STUN), and a media relay of last resort (TURN, needed for symmetric NAT).</dd>
+    <dt>Opus / G.711 <span class="tag t-med">media</span></dt>
+    <dd>Codecs. Opus = modern, browsers. G.711 (µ-law/a-law) = PSTN standard. Different codecs on the two legs ⇒ <strong>transcoding</strong>.</dd>
+    <dt>rtpengine <span class="tag t-med">media</span></dt>
+    <dd>Wazo's media relay: shuttles and (when needed) transcodes the RTP/SRTP audio. The component that actually touches your voice.</dd>
+    <dt>Early media <span class="tag t-med">media</span></dt>
+    <dd>Audio before the call is answered (ringback, "number disconnected"). Signaled by 183.</dd>
+  </dl>
+  <div class="note"><strong>The "silent call" failure</strong> (connects, no audio) is almost always a <em>media-plane</em> problem: NAT, firewall, the wrong public IP in SDP, or a codec mismatch. Signaling works over TCP/443 like normal HTTPS; media needs the wide UDP RTP range (10000–20000) open. <em>(Wazo session §7, §06-ports)</em></div>
+</section>
+
+<section id="pbx">
+  <h2>Kamailio · Asterisk · Wazo internals <span class="em">inside the switchboard</span></h2>
+  <dl>
+    <dt>Kamailio <span class="tag t-sig">signaling</span></dt>
+    <dd>High-performance SIP proxy / registrar / router. <strong>No media.</strong> Terminates browser WSS, handles registrations at huge scale, and is the hardened public-facing SIP front door. The edge.</dd>
+    <dt>Asterisk <span class="tag t-both">both</span></dt>
+    <dd>The telephony engine (B2BUA). Runs the dialplan, IVR, voicemail, queues, transfers — the call <em>logic</em>. Orchestrates media (delegated to rtpengine in Wazo). The brain.</dd>
+    <dt>PJSIP <span class="tag t-sig">signaling</span></dt>
+    <dd>The modern SIP stack inside Asterisk (replaces the old <code>chan_sip</code>).</dd>
+    <dt>wazo-confd <span class="tag t-ctrl">config</span></dt>
+    <dd>Configuration DB + REST API: source of truth for users, lines, extensions, dial rules, queues. <strong>Odoo configures Wazo through this.</strong></dd>
+    <dt>wazo-calld <span class="tag t-ctrl">config</span></dt>
+    <dd>Runtime call control (originate, transfer, hangup) via ARI.</dd>
+    <dt>wazo-auth <span class="tag t-ctrl">config</span></dt>
+    <dd>Token issuance + multi-tenancy. The shop authenticates here with its <em>master</em> credential; every call it makes must explicitly declare its tenant scope (<code>Wazo-Tenant</code> header). Customers no longer receive Wazo tokens at all.</dd>
+    <dt>wazo-agentd <span class="tag t-ctrl">config</span></dt>
+    <dd>The queue-agent runtime API: login/logoff/pause an agent, read logged/paused status. Distinct from confd's agent <em>configuration</em>.</dd>
+    <dt>wazo-webhookd <span class="tag t-ctrl">config</span></dt>
+    <dd>Pushes event webhooks (call created/answered/ended, voicemail message created) — <strong>to the shop</strong>, authenticated by a per-tenant secret; the shop filters, renames and re-signs them for the customer DB. Wazo never calls the customer DB directly.</dd>
+    <dt>ARI / AMI / AGI <span class="tag t-ctrl">config</span></dt>
+    <dd>Three ways to control Asterisk from outside. <strong>Stasis</strong> = the handoff from the dialplan to an external app (e.g. Odoo) over ARI — our v2 "live CRM data at call time" escape hatch.</dd>
+    <dt>Tenant <span class="tag t-ctrl">config</span></dt>
+    <dd>One isolated customer space inside the one shared Wazo (own contexts, trunk, users). Isolation is logical, by <code>tenant_uuid</code> — not separate servers.</dd>
+    <dt>Dialplan <span class="tag t-sig">signaling</span></dt>
+    <dd>The rules for what happens when a call arrives (time conditions, routing, queues, voicemail). In Wazo it lives in wazo-confd's DB. Decision: Odoo 20 Callflow <strong>compiles</strong> to confd config (not live interpretation) for v1.</dd>
+    <dt>CDR / CEL <span class="tag t-ctrl">config</span></dt>
+    <dd>Call Detail Record / Channel Event Log — the "what happened" records that drive billing.</dd>
+  </dl>
+</section>
+
+<section id="telnyx">
+  <h2>Telnyx <span class="em">the carrier's vocabulary</span></h2>
+  <dl>
+    <dt>DID number <span class="tag t-ctrl">config</span></dt>
+    <dd>Direct Inward Dialing — a public E.164 number (<code>+3225551234</code>) bought from Telnyx, stored in <code>voip.did.number</code>.</dd>
+    <dt>SCC <span class="tag t-sig">signaling</span></dt>
+    <dd>SIP Connection / Credential Connection — Telnyx's trunking config. In the old Telnyx-direct world one SCC was shared by everyone (the spoofing risk that helped motivate Parrot); today the trunk runs Wazo↔Telnyx and customers are isolated per tenant.</dd>
+    <dt>CCA <span class="tag t-sig">signaling</span></dt>
+    <dd>Call Control Application — inbound routing config (so a call to your DID comes back to us).</dd>
+    <dt>OVP <span class="tag t-ctrl">config</span></dt>
+    <dd>Outbound Voice Profile — which caller-IDs and rate plans are allowed. A DID must be assigned here to be usable as caller-ID (fixes D51).</dd>
+    <dt>PAID / PPID / RPID / From <span class="tag t-sig">signaling</span></dt>
+    <dd>Caller-ID SIP headers, in Telnyx's priority order <strong>PPID &gt; PAID &gt; RPID &gt; From</strong>. In the old Telnyx-direct softphone, browser JS stamped <strong>P-Asserted-Identity</strong> onto the INVITE (the D35 fix — and a spoofing hole). In Parrot, caller identity is set <em>server-side</em> on the Wazo user's <code>outgoing_caller_id</code>; the headers are now the switchboard's business.</dd>
+    <dt>D-codes <span class="tag t-sig">signaling</span></dt>
+    <dd>Telnyx hangup causes. <strong>D35</strong> = caller-ID invalid; <strong>D51</strong> = caller-ID unverified (an OVP config step, not a code bug).</dd>
+  </dl>
+</section>
+
+<section id="odoo">
+  <h2>Odoo · IAP <span class="em">our application layer</span></h2>
+  <dl>
+    <dt>Extension <span class="tag t-ctrl">config</span></dt>
+    <dd>Your internal desk number (3–5 digits, from 1000). <code>voip.extension</code>; routes to a user, a call group <em>or a queue</em> via <code>destination_ref</code>. The DID's <em>only writable</em> link — <code>did.user_id</code> is computed from it.</dd>
+    <dt>Call group <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.call.group</code> — a set of extensions that ring together (Wazo group, ring strategy "all").</dd>
+    <dt>Queue <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.queue</code> — a waiting room: callers hold, the PBX rings <em>agents</em> by strategy (ringall/linear/rrmemory/…) with priorities. Two layers: <code>voip.queue.agent.source</code> = declared intent (ordered users/groups); <code>voip.queue.agent</code> = materialized roster with live status. ⚠️ Unrelated to <code>voip.queue.mixin</code>, the softphone Next-Activities list.</dd>
+    <dt>Agent <span class="tag t-ctrl">config</span></dt>
+    <dd>A Wazo <em>agentd</em> object — the "worker badge" queues ring, distinct from the Wazo user (the phone identity). One per Odoo user (<code>res.users.voip_pbx_agent_id</code>), agent number = extension number, shared across queues.</dd>
+    <dt>Voicemail box / message <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.voicemail</code> — a numbered answering machine on the PBX (default number <code>"90"+id</code>; dial <code>*98</code> for your own, <code>*97&lt;n&gt;</code> for box <em>n</em>). <code>voip.voicemail.message</code> — one received recording; metadata is pushed via webhook, the audio is <em>pulled</em> back through the shop.</dd>
+    <dt>Audio message / Voice <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.audio.message</code> — a reusable audio asset (upload or on-prem Piper TTS) used as a greeting; transcoded in pure Python to telephony format (8 kHz mono 16-bit WAV). <code>voip.voice</code> — a Piper voice model, downloaded on demand from an allowlisted repo.</dd>
+    <dt>error_key <span class="tag t-ctrl">config</span></dt>
+    <dd>The stable machine-readable key on every shop error (<code>PhoneServiceError.error_key</code>, e.g. <code>not_found</code>, <code>insufficient_credits</code>). Code branches on the key and renders translated text — never show or parse a raw server message.</dd>
+    <dt>IAP credits <span class="tag t-ctrl">config</span></dt>
+    <dd>Odoo In-App-Purchase balance. Numbers cost credits/month; calls cost credits/minute. The shop's currency.</dd>
+    <dt>Requirement / Requirement group <span class="tag t-ctrl">config</span></dt>
+    <dd>KYC paperwork some countries demand: <code>textual</code>, <code>document</code>, <code>address</code>, or <code>action</code> (live identity verification). Grouped per <code>(country, number type)</code> in <code>voip.requirement.group</code>. <strong>action</strong> requirements belong to one specific DID (<code>did_number_id</code>); the others are shared by the group.</dd>
+    <dt>Incall / Outcall <span class="tag t-sig">signaling</span></dt>
+    <dd>Wazo contexts: <em>incall</em> maps DID → destination — a user, a group or a queue (inbound); <em>outcall</em> maps <code>_X.</code> / <code>_+X.</code> dialing → trunk (outbound).</dd>
+  </dl>
+</section>
+
+<footer>
+  🦜 Parrot VoIP teaching workspace · reference/glossary.html · v2 (2026-07-06 — post DB→IAP→WAZO refactor)<br>
+  Grounded in: Parrot Onboarding §2–§3, Wazo Architecture Session §9, RFC 3261, RFC 7118, Wazo Platform docs.
+  See <a href="../RESOURCES.md">RESOURCES.md</a> for sources. This is a living document — tell your teacher when a term drifts.
+</footer>
+</div>
+</body>
+</html>

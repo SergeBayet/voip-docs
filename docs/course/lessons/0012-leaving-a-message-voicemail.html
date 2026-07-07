@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 12 · Leaving a message — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 12 of 13</div>
+  <h1>Leaving a message</h1>
+  <p class="lede">Numbered answering machines on the switchboard, greetings cooked down to telephone-grade audio, and messages that find their way home.</p>
+  <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: trace a voicemail from beep to play button, and know the four models by heart</span><span>🧩 Builds on: Lessons 5, 9, 11</span></div>
+</header>
+
+<h2>The answering-machine room</h2>
+<p>Picture a back room in the switchboard building (your Wazo tenant, <a href="./0008-your-floor-tenancy-and-provisioning.html">Lesson 8</a>) full of old-school answering machines. Each machine has a number taped to it — <b>box 9012</b> — and each plays its own greeting tape when a caller lands on it. When a machine blinks with a new message, the concierge (the shop, the IAP service) slips a <em>note</em> under your door: "new message on machine 9012, from this caller, this long". The note is just paper — to actually hear the tape, you walk back down <em>with</em> the concierge and fetch it. Hold that picture: the note is pushed, the tape is fetched.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+  V["voip.voicemail<br/>the machine — box 9012"] -- holds --> M["voip.voicemail.message<br/>one message on the machine"]
+  A["voip.audio.message<br/>a reusable greeting tape"] -- plays as greeting on --> V
+  T["voip.voice<br/>a TTS voice actor"] -- can record --> A
+</pre>
+<figcaption>The whole subsystem is four models: a box, its messages, a reusable audio asset, and a voice that can generate one.</figcaption>
+</figure>
+
+<h2>The four models</h2>
+<table>
+<tr><th>Model</th><th>Kid version</th><th>Grown-up version</th></tr>
+<tr><td><code>voip.voicemail</code></td><td>An answering machine with a number taped on it</td><td>A box: name, dialable number (default <code>"90"+id</code>, admin-editable, digits-only + unique), notification <code>email</code>, optional greeting; mirrors a Wazo confd voicemail via <code>pbx_voicemail_id</code></td></tr>
+<tr><td><code>voip.voicemail.message</code></td><td>One message somebody left on a machine</td><td>Caller id, duration, folder, lazily fetched <code>recording</code>, raw payload. Exactly-once via <b>two</b> unique indexes: <code>(event_id)</code> and <code>(voicemail_id, pbx_message_id)</code></td></tr>
+<tr><td><code>voip.audio.message</code></td><td>A tape you record once and reuse anywhere</td><td>Reusable audio asset: uploaded file <b>or</b> local TTS (<code>tts_text</code> + voice); <code>data_version</code> cache-buster so the browser never plays a stale file</td></tr>
+<tr><td><code>voip.voice</code></td><td>A voice actor who can read tapes for you</td><td>A Piper TTS voice: ONNX model downloaded on demand from a <b>hard-allowlisted</b> Hugging Face repo (<code>rhasspy/piper-voices</code> only), md5-checked, 256&nbsp;MB cap</td></tr>
+</table>
+<p>All four are VoIP-admin gated, and the box follows the two-brains pattern you know from users and queues (<a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>): Odoo holds the intent, syncs create-or-update keyed on the stored PBX id, and <code>voip_skip_pbx_sync</code> breaks write-recursion.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
+
+<h2>The listen flow — from beep to play button</h2>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  actor C as Caller
+  participant W as Wazo (PBX)
+  participant S as Shop (IAP)
+  participant O as Odoo (your DB)
+  participant B as Your browser
+  C->>W: rings box 9012, records after the beep
+  W->>S: webhookd POST (per-tenant secret)
+  S->>O: /voip/api/event, HMAC-signed<br/>global_voicemail.message_created
+  Note over S,O: not acked? shop tells Wazo 503 →<br/>webhookd redelivers (shop stores nothing)
+  O->>O: idempotent row: search-first, savepoint,<br/>UniqueViolation → re-search
+  O->>S: get_voicemail_message_recording
+  S->>W: GET …/messages/{id}/recording
+  W-->>S: WAV bytes
+  S-->>O: base64-over-JSON → binary attachment
+  B->>O: ▶ streams /voip/voicemail/message/&lt;id&gt;
+</pre>
+<figcaption>The metadata rides the webhook pipe you met in <a href="./0009-doorbells-and-robots.html">Lesson 9</a>; the audio makes a separate round-trip back through the shop.</figcaption>
+</figure>
+
+<p>Walk it once in words. Wazo stores the message and its <b>webhookd</b> subscription (created at tenant provisioning) POSTs to the shop, authenticated by a per-tenant secret. The shop renames the event to <code>global_voicemail.message_created</code> and forwards it to <code>/voip/api/event</code>, HMAC-signed. Odoo verifies the signature and creates the message row <em>idempotently</em>: search first, create inside a savepoint, and if a concurrent delivery already won the race, catch <code>UniqueViolation</code> and re-search. If the message is non-empty, Odoo immediately <b>pulls</b> the recording back through the shop — base64-over-JSON, because there is <b>no multipart anywhere</b> in this pipe — and stores it as an attachment. The Messages page then shows an inline ▶ that streams <code>/voip/voicemail/message/&lt;id&gt;</code>.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
+
+<div class="big-idea">
+<strong>THE BIG IDEA — push the metadata, pull the audio.</strong> Webhooks must stay small and safely retryable: the retry mechanism is literally "return 503 and let Wazo redeliver" — the shop stores nothing, so the payload has to be cheap to resend. Audio is big, and fetch-on-demand is naturally idempotent: if the pull fails, Odoo logs a warning, the row <em>survives without audio</em>, and the next redelivery (or a manual replay) heals it. No retry queue, no quarantine table — the design makes failure boring.
+</div>
+
+<h3>Exactly-once without a queue: why TWO unique keys?</h3>
+<p>Look at the pair of indexes on <code>voip.voicemail.message</code>. <code>(event_id)</code> catches the <em>same event delivered twice</em> — the normal case, since 503-driven redelivery resends the identical event. <code>(voicemail_id, pbx_message_id)</code> catches the <em>same PBX message arriving under a fresh event id</em> — say, a re-subscription or a second event name for the same message. Either key alone leaves a duplicate-row hole; together with the savepoint + re-search they make a textbook idempotent consumer in about 40 lines.<a class="cite" href="../reference/onboarding.html">(voip_voicemail_message.py:40-45, 84-128)</a></p>
+
+<h2>Greetings: cooking a tape down to telephone grade</h2>
+<p>A phone line only carries frequencies up to roughly 4&nbsp;kHz — that is <em>why</em> phones sound like phones — so telephony audio is <b>8&nbsp;kHz, mono, 16-bit WAV</b>. Whatever the admin uploads as a greeting gets transcoded to that format <b>in pure stdlib Python</b> (<code>struct</code> + <code>wave</code>): stereo is downmixed by averaging channels, and the sample rate is converted by linear interpolation. No ffmpeg — deliberately zero external dependencies.<a class="cite" href="../reference/onboarding.html">(voip_audio_message.py:217-292)</a></p>
+<p>The cooked WAV is pushed to Wazo's <b>calld</b> greetings API with the slot fixed to <code>"unavailable"</code> (of Wazo's unavailable/busy/name trio); on the shop side the upload is a delete-then-POST replace. The box itself syncs with <code>attach_audio=True</code>, so Wazo also emails the recording to the box's notification address.</p>
+<div class="callout"><b>Sync strictness is graded.</b> Box sync failures <b>raise</b> — the admin must know, because Odoo and Wazo would silently disagree about what exists. Sound uploads and recording fetches only <b>warn</b> — they are deferrable, and a replay fixes them. Fail loud where state diverges; log where retrying later is fine. That is the project philosophy in one line.</div>
+
+<h2>Getting callers in — and dialing in yourself</h2>
+<p>How does a caller ever <em>reach</em> box 9012? Through a user's fallbacks (<a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>): if your no-answer or busy destination is a string that matches a synced box number (or <code>*97</code> + that number), Odoo turns it into a <em>typed</em> voicemail destination for Wazo — <code>{type: voicemail, voicemail_id, greeting: unavailable, skip_instructions}</code>. <code>skip_instructions</code> suppresses Wazo's canned "please leave a message" prompt when a custom greeting exists, so callers hear only your tape. Dial-in codes: <code>*98</code> is <em>your own</em> box (that is what the softphone's voicemail button dials), <code>*97&lt;n&gt;</code> reaches box <em>n</em>.<a class="cite" href="../reference/onboarding.html">(res_users_settings.py:179-210)</a></p>
+
+<h2>TTS that never leaves the building</h2>
+<p>Instead of uploading a file, an audio message can be <em>generated</em>: Piper TTS runs <b>on the Odoo server itself</b> — no text or audio leaves the database for generation. Voices are ONNX models downloaded on demand, only from the allowlisted Hugging Face repo, md5-verified and size-capped; every failure mode (piper not installed, voice not downloaded, empty output) is a clean <code>UserError</code>, never a stack trace. One honest status note: every audio asset also mirrors best-effort to the Wazo confd sound category <code>"odoo"</code> — this is <b>forward-compat only</b>, nothing on the PBX consumes those sounds yet, and deleting the asset leaves the Wazo copy behind as an orphan.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
+
+<div class="warnbox">
+<b>Gotchas to keep in your pocket.</b> (1)&nbsp;Box numbers are only checked unique against <em>other voicemails</em> — not against user extensions in the same context; a colliding admin edit is possible. (2)&nbsp;<code>user_voicemail.*</code> events are forwarded by the shop but <em>deliberately unhandled</em> in Odoo — Odoo boxes are standalone, not attached to Wazo users, so their messages arrive via the global event only. (3)&nbsp;The recording download is issued under the <b>confd</b> URL prefix where upstream Wazo documents <b>calld</b> — tests and demo mode mock it, so if listen-to-message misbehaves on a live box, this is your first suspect.
+</div>
+
+<div class="codehook">
+<div class="kicker">⌨️ Where this lives in our code</div>
+<p style="margin:.4rem 0 0"><code>voip/models/voip_voicemail.py</code> — <code>_sync_pbx_voicemail</code> (create-or-update, echo-id) and <code>_sync_pbx_greeting</code> (upload or delete, slot <code>"unavailable"</code>).<br>
+<code>voip/models/voip_voicemail_message.py</code> — <code>_handle_message_created_event</code> → <code>_create_from_event</code> (the idempotent consumer) → <code>_fetch_recording_from_pbx</code>.<br>
+<code>voip/models/voip_audio_message.py</code> — <code>_get_voicemail_greeting_content</code> (the pure-stdlib 8&nbsp;kHz transcode).<br>
+IAP: <code>phone_service_pbx_tenant_ops.py</code> — <code>_op_upload_voicemail_greeting</code>; <code>utils/wazo_client.py</code> — <code>VoicemailGreetingsCommand.replace</code> (delete-then-POST).</p>
+</div>
+
+<div class="exercise">
+<h3>🧩 Put the listen flow in order</h3>
+<p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;color:var(--muted)">Click the hops in the order they happen, from beep to play button.</p>
+<div id="orderer"></div>
+<div class="score" id="orderer-score"></div>
+</div>
+
+<div class="exercise">
+<h3>🧠 Check yourself</h3>
+<div id="quiz"></div>
+<div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><b>Onboarding Guide §11 — "Story 7: Leaving a message 📼"</b> — the four-model table and all four flows on one page. Secondary: the <a href="https://wazo-platform.org/documentation/">Wazo platform docs</a> for the confd voicemails / calld greetings split.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
+  code path for Y". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding §11 (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0011-desks-teams-and-waiting-rooms.html"><span class="lbl">← Previous</span>Lesson 11 · Desks, teams &amp; waiting rooms</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0013-following-the-money.html"><span class="lbl">Next →</span>Lesson 13 · Following the money<br><span style="color:var(--faint);font-weight:400">an anonymous cost event becomes a charge — bridged twice.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+/* makeSorter(containerId, scoreId, planesArr, itemsArr)
+   planesArr: [{k:'sig',label:'Signaling'},...]   itemsArr: [{name, ans:'sig', why:'<b>..</b> ..'},...] */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+/* makeQuiz(containerId, scoreId, quizArr)
+   quizArr: [{stem, choices:[{t, ok}], why}] — keep every choice the SAME length (no format clues). */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+/* makeOrderer(containerId, scoreId, stepsArr) — "put the hops in order" exercise.
+   stepsArr: array of step strings in CORRECT order; they are shown shuffled. */
+function makeOrderer(containerId, scoreId, STEPS){
+  const el = document.getElementById(containerId);
+  const shuffled = STEPS.map((s,i)=>({s,i})).sort((a,b)=> (a.s.length%3 - b.s.length%3) || (b.i - a.i));
+  let expected = 0;
+  const status = document.getElementById(scoreId);
+  shuffled.forEach(({s,i})=>{
+    const b=document.createElement('button'); b.className='choice'; b.style.display='block'; b.style.width='100%';
+    b.textContent=s; b.dataset.idx=i;
+    b.onclick=()=>{
+      if(b.disabled) return;
+      if(+b.dataset.idx===expected){ b.classList.add('correct'); b.disabled=true; b.textContent=(expected+1)+'. '+s; expected++;
+        if(expected===STEPS.length) status.textContent='All '+STEPS.length+' hops in order. Locked in. 🦜';
+      } else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 600);
+        status.textContent='Not yet — which hop must happen before that one?'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+makeOrderer('orderer','orderer-score',[
+  'Caller hits box 9012 and records a message after the beep',
+  'Wazo webhookd rings the shop, authenticated by the per-tenant secret',
+  'The shop renames the event and forwards it, HMAC-signed, to /voip/api/event',
+  'Odoo dedupes against both unique keys and stores the message row',
+  'Odoo pulls the recording back through the shop as base64-over-JSON',
+  'The inline play button streams /voip/voicemail/message/<id> to your browser'
+]);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'Why does voip.voicemail.message carry TWO unique indexes instead of one?',
+   choices:[
+     {t:'One blocks the same event redelivered after a 503; the other blocks the same PBX message arriving under a fresh event id', ok:true},
+     {t:'One makes searching by event fast for the webhook path; the other makes the box form load its message list quickly', ok:false},
+     {t:'One is enforced in Python by the ORM at create time; the other is enforced by PostgreSQL when concurrent writes collide', ok:false}
+   ],
+   why:'<b>Two duplicate paths, two keys.</b> Redelivery resends the identical event → (event_id) catches it. A re-subscription or second event name resends the same message with a new event id → (voicemail_id, pbx_message_id) catches that. Either alone leaves a hole.'},
+  {stem:'Why is the message metadata pushed by webhook, but the recording pulled afterwards?',
+   choices:[
+     {t:'Webhooks must stay small and cheaply retryable; audio is big, and fetching it on demand is naturally idempotent', ok:true},
+     {t:'Wazo webhookd is unable to attach binary payloads to its events, so the audio has to travel over a separate channel', ok:false},
+     {t:'The shop keeps a copy of every recording for its billing records, so Odoo simply reads the audio out of shop storage', ok:false}
+   ],
+   why:'<b>Retry = 503 + redeliver, and the shop stores nothing</b> — so the pushed payload must be tiny and safe to resend. The big blob rides a pull that can fail and simply be tried again. That is the whole design.'},
+  {stem:'The recording fetch fails because the PBX is unreachable. What happens to the voicemail?',
+   choices:[
+     {t:'A warning is logged, the message row survives without audio, and a later replay of the event heals it', ok:true},
+     {t:'The transaction is rolled back, the row disappears, and Wazo keeps redelivering the event until the fetch works', ok:false},
+     {t:'The row is parked in a quarantine table with a retry cron, and an escalation email fires if it stays unfetched', ok:false}
+   ],
+   why:'<b>Fetch failures only warn</b> — the metadata row is kept, so nothing is lost and the flow stays graded: box sync raises (state divergence), audio pulls warn (deferrable). No quarantine machinery — that shape of fix is the project&#39;s cautionary tale.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>
