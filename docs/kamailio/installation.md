@@ -35,6 +35,8 @@ apt update
 apt install kamailio
 apt install kamailio-utils-modules curl # for http_client.so module
 apt install kamailio-extra-modules libjansson4 # for jansson.so module
+apt install kamailio-tls-modules # for tls.so module
+apt install kamailio-outbound-modules # for outbound.so module
 ```
 
 There are many Kamailio packages specific for various modules. You can see all available with:
@@ -77,6 +79,26 @@ proxy** (no database, no media). It bridges three worlds — browsers (WebRTC ov
 WSS), the **Telnyx** carrier trunk, and per-region **Wazo** PBXes — and asks
 **IAP Services** over REST who owns a number and whether a tenant may place a
 call. Media (RTP/DTLS-SRTP) never traverses the edge.
+
+### Certs
+
+> /etc/ssl/kamailio/{fullchain,privkey}.pem = fixed paths awaited by tls.cfg;
+> Symlink them onto the real X.509 cert pair.
+
+```bash
+install -d -m 755 /etc/ssl/kamailio
+ln -sf ../_.voip.odoo.com.crt /etc/ssl/kamailio/fullchain.pem
+ln -sf ../_.voip.odoo.com.key /etc/ssl/kamailio/privkey.pem
+```
+
+> private key: readable by the user that started the kamailio service, not everybody
+
+```bash
+chown user:kamailio /etc/ssl/_.voip.odoo.com.key
+chmod 640 /etc/ssl/_.voip.odoo.com.key
+systemctl restart kamailio
+```
+
 
 ### Load order and entry point
 
