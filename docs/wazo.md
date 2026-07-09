@@ -83,81 +83,6 @@ wazo-service status
 
 #### Configuration Files
 
-- Create `/etc/asterisk/extensions_extra.d/odoo-subroutine-queue-no-continue.conf` file with the following content:
-
-```conf
-; Hook called by wazo before Queue()
-; -> add "c" option in Queue()
-; -> inject a subroutine on each channel called before Dial()
-[odoo-subroutine-queue-no-continue]
-exten = s,1,NoOp(=== ODOO SUBROUTINE - Queue No Continue ===)
- ; Reset flag at the beginning of the call
- ; MASTER_CHANNEL store the information on the master channel
- same = n,Set(MASTER_CHANNEL(__ODOO_CALL_REJECTED)=0)
-
- ; Debug to see the current options
- same = n,NoOp(Current WAZO_QUEUEOPTIONS=${WAZO_QUEUEOPTIONS})
- same = n,NoOp(Current WAZO_DIAL_OPTIONS=${WAZO_DIAL_OPTIONS})
-
- ; Add c option
- ; Not sure it's really necessary but...
- same = n,Set(_WAZO_QUEUEOPTIONS=${WAZO_QUEUEOPTIONS}c)
-
- ; Add a subroutine Dial b()
- ; b() is executed before the DIAL()
- ; used to attach a hangup handler to the callee
- same = n,Set(_WAZO_DIAL_OPTIONS=${WAZO_DIAL_OPTIONS}b(odoo-callee-before-dial^s^1))
-
- same = n,NoOp(New WAZO_QUEUEOPTIONS=${WAZO_QUEUEOPTIONS})
- same = n,NoOp(New WAZO_DIAL_OPTIONS=${WAZO_DIAL_OPTIONS})
- same = n,Return()
-
-; Subroutine executed on the callee channel before the real call
-; Install a handler that will be called when it finished
-[odoo-callee-before-dial]
-exten = s,1,NoOp(=== ODOO CALLEE BEFORE DIAL ===)
- same = n,NoOp(Channel=${CHANNEL})
- same = n,NoOp(Linkedid=${CHANNEL(linkedid)})
-
- ; The handler will be executed when the callee hang up / decline / fail
- same = n,Set(CHANNEL(hangup_handler_push)=odoo-callee-hangup-handler,s,1)
- same = n,Return()
-
-; Handler called at the end of the callee canal
-; Our case: a decline = SIP 603 rejected with a HANGUPCAUSE=21
-[odoo-callee-hangup-handler]
-exten = s,1,NoOp(=== ODOO CALLEE HANGUP HANDLER ===)
- same = n,NoOp(Channel=${CHANNEL})
- same = n,NoOp(Linkedid=${CHANNEL(linkedid)})
- same = n,NoOp(HANGUPCAUSE=${HANGUPCAUSE})
-
- ; 21 = call rejected
- same = n,GotoIf($["${HANGUPCAUSE}" = "21"]?rejected)
- same = n,Return()
-
- same = n(rejected),NoOp(=== ODOO EXPLICIT REJECT DETECTED ===)
-
- ; we bubble the information before the forwarding of the queue
- ; to be visible later in the Wazo forward hook
- same = n,Set(MASTER_CHANNEL(__ODOO_CALL_REJECTED)=1)
- same = n,Return()
-
-; Hook Wazo called before the forwarding of a queue
-; Wazo calls this context automatically if it exists
-[xivo-subrfwd-queue]
-exten = s,1,NoOp(=== ODOO FWD SUBROUTINE QUEUE ===)
- same = n,NoOp(ODOO_CALL_REJECTED=${ODOO_CALL_REJECTED})
-
- ; if the softphone rejects the call, we block the forwarding to the cellphone (for instance)
- same = n,GotoIf($["${ODOO_CALL_REJECTED}" = "1"]?stop)
- same = n,Return()
-
- same = n(stop),NoOp(=== STOP FORWARD: ODOO CALL WAS REJECTED ===)
-
- ; End the call with the same logical cause : rejected
- same = n,Hangup(21)
-```
-
 - (optional) To enable monit web ui endpoint, create `/etc/nginx/locations/https-available/monit` file with the following content:
 
 ```conf
@@ -235,3 +160,30 @@ Then restart nginx:
 ```bash
 systemctl restart nginx
 ```
+
+## Upgrade Wazo
+
+Before upgrading, read the [official upgrade notes](https://wazo-platform.org/uc-doc/upgrade/) for every Wazo release between the currently installed version and the target version. Make sure that recent backups are available and plan a maintenance window: the upgrade restarts Wazo services and temporarily interrupts telephony. Run the following commands as `root`.
+
+```bash
+wazo-dist -m pelican-bookworm
+apt update
+apt-cache policy wazo-agentd
+wazo-upgrade -d
+wazo-upgrade
+```
+
+`wazo-dist -m pelican-bookworm`
+: Configures the Wazo package repositories to track the production distribution for Debian 12 (Bookworm). This also removes any pinning to an archived Wazo release, allowing the system to retrieve the latest production version.
+
+`apt update`
+: Refreshes APT's local package index from the configured Debian and Wazo repositories. This step does not install or upgrade any package.
+
+`apt-cache policy wazo-agentd`
+: Displays the installed and candidate versions of `wazo-agentd`, together with their repository origins. Use this as a sanity check that the expected Wazo production repository is selected before starting the upgrade.
+
+`wazo-upgrade -d`
+: Downloads the packages required by the upgrade without installing them or stopping the services. This optional preparation step reduces the duration of the maintenance window. It may still upgrade the package that provides the `wazo-upgrade` command itself.
+
+`wazo-upgrade`
+: Performs the actual upgrade, including package installation, database and configuration migrations, and Wazo service restarts. Confirm the operation when prompted, then check the service status and test SIP registrations and inbound, outbound, and internal calls when it completes.
