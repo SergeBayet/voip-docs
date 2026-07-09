@@ -44,7 +44,10 @@ nav:
   - SIP:
       - SIP Trunk Configuration: sip/trunk.md
   - Asterisk: asterisk.md
-  - Wazo: wazo.md
+  - HAProxy: haproxy.md
+  - Wazo:
+      - Installation and upgrade: wazo.md
+      - Plugin development: wazo/plugins.md
   - Debugging: debugging.md
   - Kamailio:
       - Installation: kamailio/installation.md
