@@ -35,8 +35,9 @@ apt update
 apt install kamailio
 apt install kamailio-utils-modules curl # for http_client.so module
 apt install kamailio-extra-modules libjansson4 # for jansson.so module
-apt install kamailio-tls-modules # for tls.so module
-apt install kamailio-outbound-modules # for outbound.so module
+# for tls.so, outbound.so and websocket.so modules
+apt install kamailio-tls-modules kamailio-outbound-modules kamailio-websocket-modules
+apt install rsync # (optional, only if you want to rsync things)
 ```
 
 There are many Kamailio packages specific for various modules. You can see all available with:
@@ -87,14 +88,14 @@ call. Media (RTP/DTLS-SRTP) never traverses the edge.
 
 ```bash
 install -d -m 755 /etc/ssl/kamailio
-ln -sf ../_.voip.odoo.com.crt /etc/ssl/kamailio/fullchain.pem
-ln -sf ../_.voip.odoo.com.key /etc/ssl/kamailio/privkey.pem
+ln -sfn ../_.voip.odoo.com.crt /etc/ssl/kamailio/fullchain.pem
+ln -sfn ../_.voip.odoo.com.key /etc/ssl/kamailio/privkey.pem
 ```
 
 > private key: readable by the user that started the kamailio service, not everybody
 
 ```bash
-chown user:kamailio /etc/ssl/_.voip.odoo.com.key
+chown <user>:kamailio /etc/ssl/_.voip.odoo.com.key
 chmod 640 /etc/ssl/_.voip.odoo.com.key
 systemctl restart kamailio
 ```
