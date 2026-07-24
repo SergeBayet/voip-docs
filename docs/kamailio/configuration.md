@@ -19,11 +19,11 @@ The actions are exported by Kamailio core or modules and are like functions expo
     ```
     Or, to keep the folder in sync (transfers only what changed and removes files deleted locally), use `rsync` over SSH:
     ```bash
-    rsync -avz --delete ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/
+    rsync -avz ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/
     ```
     The first time you also must configure the systemd kamailio service itself:
     ```bash
-    rsync -avz --delete ./conf/kamailio/etc/systemd/ root@edge-XXX.voip.test.odoo.com:/etc/systemd/ && ssh root@edge-XXX.voip.test.odoo.com systemctl daemon-reload
+    rsync -avz ./conf/kamailio/etc/systemd/system/kamailio.service.d/ root@edge-XXX.voip.test.odoo.com:/etc/systemd/system/kamailio.service.d/ && ssh root@edge-XXX.voip.test.odoo.com systemctl daemon-reload
     ```
     After copying the configuration files, the Kamailio service needs to be restarted for the changes to take effect. You can do this remotely over SSH:
     ```bash
@@ -31,7 +31,7 @@ The actions are exported by Kamailio core or modules and are like functions expo
     ```
     To sync from local to the server and restart in a single command:
     ```bash
-    rsync -avz --delete ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/ && ssh root@edge-XXX.voip.test.odoo.com systemctl restart kamailio
+    rsync -avz ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/ && ssh root@edge-XXX.voip.test.odoo.com systemctl restart kamailio
     ```
 
 ## Environment Variables
