@@ -49,6 +49,8 @@ nav:
   - Kamailio:
       - Installation: kamailio/installation.md
       - Configuration: kamailio/configuration.md
+  - Odoo VoIP Module:
+      - Configuration: odoo_voip/configuration.md
   - Odoo IAP Phone Service:
       - Configuration: phone_service/configuration.md
   - Swiss Knives:
