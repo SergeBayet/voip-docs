@@ -57,8 +57,8 @@ We strongly recommend you create your own data module with:
         <field name="url">https://wazo-2.voip.test.odoo.com</field>
         <field name="telnyx_connection_id">use-your-own-telnyx-sip-fqdn-connection</field>
         <field name="edge_proxy_fqdn">edge-XXX.voip.test.odoo.com</field>
-        <field name="public_ip">w.x.y.z</field> <!-- Public IP of edge-XXX -->
-        <field name="private_ip">a.b.c.d</field> <!-- Private IP of edge-XXX (find it with `ip addr` CLI command) -->
+        <field name="public_ip">34.79.218.67</field> <!-- Public IP of wazo-2.voip.test.odoo.com -->
+        <field name="private_ip">10.132.15.236</field> <!-- Private IP of wazo-2.voip.test.odoo.com (find it with `ip addr` CLI command) -->
         <field name="master_username">master-wazo-user</field>
         <field name="master_password">master-wazo-password</field>
     </record>
