@@ -30,6 +30,23 @@ The actions are exported by Kamailio core or modules and are like functions expo
     rsync -avz --delete ./_etc_kamailio/ root@voip.test.odoo.com:/etc/kamailio/ && ssh root@voip.test.odoo.com systemctl restart kamailio
     ```
 
+## Environment Variables
+`/etc/kamailio/edge.env` file must contain:
+```conf
+NODE_ADVERTISE_FQDN=voip.test.odoo.com # The FQDN of this edge node
+NODE_ADVERTISE_IP=x.y.z.a # The public IP address of this edge node
+IAP_PHONE_SERVICE_BASE_URL=https://iap-services.odoo.com # The base url of the IAP Phone Service
+TELNYX_HOST=sip.telnyx.com
+TELNYX_PORT=5061
+TELNYX_TRANSPORT=tls
+# RFC 5626 flow-token signing secret (any long random string; identical on every node).
+FLOW_TOKEN_SECRET=change-me-to-a-long-random-string
+# Shared secret for IAP REST authentication — must match the IAP side.
+EDGE_TOKEN=changeme
+```
+
+# --- BELOW DOCUMENTATION IN REVIEW ---
+
 ### Load order and entry point
 
 `kamailio.cfg` is the entry point. It defines the feature toggles and flags, then

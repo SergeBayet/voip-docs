@@ -49,6 +49,8 @@ nav:
   - Kamailio:
       - Installation: kamailio/installation.md
       - Configuration: kamailio/configuration.md
+  - Odoo IAP Phone Service:
+      - Configuration: phone_service/configuration.md
   - Swiss Knives:
       - Troubleshooting Tools: swiss-knives/troubleshoot.md
       - HOMER Setup: swiss-knives/homer.md
