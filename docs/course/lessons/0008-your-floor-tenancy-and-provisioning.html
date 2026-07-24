@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 8 · Your floor: tenancy &amp; provisioning — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 8 of 13</div>
+  <h1>Your floor: tenancy &amp; provisioning</h1>
+  <p class="lede">How the shop builds each customer an isolated floor of the switchboard — brick by idempotent brick — and why nobody can wander onto someone else's.</p>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: explain structural tenancy and resume-anywhere provisioning from memory</span><span>🧩 Builds on: Lessons 1, 7</span></div>
+</header>
+
+<p>Picture a hotel that builds a whole floor for every new guest. The crew keeps a <b>construction diary</b>: every time a brick is finished, they write it down and put the pencil away. If the power cuts out mid-wall, nobody panics — tomorrow they open the diary, see "wall three: done", and continue from brick four. Never from scratch, never a duplicate wall.</p>
+<p>And the room keys? Your floor number isn't <i>assigned</i> — it's <b>computed from your name</b>. The front desk can always re-derive it, so it can never be lost; and since no two guests have the same name, no two guests can ever compute the same floor. You never say "floor 12, please" — you show your ID, and the desk works out which floor is yours. That hotel is exactly how the shop (IAP <code>phone_service</code>, <a href="./0007-the-shop-the-broker-in-the-middle.html">Lesson 7</a>) builds your tenant on the Wazo switchboard.</p>
+
+<h2>The build, as a picture</h2>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+    subgraph P1["Phase 1 · The floor"]
+        S1["tenant<br/>uuid = UUID(hex=client_id)"]
+    end
+    subgraph P2["Phase 2 · The rooms"]
+        S2["incall<br/>context"] --> S3["outcall<br/>context"] --> S4["internal<br/>context"] --> S5["attach outcall<br/>to internal"]
+    end
+    subgraph P3["Phase 3 · The door to Telnyx"]
+        S6["SIP<br/>endpoint"] --> S7["trunk"] --> S8["attach"] --> S9["outcall routes<br/>_X. and _+X."] --> S10["bind<br/>trunk"]
+    end
+    subgraph P4["Phase 4 · The doorbell"]
+        S11["webhookd subscription<br/>(per-tenant secret)"]
+    end
+    P1 --> P2 --> P3 --> P4 --> R(["READY ✅"])
+    R <--> D["disabled<br/>(budget-gated)"]
+    R -.-> REL["released"]
+    P3 -.->|"any step stuck<br/>past the TTL"| F["failed"]
+</pre>
+<figcaption>The 11-step build in 4 phases: the floor, the rooms (dialplan contexts, Lessons 4–5), the door to the street (the Telnyx trunk), and finally the doorbell — the wire that lets the switchboard report events back to the shop.</figcaption>
+</figure>
+
+<p>The shop's <code>phone_service.pbx_tenant</code> walks a <b>linear state machine</b> — 11 forward steps, then <code>ready</code>:<a class="cite" href="../reference/onboarding.html">§7</a></p>
+<pre><code>planned → tenant_created → incall_context_created → outcall_context_created
+→ internal_context_created → outcall_context_attached_to_internal_context
+→ trunk_sip_endpoint_created → trunk_created → trunk_attached_to_sip_endpoint
+→ outcall_created → trunk_bound → ready</code></pre>
+<p>Plus three side exits: <code>ready ↔ disabled</code> (billing suspension — the floor exists, the door is locked), <code>released</code> (floor demolished), and <code>failed</code> when a tenant sits stuck past the provisioning TTL — <b>2 hours at HEAD</b> (<code>PROVISIONING_TTL</code>; older docs still say 24 h).<span class="cite">pbx_tenant.py:42,741</span></p>
+<p>The last brick deserves a second look: phase 4 registers <b>one Wazo webhookd subscription</b> for the whole tenant — call created/answered/ended, push and push-cancel, voicemail events — pointing back at the shop, authenticated by a freshly minted per-tenant <code>wazo_webhook_secret</code>. The doorbell wire is part of the building, not an afterthought: a tenant is not <code>ready</code> until the switchboard can talk back.<span class="cite">_step_create_webhook_subscriptions</span></p>
+
+<h2>Lay every brick twice, safely</h2>
+<p>Every step follows the same discipline, and it's the diary from the hook:</p>
+<ul>
+  <li><b>Lookup before create.</b> Each <code>_step_*</code> first asks Wazo "does this already exist?" and only creates what's missing. Running a step twice converges; it never duplicates.</li>
+  <li><b>Commit after every success.</b> <code>_advance_until_blocked</code> commits the transaction after each step, so a mid-chain Wazo outage strands the tenant at its <i>last good state</i>, not at zero. The invariant: <code>state == S</code> ⟹ every Wazo object up to step S exists.<span class="cite">pbx_tenant.py:75-80</span></li>
+  <li><b>Resume from anywhere.</b> A cron retries stuck tenants every 5 minutes; the build is also kicked eagerly the moment you order your first number (<code>_place_orders</code>), and lazily by any PBX call that arrives while the floor is unfinished.<span class="cite">phone_service_number.py:287</span></li>
+</ul>
+<div class="big-idea"><strong>Every brick can be laid twice safely.</strong> Idempotent steps + commit-per-step + a dumb retry cron is the whole resilience story. No rollback logic, no "undo half a floor" — the saga only ever moves forward or re-lays the same brick.</div>
+
+<h2>The big idea: nobody names their floor</h2>
+<p>Here is the design decision this lesson exists for. The tenant is a <b>pure function of the authenticated client</b>: <code>wazo_tenant_uuid = UUID(hex=client_id)</code>. The customer database <i>never sends a tenant id</i> — it just authenticates, and the shop derives which floor is theirs. You can't ask for someone else's floor, because you never ask for a floor at all.<a class="cite" href="../reference/onboarding.html">§7</a></p>
+<p>The shop enforces this at its own boundary too. Every shop→Wazo request goes through <code>wazo_api.pbx_request</code>, which demands <b>exactly one</b> of <code>tenant_uuid=…</code> or <code>master_scoped=True</code>. Declare neither, or both, and you get a hard <code>ValueError</code> at the call site — not a silent write into the master tenant. And the derived <code>Wazo-Tenant</code> header is written <i>after</i> merging caller headers, so nothing a caller supplies can override the scope.<span class="cite">wazo_api.py:121-126</span></p>
+<div class="big-idea"><strong>Cross-tenant access is impossible by construction, not by ACL diligence.</strong> There is no permission an admin could misconfigure, no token a customer could leak, no header an attacker could inject. The isolation is structural: wrong tenant ids simply cannot be expressed.</div>
+<p>It wasn't always like this. The old design gave each tenant an ACL policy, an API user, and scoped Wazo tokens that were handed to the customer's database. All of it is <b>deleted</b>. Today customers hold <b>zero Wazo credentials</b> — the only thing that ever touches Wazo directly is the browser's SIP/WSS media leg (<a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>), because audio can't transit a JSON API.<a class="cite" href="../reference/onboarding.html">§7</a></p>
+
+<h2>The gate on every operation</h2>
+<p>Every <code>/pbx/&lt;op&gt;</code> route passes through one gate, <code>_require_active_tenant</code>, before anything runs:<span class="cite">pbx_controller.py:154-178</span></p>
+<table>
+  <tr><th>Situation</th><th>Answer</th><th>Meaning</th></tr>
+  <tr><td>No tenant <i>and</i> no orderable number</td><td><span class="pill p-med">403</span></td><td>You never engaged the PBX. Go buy a number first.</td></tr>
+  <tr><td>Tenant exists but is still building</td><td><span class="pill p-sig">503</span></td><td>Kick the provisioning cron, tell the client to retry. Its next attempt eventually succeeds.</td></tr>
+  <tr><td>Tenant <code>ready</code> (or <code>disabled</code>)</td><td><span class="pill p-cfg">run</span></td><td>The op executes, tenant-scoped.</td></tr>
+</table>
+<div class="callout"><b>503 means "come back in a minute", not "broken".</b> While the floor is under construction, every PBX call both nudges the build forward and politely refuses. The client's ordinary retry loop is the waiting room — no special "provisioning pending" protocol exists, and none is needed.</div>
+
+<div class="warnbox">
+<b>The 401-vs-404 trap.</b> Wazo answers <b>401</b> — not 404 — for an <i>unknown</i> <code>Wazo-Tenant</code>. So a bare 401 is ambiguous: expired credential, or a floor that vanished behind our back? On 401 the shop probes tenant existence with an explicit <b>master-scoped</b> check: confirmed gone → re-plan the tenant and answer 503 (the rebuild self-heals, the retry succeeds); still there → surface a real auth error (502). <b>Never rebuild on a bare 401</b> — or a transient auth blip would bulldoze and rebuild customer floors.<span class="cite">_reprovision_if_tenant_gone · pbx_controller.py:181-204</span>
+</div>
+
+<h2>Healing on the Odoo side (a preview of <a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>)</h2>
+<p>The shop heals its floor; the customer database heals its <i>occupants</i> with the same philosophy — <b>level-triggered, not event-triggered</b>. A checklist (<code>_filter_under_provisioned</code>) defines what a fully provisioned user looks like: SIP credentials, PBX ids, wakeup token, incall ids. Events merely trigger <i>checks</i>; a 30-minute heal cron plus a 60-second post-failure retrigger re-drive whatever is missing.<span class="cite">voip_did_number.py:501-541</span></p>
+<p>And when ids were lost mid-crash (Wazo objects created, Odoo transaction rolled back), the retry hits a create-conflict — and <b>adopts the orphan</b>: it finds the Wazo object by its <i>deterministic name</i>, re-owns it, and re-issues its secrets. Deterministic naming is the same trick as the deterministic tenant UUID, one level down.</p>
+
+<div class="codehook">
+  <div class="kicker">🔩 Where this lives in the code</div>
+  <ul style="margin:.4rem 0 0 1rem;padding:0">
+    <li><code>iap-apps/…/phone_service/models/phone_service_pbx_tenant.py</code> — <code>STATE_SEQUENCE</code>, the saga comment block (l. 47–126), <code>_advance_until_blocked</code>, <code>_step_create_webhook_subscriptions</code>, <code>_reprovision_if_tenant_gone</code></li>
+    <li><code>…/phone_service_pbx_tenant_ops.py</code> — the <code>_op_*</code> methods (full confd/calld sequences), server-side naming conventions (l. 47–61), <code>INTERACTIVE_RETRIES = 2</code> so interactive ops can't outlive the client's HTTP timeout</li>
+    <li><code>…/models/wazo_api.py</code> — <code>pbx_request</code> scoping guard (exactly one of <code>tenant_uuid</code> / <code>master_scoped</code>)</li>
+    <li><code>…/controllers/pbx_controller.py</code> — <code>_require_active_tenant</code>, <code>_map_wazo_error</code></li>
+    <li><code>enterprise/voip/models/voip_did_number.py</code> — <code>_cron_heal_provisioning</code>, <code>_filter_under_provisioned</code>, <code>_schedule_provisioning_retry</code></li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h3>🧱 Build the floor in order</h3>
+  <p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;color:var(--muted)">Click the phases in the order the state machine walks them.</p>
+  <div id="orderer"></div>
+  <div class="score" id="orderer-score"></div>
+</div>
+
+<div class="exercise">
+  <h3>🧠 Three questions</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0">Onboarding Guide <a href="../reference/onboarding.html">§7 — Building your floor in the switchboard</a>: the state machine, the clever bits, and the traps, in six bullets. Secondary: the <a href="https://wazo-platform.org/documentation/">Wazo platform docs</a> on multi-tenancy, to see what the shop is scoping against.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
+  code path for Y". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0007-the-shop-the-broker-in-the-middle.html"><span class="lbl">← Previous</span>Lesson 7 · The shop: the broker in the middle</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0009-doorbells-and-robots.html"><span class="lbl">Next →</span>Lesson 9 · Doorbells &amp; robots<br><span style="color:var(--faint);font-weight:400">three webhook flavours, one dedup discipline, and the crons that heal everything.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+/* makeSorter(containerId, scoreId, planesArr, itemsArr)
+   planesArr: [{k:'sig',label:'Signaling'},...]   itemsArr: [{name, ans:'sig', why:'<b>..</b> ..'},...] */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+/* makeQuiz(containerId, scoreId, quizArr)
+   quizArr: [{stem, choices:[{t, ok}], why}] — keep every choice the SAME length (no format clues). */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+/* makeOrderer(containerId, scoreId, stepsArr) — "put the hops in order" exercise.
+   stepsArr: array of step strings in CORRECT order; they are shown shuffled. */
+function makeOrderer(containerId, scoreId, STEPS){
+  const el = document.getElementById(containerId);
+  const shuffled = STEPS.map((s,i)=>({s,i})).sort((a,b)=> (a.s.length%3 - b.s.length%3) || (b.i - a.i));
+  let expected = 0;
+  const status = document.getElementById(scoreId);
+  shuffled.forEach(({s,i})=>{
+    const b=document.createElement('button'); b.className='choice'; b.style.display='block'; b.style.width='100%';
+    b.textContent=s; b.dataset.idx=i;
+    b.onclick=()=>{
+      if(b.disabled) return;
+      if(+b.dataset.idx===expected){ b.classList.add('correct'); b.disabled=true; b.textContent=(expected+1)+'. '+s; expected++;
+        if(expected===STEPS.length) status.textContent='All '+STEPS.length+' hops in order. Locked in. 🦜';
+      } else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 600);
+        status.textContent='Not yet — which hop must happen before that one?'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+makeOrderer('orderer', 'orderer-score', [
+  'The floor — create the Wazo tenant, uuid = UUID(hex=client_id)',
+  'The rooms — incall, outcall, internal contexts; attach outcall to internal',
+  'The door — SIP endpoint, trunk, attach, outcall routes _X. / _+X., bind trunk',
+  'The doorbell — webhookd subscription carrying the per-tenant secret',
+  'READY — the only state (with disabled) that serves /pbx/<op> traffic',
+]);
+
+makeQuiz('quiz', 'quiz-score', [
+  {stem:'Why is the tenant UUID computed as UUID(hex=client_id) instead of stored after Wazo assigns one?',
+   choices:[
+     {t:'So a retry can always re-derive its own floor — the id can never be lost, and no two clients can ever collide', ok:true},
+     {t:'So the shop can avoid one database column — recomputing the id on demand is cheaper than persisting the value', ok:false},
+     {t:'So Wazo can validate the format on arrival — it only accepts UUIDs that derive from a registered client secret', ok:false},
+   ],
+   why:'<b>Deterministic ids make retries converge.</b> The tenant uuid is a pure function of client_id (which is also the Telnyx customer_reference) — provisioning always finds its own bricks, and the three identities line up by construction.'},
+  {stem:'A tenant-scoped Wazo call returns 401. What must the shop do before anything else?',
+   choices:[
+     {t:'Probe tenant existence with a master-scoped check; only a confirmed 404 there may re-plan, else it is an auth error', ok:true},
+     {t:'Re-plan the tenant immediately and replay all eleven steps, because a 401 always means the floor has been deleted', ok:false},
+     {t:'Refresh the master token and retry the same call at once, because a 401 always means the credential just expired', ok:false},
+   ],
+   why:'<b>Wazo answers 401 — not 404 — for an unknown tenant</b>, so a bare 401 is ambiguous. Confirmed gone → re-plan + 503 (self-healing). Still there → real auth error. Rebuilding on a bare 401 would bulldoze floors on every auth blip.'},
+  {stem:'Why do customer databases hold zero Wazo credentials in the current design?',
+   choices:[
+     {t:'Tenancy is structural — the shop derives the tenant from the authenticated client, so there is no token to leak or mis-scope', ok:true},
+     {t:'Wazo dropped its scoped-token API in an upgrade — the shop was forced to keep every credential on its own side of the wall', ok:false},
+     {t:'Customers found scoped tokens too confusing to rotate — support asked for the credential screens to simply be removed', ok:false},
+   ],
+   why:'<b>The old per-tenant ACL policy, API user, and scoped tokens were deleted</b> — isolation moved from "diligent permissions" to "impossible by construction". The single remaining direct link is the browser\'s SIP/WSS media leg.'},
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

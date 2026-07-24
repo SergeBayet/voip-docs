@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 11 · Desks, teams &amp; waiting rooms — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 11 of 13</div>
+  <h1>Desks, teams &amp; waiting rooms</h1>
+  <p class="lede">A number is useless until the switchboard knows whose desk it rings — meet extensions, groups, queues and agents.</p>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: know which record to touch (and which NOT to) for any routing change</span><span>🧩 Builds on: Lessons 5, 8</span></div>
+</header>
+
+<p>Picture the office floor behind every phone number you sold in Lesson 10. Each person has a <strong>desk</strong> with a short desk number — that's an <em>extension</em>. A team can share <strong>one bell</strong> that makes every desk ring at once — a <em>call group</em>. For support, you open a <strong>waiting room</strong> where callers hold while staff take them in turn — a <em>queue</em>. And to work a waiting-room shift, each worker wears a <strong>badge</strong> — an <em>agent</em>. Same person, two roles: the desk is where <em>you</em> get called; the badge is how the <em>waiting room</em> calls you.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+  DID["voip.did.number<br/>+32 2 555 1234"]
+  EXT["voip.extension<br/>desk 1001"]
+  USER["res.users<br/>PBX identity fields"]
+  GRP["voip.call.group<br/>one bell, all desks ring"]
+  Q["voip.queue<br/>the waiting room"]
+  SRC["voip.queue.agent.source<br/>ordered INTENT"]
+  ROS["voip.queue.agent<br/>materialized ROSTER"]
+  DID -->|"extension_id<br/>the ONLY writable link"| EXT
+  DID -.->|"user_id — COMPUTED,<br/>UNIQUE: one DID per user"| USER
+  EXT -->|destination_ref| USER
+  EXT -->|destination_ref| GRP
+  EXT -->|destination_ref| Q
+  Q --> SRC
+  Q -.->|"system-managed"| ROS
+  SRC -->|"resolve: expand groups,<br/>first occurrence wins"| ROS
+</pre>
+<figcaption>The whole routing model. Solid arrows are things you author; dotted arrows are derived. Adapted from onboarding §8.</figcaption>
+</figure>
+
+<div class="big-idea"><strong>One writable link.</strong> You author exactly one assignment: <code>did.extension_id</code>. The DID's <code>user_id</code> is a stored compute from the extension's destination<a class="cite" href="../reference/onboarding.html">§8.2</a>; the queue roster is derived from the sources; the Wazo objects are synced from all of it. When routing looks wrong, find which <em>derived</em> layer is stale — never write to it directly. (One DID per user is a deliberate, temporary <code>UNIQUE</code> constraint.)</div>
+
+<h2>A user is a user</h2>
+<p>Early builds rang a person through a hidden one-member "personal queue" on the PBX — that's history. Today an Odoo user maps to a <strong>real Wazo user</strong> with a WebRTC line: an actual account on the switchboard, not a trick<a class="cite" href="../reference/onboarding.html">§8.1</a>.</p>
+<ul>
+  <li><strong>Identity lives on <code>res.users</code></strong>, in system-only fields: <code>voip_pbx_user_id</code> / <code>_user_uuid</code> / <code>_line_id</code> / <code>_agent_id</code> / <code>_auth_password</code>. The extension record keeps only <code>pbx_extension_id</code>.</li>
+  <li><strong>Naming is server-side</strong>: the shop builds <code>odoo-&lt;login&gt;-&lt;odoo_id&gt;</code> plus a tenant-uuid suffix, and hands the SIP username back to be stored in the user's settings. Enterprise never invents Wazo names — deterministic names are also how orphans get re-adopted (below).</li>
+  <li><strong>Personal routing = Wazo user <em>fallbacks</em></strong>. Busy, no-answer (+ ring timeout) and always-forward rules are pushed from <code>res.users.settings</code> whenever a field in <code>PBX_SYNC_FIELDS</code> changes. A destination may be an E.164 number, an internal extension, a feature code like <code>*97…</code>, or a voicemail box — <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>'s whole topic.</li>
+</ul>
+
+<h2>Extensions: the desk number</h2>
+<p>An extension number is 3–5 digits, must not start with 0, is auto-allocated from 1000 up, and is globally unique (<code>EXTENSION_NUMBER_RE</code>, <code>_allocate_numbers</code>). Admins can create, renumber or remove a user's extension straight from user settings: <code>pbx_extension_number</code> is a compute/inverse on <code>res.users.settings</code>, and the inverse raises <code>AccessError</code> for anyone outside the VoIP-admin group.</p>
+
+<div class="big-idea"><strong>Credentials outlive numbers.</strong> Releasing or suspending a DID never touches SIP identity — the user keeps their creds and stays registered. Only deleting the <em>extension</em> clears them: <code>_unlink_pbx_resources</code> unroutes DIDs, deletes the PBX objects, revokes the wakeup token, and wipes <code>voip_pbx_auth_password</code> + the settings' SIP creds. The extension, not the DID, owns the identity lifecycle<a class="cite" href="../reference/onboarding.html">§8.2</a>.</div>
+
+<div class="callout"><strong>Gotcha that cost real debugging time: the FK bypass.</strong> The DID's <code>extension_id</code> has an <code>ondelete="set null"</code> in the database. If we let Postgres do the nulling when an extension is deleted, Odoo's Python <code>write()</code> never runs — so the Wazo incall (the "this number rings that desk" rule) never gets torn down and <strong>leaks</strong>. That's why <code>_unroute_did_numbers</code> explicitly does <code>routed_numbers.write({"extension_id": False})</code> <em>before</em> the unlink (<code>voip_extension.py:260-266</code>). Rule of thumb: any PBX-side side-effect must ride an explicit ORM write, never a DB-level cascade.</div>
+
+<h2>When provisioning breaks: healing (<a href="./0008-your-floor-tenancy-and-provisioning.html">Lesson 8</a> recap, enterprise side)</h2>
+<ul>
+  <li><strong>Level-triggered checklist</strong>: <code>_sync_user_provisioning</code> / <code>_filter_under_provisioned</code> compare each user against "what fully provisioned looks like" — settings creds, PBX ids, wakeup token, incall ids — and re-drive only what's missing. Events trigger <em>checks</em>, not blind re-runs.</li>
+  <li><strong>Safety nets</strong>: a 30-minute heal cron, plus a 60-second retrigger scheduled after any failure.</li>
+  <li><strong>Separate savepoints</strong>: user provisioning and incall routing each get their own — a routing failure must never roll back freshly persisted PBX ids, or the retry would duplicate Wazo objects.</li>
+  <li><strong>Orphan adoption</strong>: if Odoo crashed after creating Wazo objects but before saving their ids, the retry hits a conflict — recovery finds the orphan via its deterministic SIP username and re-owns it with re-issued secrets.</li>
+</ul>
+
+<h2>Queues &amp; agents: intent vs roster</h2>
+<p>The waiting room uses a <strong>two-layer model</strong>. You declare <em>who should staff it</em>; the system works out <em>who that actually is right now</em>:</p>
+<div class="planes">
+  <div class="plane sig">
+    <h4>◆ voip.queue.agent.source — the INTENT</h4>
+    <ul>
+      <li><strong>You write this.</strong> Ordered lines pointing at users <em>or whole call groups</em>.</li>
+      <li>Groups expand recursively (descendants too; recursion is a constraint violation).</li>
+      <li>Order matters: it becomes Wazo member <em>priority</em>. Duplicates? First occurrence wins.</li>
+    </ul>
+  </div>
+  <div class="plane med">
+    <h4>● voip.queue.agent — the ROSTER</h4>
+    <ul>
+      <li><strong>System-managed.</strong> One row per resolved user, rebuilt on every sync.</li>
+      <li>Carries Wazo runtime status: <code>logged_out / available / paused / in_call</code>.</li>
+      <li>Status is pull-only — the form's Refresh button, no cron. <code>status_last_sync</code> says how stale.</li>
+    </ul>
+  </div>
+</div>
+<p>One Wazo agent per Odoo user (<code>res.users.voip_pbx_agent_id</code>), shared across every queue; the agent's number is simply the user's extension number. Ring strategy per queue: <code>ringall</code> (all badges at once), <code>linear</code> (top of the list first), <code>rrmemory</code> (round-robin that remembers where it stopped), <code>leastrecent</code>, <code>fewestcalls</code>, <code>random</code> — plus agent/queue timeouts, retry delay and a max-waiting-calls cap. (<code>wrandom</code> is deliberately hidden until per-member weights exist.)</p>
+<p>The sync, in five hops (<code>voip_queue.py:233-268</code>):</p>
+<ol>
+  <li><strong>Resolve</strong>: <code>_get_resolved_agent_users()</code> expands the sources in order into a deduped user list.</li>
+  <li><strong>Per user</strong>: find-or-create their extension, sync it, then <code>sync_agent(...)</code> — create-or-adopt on the shop — storing the returned agent id on the user.</li>
+  <li><strong>Materialize</strong> the roster rows (stale rows unlinked, current ones upserted with sequence).</li>
+  <li><strong>Queue sync</strong>: <code>sync_queue(..., agent_ids=[ordered wazo ids])</code>; the shop reconciles Wazo queue members so priority = list position, and strips legacy user-type members.</li>
+  <li><strong>Ripple</strong>: editing a call group's members or an extension's destination re-resolves <em>every queue that transitively references it</em> — affected sets computed both before and after the write.</li>
+</ol>
+<p>Deleting a queue removes its extension and the Wazo queue — but never the Wazo <em>agents</em>; they just lose that membership.</p>
+
+<div class="callout"><strong>Honest status note.</strong> The full agentd surface — login, logoff, pause, per-queue login — is exposed on <code>voip.pbx.service</code> but has <strong>zero business callers</strong> today. It is plumbing for a future agent-presence UI. Whether a never-logged-in agent still receives queue calls is Wazo-side behaviour to verify when that lands — don't assume either way.</div>
+
+<div class="warnbox"><strong>⚠️ Naming trap.</strong> <code>voip.queue.mixin</code> has <em>nothing</em> to do with PBX queues. It backs the softphone's "Next Activities" to-call list (today's phonecall activities). Worst name collision in the module — the mixin even carries a comment saying so (<code>voip_queue_mixin.py:12-13</code>).</div>
+
+<div class="codehook">
+  <strong>🔌 Where this lives in our code.</strong>
+  <ul style="margin:.4rem 0 0">
+    <li><code>voip/models/voip_extension.py</code> — <code>_sync_user_extension</code> (the whole provision-a-person flow), <code>_unlink_pbx_resources</code> + <code>_unroute_did_numbers</code> (the write-not-FK teardown).</li>
+    <li><code>voip/models/voip_queue.py</code> — <code>_get_resolved_agent_users</code> (intent → users), <code>_sync_pbx</code> (agents, roster, ordered <code>agent_ids</code>).</li>
+    <li><code>voip/models/res_users_settings.py</code> — <code>PBX_SYNC_FIELDS</code> (routing pushes), <code>pbx_extension_number</code> compute/inverse.</li>
+    <li>IAP shop, <code>phone_service/models/phone_service_pbx_tenant_ops.py</code> — <code>_op_sync_user_extension</code>, <code>_op_sync_queue</code>, <code>_sync_queue_agents</code> (member reconciliation).</li>
+  </ul>
+</div>
+
+<!-- ===== INTERACTIVE 1 ===== -->
+<div class="exercise">
+  <h3>① Intent, roster, or identity?</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">Where does each of these live? Sort onto the right layer.</p>
+  <div id="sorter"></div>
+  <div class="score" id="sorter-score"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2 ===== -->
+<div class="exercise">
+  <h3>② Three quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><strong>Onboarding Guide §8 — "Your desk, your team, your waiting room"</strong> (rendered link below): the authoritative version of this lesson, including the assignment flowchart and the ER diagram. For what Wazo itself means by users, queues and agents, the <a href="https://wazo-platform.org/documentation/">Wazo Platform docs</a> (confd users/queues) are the reference.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "walk me through <code>_get_resolved_agent_users</code> with a nested group",
+  "show me exactly what <code>sync_queue</code> sends to the shop", "quiz me again, harder".
+  The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0010-buying-a-number-end-to-end.html"><span class="lbl">← Previous</span>Lesson 10 · Buying a number, end to end</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0012-leaving-a-message-voicemail.html"><span class="lbl">Next →</span>Lesson 12 · Leaving a message<br><span style="color:var(--faint);font-weight:400">voicemail boxes, greetings, and push-the-metadata-pull-the-audio.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+/* makeSorter(containerId, scoreId, planesArr, itemsArr)
+   planesArr: [{k:'sig',label:'Signaling'},...]   itemsArr: [{name, ans:'sig', why:'<b>..</b> ..'},...] */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+/* makeQuiz(containerId, scoreId, quizArr)
+   quizArr: [{stem, choices:[{t, ok}], why}] — keep every choice the SAME length (no format clues). */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+</script>
+<script>
+makeSorter('sorter','sorter-score',
+  [{k:'src',label:'agent.source (intent)'},{k:'ros',label:'queue.agent (roster)'},{k:'idn',label:'res.users (identity)'}],
+  [
+    {name:'"Support team first, then managers"', ans:'src', why:'<b>Intent.</b> An ordered wish-list of who staffs the queue — you author it; order becomes priority.'},
+    {name:'is_paused right now', ans:'ros', why:'<b>Roster.</b> Wazo runtime status lives on the materialized voip.queue.agent rows (pull-only Refresh).'},
+    {name:'voip_pbx_agent_id', ans:'idn', why:'<b>Identity.</b> One Wazo agent per user, owned by res.users and shared across every queue.'},
+    {name:'A whole call group as one line', ans:'src', why:'<b>Intent.</b> Sources reference users OR call groups; groups expand recursively at resolve time.'},
+    {name:'status_last_sync timestamp', ans:'ros', why:'<b>Roster.</b> Tells you how stale the pulled statuses are — it describes the snapshot, not the wish.'},
+    {name:'voip_pbx_auth_password', ans:'idn', why:'<b>Identity.</b> PBX auth is a system-only res.users field — cleared only when the extension is deleted.'}
+  ]);
+makeQuiz('quiz','quiz-score',[
+  {stem:'A user\'s DID is released back to the pool. What happens to their SIP credentials?',
+   choices:[
+     {t:'Nothing changes — credentials outlive numbers; only extension deletion clears them', ok:true},
+     {t:'They are cleared immediately so the released number can never be dialed once more', ok:false},
+     {t:'They are suspended until the heal cron confirms the number is genuinely released', ok:false},
+     {t:'They are rotated to fresh values and pushed back down into the user\'s own settings', ok:false}
+   ],
+   why:'The <b>extension</b> owns the identity lifecycle. Releasing a DID only unroutes it; <code>_unlink_pbx_resources</code> (extension delete) is the only path that wipes creds and revokes the wakeup token.'},
+  {stem:'Why must you never hand-edit voip.queue.agent rows?',
+   choices:[
+     {t:'They are a derived snapshot — the very next queue sync rebuilds them from sources', ok:true},
+     {t:'They are protected by an SQL constraint that rejects any write coming from Python', ok:false},
+     {t:'They exist only on the Wazo side and Odoo keeps no local copy for you to modify', ok:false},
+     {t:'They are readonly because editing them would break the call-cost billing matching', ok:false}
+   ],
+   why:'<code>_sync_resolved_agent_records</code> unlinks stale rows and upserts the resolved set on every sync — your edit evaporates. Change the <b>agent sources</b>; the roster follows.'},
+  {stem:'A user sets a no-answer forward in their Odoo preferences. Where does that rule actually run?',
+   choices:[
+     {t:'On the Wazo user, as fallbacks pushed down from res.users.settings on any write', ok:true},
+     {t:'On the DID\'s incall route, which gets rewritten every time the settings change', ok:false},
+     {t:'In the browser softphone, which redirects the ringing call before it is answered', ok:false},
+     {t:'On each queue the user staffs, stored as a per-member timeout on the membership', ok:false}
+   ],
+   why:'Writes to <code>PBX_SYNC_FIELDS</code> trigger <code>update_user_routing</code> → Wazo <b>user fallbacks</b>. The incall only picks which desk rings; what happens when the desk doesn\'t answer belongs to the Wazo user itself.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

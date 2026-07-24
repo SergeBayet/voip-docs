@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 · The shop: the broker in the middle — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 7 of 13</div>
+  <h1>The shop: the broker in the middle</h1>
+  <p class="lede">Why every road goes through one Odoo-run broker — and how to talk to it without ever seeing a Telnyx or Wazo key.</p>
+  <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: know which side of the counter any given change belongs on</span><span>🧩 Builds on: Lessons 1, 6</span></div>
+</header>
+
+<p>Picture a hotel with one concierge desk. Guests never get the master keys — not to the phone room, not to the switchboard closet. You hand over a <em>request slip</em> ("please wire a number to desk 1001") and the concierge walks the building for you. Two things fall out of that arrangement: <strong>you can't lose keys you never had</strong>, and <strong>the hotel can renovate the back corridors without reprinting a single slip</strong>. The Parrot "shop" — the IAP <code>phone_service</code> — is that concierge. Your customer database only ever writes slips.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+  subgraph ENT["🏠 Customer Odoo DB"]
+    API["PhoneServiceAPI<br/>slips signed with:<br/>client_id · client_secret<br/>account_token · db_uuid"]
+  end
+  subgraph SHOP["🏪 The shop — IAP phone_service"]
+    BIZ["Business routes<br/>/api/phone_service/1/&amp;lt;name&amp;gt;<br/>search · order · requirements · coverage"]
+    PBXR["PBX ops<br/>/api/phone_service/1/pbx/&amp;lt;op&amp;gt;<br/>sync_user_extension · sync_incall · …"]
+  end
+  API --> BIZ
+  API --> PBXR
+  BIZ -->|"Telnyx API key<br/>(lives ONLY here)"| T["🌍 Telnyx"]
+  PBXR -->|"master token,<br/>Wazo-Tenant scoped"| W["🏢 Wazo"]
+</pre>
+<figcaption>Two families of request slips, one counter. The keys to Telnyx and Wazo never leave the shop.<a class="cite" href="../reference/onboarding.html">onboarding §2</a></figcaption>
+</figure>
+
+<p>Every slip your DB writes lands on one of <strong>two route families</strong>. <em>Business routes</em> (<code>/api/phone_service/1/&lt;name&gt;</code>) are about numbers and paperwork: search, order, requirements, coverage — the Lesson-6 story. <em>PBX ops</em> (<code>/api/phone_service/1/pbx/&lt;op&gt;</code>) are about your floor in the switchboard: sync a user's extension, route an incall, set up a voicemail. Both go through the same client, <code>PhoneServiceAPI</code>, which stamps the same four credentials onto every call: <code>client_id</code>, <code>client_secret</code>, <code>account_token</code> (your IAP credits account) and <code>db_uuid</code>.</p>
+
+<h2>Getting a counter account — no signup form</h2>
+<p>Nobody types a Telnyx key into Odoo settings, and nobody types a shop password either. The first time your DB talks to the shop, <code>PhoneServiceAPI</code> <strong>auto-registers</strong> (<code>register_client</code>): it generates a random <code>client_id</code> and <code>client_secret</code> locally and presents them. The shop, crucially, <strong>never stores your secret</strong> — only an HMAC <em>hash</em> of it (<code>client_secret_hash</code>), checked with a constant-time compare on every request. If a call ever comes back <code>authentication_failed</code>, the client re-registers once and retries — self-healing, no human involved.<a class="cite" href="../reference/onboarding.html">onboarding §14</a></p>
+<p>That "hash only" choice has a neat consequence. The shop also sends <em>you</em> webhooks (the doorbell you met in <a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a> — <a href="./0009-doorbells-and-robots.html">Lesson 9</a> goes deep), and it must sign them — but with what? It can't sign with your secret; it only kept the fingerprint. So at registration it <strong>derives</strong> a purpose-bound signing key — <code>HMAC(client_secret, "iap-phone-service-webhook-signing")</code> — and stores <em>that</em>. Both sides can compute it; nobody else can. The old signing key was <code>client_id</code>… which travels in the body of <em>every request</em>. A key that rides on the outside of the envelope is not a key.</p>
+
+<h2>The big idea: ask for outcomes, not for objects</h2>
+<div class="big-idea"><strong>The PBX API is capability-style.</strong> Your DB asks the shop for an <em>outcome</em> — <code>sync_user_extension</code>, <code>sync_incall</code>, <code>sync_voicemail</code> — and the shop's private <code>_op_*</code> methods perform the Wazo choreography: which confd objects to create, in what order, under what names. The customer side never learns any of it.</div>
+<p>Back at the hotel: you don't ask the concierge for "the boiler-room key so I can open valve 3, then flip breaker 7". You ask for "make room 12 warm". Which valves, in which order — the concierge's private business. Contrast this with a <em>resource passthrough</em> API (<code>/wazo/users</code>, <code>/wazo/lines</code>, <code>/wazo/extensions</code>…): every customer DB would need to know Wazo's object model, its creation order, its naming rules — and the day Odoo wanted to change any of that (or swap out Wazo entirely), it would have to upgrade <em>every customer database on Earth in lockstep</em>. With outcome-shaped slips, the shop can renovate freely: even SIP usernames are invented server-side — enterprise never constructs a Wazo name.<a class="cite" href="../reference/onboarding.html">onboarding §2</a></p>
+
+<h2>Error keys are the contract</h2>
+<p>When a slip fails, the shop answers with a <strong>stable machine key</strong> plus structured details: <code>{"error": "invalid_address", "details": {"invalid_address_fields": ["postal_code"]}}</code>. On the enterprise side, <code>_phone_service_error_message</code> maps ~18 known keys to <em>translated</em> user messages (unknown key → generic "temporarily unavailable"), and <code>PhoneServiceError.error_key</code> is what code branches on — e.g. <code>not_found</code> ⇒ drop the stale PBX ids and re-sync (heal). The prose in <code>error_msg</code> is free to change any day; the keys are frozen.</p>
+<div class="warnbox"><strong>If you ever match on an error message string, you've built a bug.</strong> Messages get reworded, translated, and improved without notice — that's the whole point of keeping them out of the contract. Raw server text is never shown to a user and never parsed by code. Branch on <code>error_key</code>, render locally, always.</div>
+
+<h2>Whose number is it anyway? Ownership &amp; the two ledgers</h2>
+<p>The shop serves <em>many</em> customer DBs out of one Telnyx account — so what stops client A from releasing client B's number? Every Telnyx resource the shop creates is stamped <code>customer_reference = client_id</code>, and that stamp is the <strong>sole ownership marker</strong>. The doctrine comment atop <code>phone_service_number.py</code> puts it plainly:</p>
+<blockquote style="border-left:3px solid var(--rule);margin:1rem 0;padding:.2rem 1rem;color:var(--muted);font-size:.94rem"><em>"That reference is the ONLY thing that marks a Telnyx number as ours: every Telnyx lookup on the release/reconcile paths filters on it server-side AND re-checks it locally."</em><a class="cite" href="../reference/onboarding.html">phone_service_number.py:22–109</a></blockquote>
+<p>Controllers enforce the same rule at the counter: the <code>_assert_owns</code> / <code>_create_owned</code> helpers check every incoming resource id against <code>phone_service.client_external_resource</code> before touching it — a slip naming someone else's resource is refused, not forwarded. That's the anti-IDOR line: you can't even <em>ask about</em> what isn't yours.</p>
+<p>And a rule you'll lean on in <a href="./0010-buying-a-number-end-to-end.html">Lesson 10</a>: a number lives in <strong>two ledgers at once</strong> — <code>voip.did.number</code> in your DB, <code>phone_service.number</code> in the shop. Neither is authoritative alone. Webhooks push changes to you, hourly polls pull what webhooks missed, and a daily reconcile <em>tears down</em> drift (never re-provisions — creating is the ordering saga's job).</p>
+
+<div class="codehook">
+  <div class="kicker">🔌 Where this lives in our code</div>
+  <ul style="margin:.5rem 0 0">
+    <li><strong>Enterprise</strong> — <code>voip/models/phone_service_api.py</code>: <code>_call_phone_service()</code> (auth stamping, one re-register retry), <code>pbx_call(name, **params)</code>, <code>PhoneServiceError.error_key</code>, <code>_phone_service_error_message</code>. <code>voip/models/pbx_service.py</code>: the named facade — one method per PBX op, each a one-line <code>pbx_call</code>.</li>
+    <li><strong>Shop</strong> — <code>controllers/common.py</code>: <code>@require_client</code>, the <code>require_str/int/…</code> validators, <code>_assert_owns</code>/<code>_create_owned</code>. Routes split into <code>client / number / pbx / regulatory / webhook_controller.py</code>. <code>utils/errors.py</code>: the 17 typed exceptions that serialize to stable keys. <code>models/phone_service_pbx_tenant_ops.py</code>: the private <code>_op_*</code> choreography.</li>
+  </ul>
+</div>
+
+<!-- ===== INTERACTIVE 1 ===== -->
+<div class="exercise">
+  <h3>① Which side of the counter?</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">For each statement, click the box it belongs to. If you hesitate, ask: who holds the key this needs?</p>
+  <div id="sorter"></div>
+  <div class="score" id="sorter-score"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2 ===== -->
+<div class="exercise">
+  <h3>② Three design decisions — can you defend them?</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><a href="../reference/onboarding.html">Onboarding Guide §2 (the cast &amp; golden rules) + §5 (a slip's full journey)</a>. Then, as secondary reading, the ~90-line doctrine comment atop <code>iap_services/phone_service/models/phone_service_number.py</code> — the canonical statement of the two-ledger invariants.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
+  code path for Y". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0006-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">← Previous</span>Lesson 6 · From Telnyx-direct to our own switchboard</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0008-your-floor-tenancy-and-provisioning.html"><span class="lbl">Next →</span>Lesson 8 · Your floor: tenancy &amp; provisioning<br><span style="color:var(--faint);font-weight:400">11 idempotent bricks and a doorbell — tenancy you can't escape.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+
+/* ===== Lesson data ===== */
+makeSorter('sorter','sorter-score',
+  [{k:'ent',label:'Enterprise'},{k:'shop',label:'Shop'},{k:'wazo',label:'Wazo'},{k:'telnyx',label:'Telnyx'}],
+  [
+    {name:'Holds the Telnyx API key', ans:'shop', why:'<b>Shop.</b> The one and only holder — enterprise never sees a carrier credential, only its own client_id/secret.'},
+    {name:'Decides a user’s SIP username', ans:'shop', why:'<b>Shop.</b> Naming conventions live in the private _op_* layer (phone_service_pbx_tenant_ops.py) — enterprise never constructs a Wazo name.'},
+    {name:'Stores the markup percentage', ans:'shop', why:'<b>Shop.</b> Prices cross the counter already marked-up, in credits; raw Telnyx cost_information is stripped before the response leaves.'},
+    {name:'Translates insufficient_credits', ans:'ent', why:'<b>Enterprise.</b> The shop sends the stable key; _phone_service_error_message renders it as a translated sentence in the user’s language.'},
+    {name:'Renders the buy-number wizard', ans:'ent', why:'<b>Enterprise.</b> All UI lives in the customer DB — the shop is a headless counter with no screens at all.'},
+    {name:'Owns the number itself', ans:'telnyx', why:'<b>Telnyx.</b> The carrier owns it and bills the shop monthly; customer_reference = client_id merely marks which client it belongs to.'},
+    {name:'Rings desk 1001 on an incoming call', ans:'wazo', why:'<b>Wazo.</b> Live call handling is the switchboard’s job — the shop only configured the incall route beforehand.'}
+  ]);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'The shop signs its webhooks to your DB with a key DERIVED from client_secret. Why was signing with client_id a bug?',
+   choices:[
+    {t:'client_id travels in the body of every request, so it was never a secret at all', ok:true},
+    {t:'client_id is too short to seed an HMAC, so signatures could be brute-forced fast', ok:false},
+    {t:'client_id changes whenever the client re-registers, invalidating old signatures', ok:false}],
+   why:'A signing key must be known only to the two parties — client_id rides in every call, effectively public. And why <i>derive</i> instead of using client_secret directly? The shop keeps only a <b>hash</b> of the secret, so it stores the purpose-bound derived key (HMAC(client_secret, "iap-phone-service-webhook-signing")) at registration instead.'},
+  {stem:'What does the stable error_key buy that the human-readable error_msg cannot?',
+   choices:[
+    {t:'Code can branch on it (not_found ⇒ heal) while the prose stays free to change', ok:true},
+    {t:'It shrinks the payload, because keys cost fewer bytes than full error sentences', ok:false},
+    {t:'It spares the shop from translating, since keys render directly in the client UI', ok:false}],
+   why:'Keys are the frozen machine contract; wording is generated and translated on the enterprise side. That is why raw server text is never shown to users and never parsed by code — reword a message and nothing breaks.'},
+  {stem:'Why does the shop stamp customer_reference = client_id on every Telnyx resource it creates?',
+   choices:[
+    {t:'It is the sole ownership marker — release and reconcile only touch what bears it', ok:true},
+    {t:'Telnyx refuses any order that arrives without a unique customer reference field', ok:false},
+    {t:'It lets the enterprise DB later query Telnyx directly for its own phone numbers', ok:false}],
+   why:'One shared Telnyx account serves every client, so each lookup on the release/reconcile paths filters on the reference server-side AND re-checks it locally — the shop can never release another client’s number, or a reference-less dev number. (Doctrine comment, phone_service_number.py.)'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

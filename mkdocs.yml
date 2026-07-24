@@ -31,12 +31,18 @@ plugins:
 # - superpowers/  : gitignored design specs/plans (and contain Jinja-like
 #                   directives that the include-markdown plugin would choke on).
 # - kamailio/_test/: internal P0 verification runbook + sipexer templates.
+# - course/*.md   : the course's own authoring/maintenance notes (README, NOTES,
+#                   MISSION, RESOURCES) — kept in the repo for maintainers, not the site.
+#                   The reader-facing course is the self-contained HTML under course/.
 exclude_docs: |
   superpowers/
   kamailio/_test/
+  course/*.md
+  course/reference/build_onboarding.py
 
 nav:
   - Home: index.md
+  - Onboarding Course: course-overview.md
   - Media:
       - Codecs: media/codecs.md
       - SDP: media/sdp.md

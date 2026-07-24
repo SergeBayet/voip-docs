@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 9 · Doorbells &amp; robots — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 9 of 13</div>
+  <h1>Doorbells &amp; robots</h1>
+  <p class="lede">How news travels between four machines that all crash sometimes — and why the answer is never a new queue table.</p>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: apply the reliability playbook (sign, dedupe, 503, poll, heal) to any new event</span><span>🧩 Builds on: Lessons 5, 7, 8</span></div>
+</header>
+
+<div class="big-idea">
+  <strong>Start with the letterbox. 🏠</strong> A doorbell ring is gone the moment it stops — if you were in the shower, that news is lost forever. Registered mail solves this differently, and notice <em>who</em> does the work: your house does <strong>not</strong> keep a warehouse of half-delivered letters. The <strong>postman keeps the letter</strong> and comes back tomorrow, and the day after, until you <strong>sign the receipt</strong>. You do exactly three things: check the <strong>wax seal</strong> (is this really from who it claims?), check <em>"did I already get this one?"</em> (duplicates happen), and sign — <em>or refuse to sign</em>, which just means "ring me again". Parrot's entire event system is that postal contract in HTTP: signing = answering <code>200</code>, refusing = answering <code>503</code>, and the sender keeps the letter.
+</div>
+
+<h2>The event geography — every doorbell on the street</h2>
+<figure>
+<pre class="mermaid">
+flowchart LR
+  T["🌍 Telnyx<br/>(carrier)"]
+  W["🏢 Wazo<br/>(webhookd)"]
+  subgraph SHOP["🏪 the shop (IAP)"]
+    TE["/webhooks/telnyx/<br/>call + account events"]
+    WE["/webhooks/wazo/<br/>call_events"]
+    N["rename · filter legs · markup<br/>event_id = call_id:event_name"]
+  end
+  subgraph ENT["🏠 your DB (enterprise)"]
+    D["/voip/api/event<br/>the ONE doorbell"]
+    E1["phone_number.status → voip.did.number"]
+    E2["requirement_group.status → voip.requirement.group"]
+    E3["call.* → voip.pbx.event"]
+    E4["global_voicemail.message_created → voip.voicemail.message"]
+    E5["call.cost → voip.call.cost.line"]
+  end
+  T -- "Ed25519 seal, ±300 s" --> TE
+  W -- "per-tenant body secret" --> WE
+  TE --> N
+  WE --> N
+  N -- "HMAC-SHA256, derived key" --> D
+  D --> E1
+  D --> E2
+  D --> E3
+  D --> E4
+  D --> E5
+</pre>
+<figcaption>Two doorbells into the shop, one doorbell into your DB, and a dispatch table behind it. Every arrow carries a different seal.<a class="cite" href="../reference/onboarding.html">§9</a></figcaption>
+</figure>
+
+<p>Read the picture left to right. The carrier and the PBX both push news to the <strong>shop</strong> (number bought, call started, call ended, cost known). The shop cleans it up — renames Wazo events to a stable vocabulary, drops call legs you don't care about, applies the billing markup — and forwards it to <strong>one single URL</strong> on your database: <code>/voip/api/event</code>. Behind that one door, a plain dispatch on <code>event_type</code> hands each letter to the model that owns it. One door means one place to check seals, one place to log, one place to debug.</p>
+
+<h2>Three doors, three locks — and why each</h2>
+<p>Each hop uses a different signature scheme. That's not inconsistency — each lock fits its door:<a class="cite" href="../reference/onboarding.html">§14</a></p>
+<table>
+  <thead><tr><th>Door</th><th>Lock</th><th>Why this lock, here</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill p-sig">Telnyx → shop</span></td><td><strong>Ed25519</strong> signature over <code>timestamp|body</code>, ±300 s tolerance</td><td>Public internet. The carrier publishes one public key; anyone can verify, nobody can forge, and the timestamp window kills replay attacks.</td></tr>
+    <tr><td><span class="pill p-med">Wazo → shop</span></td><td><strong>Per-tenant secret</strong> in the body, constant-time compare</td><td>An intra-infrastructure hop over TLS. The secret (minted at tenant provisioning) both authenticates the sender <em>and identifies which tenant</em> is talking.</td></tr>
+    <tr><td><span class="pill p-cfg">Shop → your DB</span></td><td><strong>HMAC-SHA256</strong>, key <em>derived</em> from <code>client_secret</code></td><td>The shop stores only a <em>hash</em> of your secret, so it can't use the secret itself as a key — it derives a purpose-bound key once, at registration, and stores that instead.</td></tr>
+  </tbody>
+</table>
+<div class="warnbox">
+  <strong>The bug that motivated "derived".</strong> The shop→DB signing key used to be built from <code>client_id</code>. But <code>client_id</code> travels in <em>every request</em> your DB makes — it is effectively <strong>public</strong>. Anyone who saw one request could forge "signed" events into your database. The fix (commit <code>39382d2f778</code>): derive the key from the <em>secret</em> — <code>HMAC(client_secret, "iap-phone-service-webhook-signing")</code>. Rule of thumb: a signing key must come from something that <em>never</em> crosses the wire.
+</div>
+<p>The fourth arrow — your DB calling the shop (<code>sync_queue</code>, <code>buy_number</code>…) — isn't a webhook at all: it's an ordinary API call authenticated with <code>client_id</code> + <code>client_secret</code> on every request. Keep the two directions distinct in your head; the sorter below will check.</p>
+
+<h2>"Did I already get this letter?" — dedup is a constraint, not an if</h2>
+<p>Refusing to sign means the sender rings again — so <em>every</em> event can arrive twice, and your handler must treat a replay as a no-op. Parrot's answer is mechanical and identical at every hop:</p>
+<ul>
+  <li><strong>Deterministic ids.</strong> The shop names Wazo events <code>event_id = call_id:event_name</code> — a <em>fact</em> has one name, so its redelivery collides with its first delivery. A random UUID per delivery would make every replay look new.</li>
+  <li><strong>A UNIQUE constraint at every table that stores events</strong>: the shop's webhook-event log, enterprise <code>voip.pbx.event</code>, <code>voip.call.cost.line</code>, and <code>voip.voicemail.message</code> (that one twice — by <code>event_id</code> <em>and</em> by PBX message id). Payments too: <code>UNIQUE(reference_type, reference_id)</code> means a replayed cost event can never charge twice.</li>
+  <li><strong>Race-safe insert.</strong> A cheap <code>search_count</code> pre-check, then <code>create</code> inside a savepoint, catching <code>UniqueViolation</code> as "already seen" (<code>voip_pbx_event._register_event</code>). Two workers processing the same replay concurrently both survive; exactly one wins.</li>
+</ul>
+<div class="big-idea"><strong>Every dedup is a constraint, not an <code>if</code>.</strong> An <code>if seen: return</code> check has a race window between the check and the write. A database UNIQUE index has none — the database itself is the referee. If you catch yourself writing a "have I processed this?" flag, reach for a constraint instead.<a class="cite" href="../reference/onboarding.html">§15</a></div>
+
+<h2>When you can't finish: refuse to sign</h2>
+<p>Say a <code>call.cost</code> event arrives at the shop before the lifecycle events that identify whose call it was — the handler literally cannot attribute it yet. What now? The playbook says: <strong>answer 503 and store nothing</strong>. Telnyx keeps the letter and rings again in a few minutes, by which time the correlation row exists and the same handler succeeds. The shop does the same to Wazo webhookd, and your DB's ack (or missing ack) does the same to the shop: not acknowledged → the shop answers 503 upstream → the whole letter is re-sent later. The retry queue <em>always lives at the sender</em> — that's the postal contract, and it's why no box in the diagram has a dead-letter table.</p>
+<div class="warnbox">
+  <strong>The silent-200 anti-pattern.</strong> A <code>200</code> tells the sender "delivered — <em>never send this again</em>". So a handler that hits a problem, logs a warning, and returns success anyway hasn't handled the error — it has <strong>destroyed the only retry</strong> the system had. For a billing event that is unrecoverable revenue loss, and the only trace is a log line. Smell test: any <code>_logger.warning(...)</code> immediately followed by a successful return on a path that was supposed to do real work.
+</div>
+<p><strong>And the client-side mirror: push what you can, poll what you can't.</strong> A 503 protects you when a webhook <em>arrives broken</em> — but some webhooks never arrive at all (your server was down for an hour; a network path ate the POST). So every push has a slow polling fallback: an hourly cron re-asks the shop for number statuses, and another hourly cron re-tells the shop where your doorbell URL is. The poll is deliberately dumb and slow — it's the residue, never the design. If you find yourself building a clever fast poll, first ask: is there a push I'm ignoring?</p>
+
+<h2>The robots — who heals what</h2>
+<p>Nothing here trusts a single HTTP call to succeed; every async path has a robot that re-drives it. The six most instructive (full table: onboarding §15):<a class="cite" href="../reference/onboarding.html">§15</a></p>
+<table>
+  <thead><tr><th>Side</th><th>Robot</th><th>Every</th><th>What it heals</th></tr></thead>
+  <tbody>
+    <tr><td>🏪</td><td>submit ordering</td><td>1 min</td><td>authorize credits + send number orders to Telnyx</td></tr>
+    <tr><td>🏪</td><td>resume PBX provisioning</td><td>5 min</td><td>lay the next tenant brick; mark <code>failed</code> after 24 h stuck</td></tr>
+    <tr><td>🏪</td><td>recover payments</td><td>10 min</td><td>retry charges on <strong>exponential backoff</strong> (30 min·2ⁿ, cap 1 day; ≥5 tries ⇒ delinquent)</td></tr>
+    <tr><td>🏪</td><td>reconcile client state</td><td>1 min</td><td>drive Telnyx routing to match the <code>disabled</code> intent</td></tr>
+    <tr><td>🏠</td><td>heal provisioning</td><td>30 min</td><td>re-drive under-provisioned active DIDs against the checklist</td></tr>
+    <tr><td>🏠</td><td>link orphan cost lines</td><td>30 min</td><td>re-match cost lines that arrived before their call record</td></tr>
+  </tbody>
+</table>
+<p>Notice what makes robots <em>safe to run forever</em>: every step is <strong>idempotent</strong> (lookup-before-create, adopt orphans on conflict), every webhook they back up has a <strong>polling fallback</strong>, and every "only once" rule is a <strong>constraint</strong>. A robot that re-runs a finished job must change nothing — that's the test for adding one.</p>
+
+<div class="callout">
+  <strong>⚠️ The cautionary tale — the quarantine that got reverted.</strong> Once, an unattributable <code>call.cost</code> event looked like it deserved real machinery: the team built a <em>quarantine model</em> + <em>retry cron</em> + <em>escalation email</em> for events that couldn't find their client. It worked. It was also <strong>reverted as over-engineered</strong>: three new moving parts, each needing observability and maintenance, to handle a rare case for which the upstream <em>already had a retry queue</em>. The fix that survived is one line of behavior: <strong>answer 503 and let Telnyx redeliver.</strong> The team's philosophy, verbatim from its engineering notes: <em>fix what is broken; do not harden what merely could break</em> — and when a failure is silent, the cheap reusable fix is logging the reason well, not building infrastructure around it. Before you add a table, a cron, or an alert: who already holds this letter?
+</div>
+
+<div class="codehook">
+  <div class="kicker">🔌 Where this lives in the code</div>
+  <ul style="margin:.4rem 0 0">
+    <li><strong>Shop, receiving:</strong> <code>phone_service/controllers/webhook_controller.py</code> (both Telnyx routes + Ed25519 check), <code>utils/telnyx_events.py</code> (cost correlation, the 503s), <code>utils/wazo_events.py</code> (rename, leg filters, <code>call_id:event_name</code>).</li>
+    <li><strong>Shop, sending:</strong> <code>utils/webhook.py</code> — <code>send_webhook()</code>: body, HMAC header, 5 s timeout, returns the ack boolean the 503 decision hangs on.</li>
+    <li><strong>Enterprise, receiving:</strong> <code>voip/controllers/phone_service_api_controller.py</code> (the one doorbell + dispatch), <code>voip/models/voip_pbx_event.py</code> (savepoint dedup, PBX-clock timestamps, 12 h autovacuum).</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h3>① Which lock guards this door?</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">For each event knocking somewhere, pick the seal that must check out. Trick: identify the <em>sender</em> first — the lock follows.</p>
+  <div id="sorter"></div>
+  <div class="score" id="sorter-score"></div>
+</div>
+
+<div class="exercise">
+  <h3>② Three quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><strong>Onboarding §9 "Someone calls you"</strong> walks one real event (an inbound call) through every doorbell in today's diagram, and <strong>§15 "The robots"</strong> is the full cron table with the design rules at the bottom. Together they are the authoritative version of this lesson. The three-locks summary lives in <strong>§14</strong>.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me the savepoint dedup in <code>voip_pbx_event.py</code>", "walk me through what happens if the shop is down for an hour", "quiz me again, harder", "which robot would catch a lost <code>phone_number.status</code>?". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0008-your-floor-tenancy-and-provisioning.html"><span class="lbl">← Previous</span>Lesson 8 · Your floor: tenancy &amp; provisioning</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0010-buying-a-number-end-to-end.html"><span class="lbl">Next →</span>Lesson 10 · Buying a number, end to end<br><span style="color:var(--faint);font-weight:400">coverage → paperwork → pay → the robots finish it.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+/* makeSorter(containerId, scoreId, planesArr, itemsArr)
+   planesArr: [{k:'sig',label:'Signaling'},...]   itemsArr: [{name, ans:'sig', why:'<b>..</b> ..'},...] */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+/* makeQuiz(containerId, scoreId, quizArr)
+   quizArr: [{stem, choices:[{t, ok}], why}] — keep every choice the SAME length (no format clues). */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+
+makeSorter('sorter','sorter-score',
+  [
+    {k:'ed',  label:'Ed25519 + timestamp'},
+    {k:'sec', label:'Per-tenant body secret'},
+    {k:'hm',  label:'HMAC, derived key'},
+    {k:'cc',  label:'client_id + client_secret'}
+  ],
+  [
+    {name:'call.cost → shop', ans:'ed',
+     why:'<b>Sender: Telnyx.</b> Carrier events cross the public internet — Ed25519 with the published key, ±300 s.'},
+    {name:'call_created → shop', ans:'sec',
+     why:'<b>Sender: Wazo webhookd.</b> Intra-infra hop; the per-tenant secret in the body authenticates AND names the tenant.'},
+    {name:'call.initiated → your DB', ans:'hm',
+     why:'<b>Sender: the shop.</b> X-IAP-Phone-Service-Signature — HMAC-SHA256 keyed by HMAC(client_secret, purpose-string).'},
+    {name:'sync_queue → shop', ans:'cc',
+     why:'<b>Sender: your DB — and it is not a webhook.</b> An ordinary API call, authenticated with client_id + client_secret like every request.'},
+    {name:'number_order.purchased → shop', ans:'ed',
+     why:'<b>Sender: Telnyx again.</b> Account events use the same Ed25519 door as call events — the sender decides the lock, not the event name.'}
+  ]);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'A call.cost event reaches the shop, but no client can be resolved for it yet. The handler should…',
+   choices:[
+     {t:'answer 503 — Telnyx keeps the event and will redeliver it later', ok:true},
+     {t:'answer 200 and log a warning so at least a trace of it survives', ok:false},
+     {t:'answer 200 after saving the event into a local quarantine table', ok:false},
+     {t:'answer 200 and schedule a one-off cron to re-fetch the cost data', ok:false}
+   ],
+   why:'A 200 retires the event upstream forever — every other option destroys the only retry. 503 = "ring me again"; the sender already has the queue, so the shop stores nothing.'},
+  {stem:'Wazo redelivers call_ended for call 42. Why does event_id = call_id:event_name make the replay harmless?',
+   choices:[
+     {t:'the replay carries the same id, so UNIQUE(event_id) absorbs it', ok:true},
+     {t:'the replay carries a fresh id, so handlers can detect a lost gap', ok:false},
+     {t:'the id embeds the tenant, so the replay routes to the same client', ok:false},
+     {t:'the id sorts by timestamp, so replays apply in their real order', ok:false}
+   ],
+   why:'A fact has one name: every delivery of the same event collides on the same key, and the constraint — not an if — is the dedup. A random per-delivery id would make replays look new.'},
+  {stem:'The team built a quarantine model + retry cron + escalation email for unattributable call.cost events — then reverted it all. Why?',
+   choices:[
+     {t:'the upstream already queues and retries; a 503 buys all of that for free', ok:true},
+     {t:'the quarantine table grew so fast it slowed down the webhook endpoint', ok:false},
+     {t:'the retry cron collided with payment recovery and double-charged clients', ok:false},
+     {t:'the escalation emails were too noisy and ended up filtered as spam anyway', ok:false}
+   ],
+   why:'Fix what is broken; do not harden what merely could break. Three new moving parts for a rare case duplicated a retry queue the sender already runs — the surviving fix is 503 + a good log line.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

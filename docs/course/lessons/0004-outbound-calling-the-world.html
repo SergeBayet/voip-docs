@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 · Outbound: calling the world — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice,.choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover,.choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled,.choice:disabled{cursor:default}
+  .q .choice.correct,.choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong,.choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  /* Lesson-specific additions (envelope visual, kid ramp tag) */
+  .kidbox{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .kidbox .tag{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--parrot-deep)}
+  .envelope{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.8rem;border:1px solid var(--rule);border-radius:8px;background:#fff;margin:1rem 0;overflow:hidden}
+  .envelope .row{display:flex;gap:.6rem;padding:.55rem .8rem;align-items:flex-start;border-bottom:1px solid var(--rule)}
+  .envelope .row:last-child{border-bottom:0}
+  .envelope .bad{background:#f9ece9} .envelope .mid{background:#f7efdc} .envelope .good{background:#eef5ee}
+  .envelope .lbl{color:var(--faint);min-width:8.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+  .verdict{font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700}
+  .verdict.no{color:var(--bad)} .verdict.yes{color:var(--good)}
+  @media (max-width:560px){.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 2 — A Call's Life · Lesson 4 of 13</div>
+  <h1>Outbound: calling the world</h1>
+  <p class="lede">Out through the trunk door — with your own number stamped on the envelope, by the switchboard, not by you.</p>
+  <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: trace an outbound call + explain who stamps caller ID now (and why it moved)</span><span>🧩 Builds on: Lessons 2–3</span></div>
+</header>
+
+<div class="kidbox">
+  <span class="tag">Start simple 🧒</span>
+  <p style="margin:.4rem 0 0">You want to call a normal phone out in the world — say a customer's mobile. Think of it like <strong>mailing a letter</strong>:</p>
+  <ul style="margin:.5rem 0 0">
+    <li>You drop the letter in your company's <strong>mailroom</strong> (that's <strong>Wazo</strong>, our switchboard — <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s building).</li>
+    <li>The mailroom carries it to the <strong>post office</strong> (<strong>Telnyx</strong>, our carrier — it has the trucks that reach every phone in the world).</li>
+    <li>Every envelope needs a <strong>return address</strong>. On a phone call, that's the <strong>caller ID</strong> — the "who's calling" your customer sees on their screen.</li>
+    <li>The post office only mails your letter if the return address is <strong>really yours</strong>. Fake one, and it hands the letter back.</li>
+  </ul>
+  <p style="margin:.5rem 0 0">The twist of this lesson: <strong>who writes the return address?</strong> It used to be you, with your own pen (and that went wrong). Today the <strong>mailroom stamps it for you</strong>, from its own records.</p>
+</div>
+
+<h2>The journey, as a picture</h2>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  actor You as You (browser softphone)
+  participant O as Odoo server
+  participant W as Wazo (Kamailio edge → Asterisk)
+  participant T as Telnyx (post office)
+  actor P as Customer phone (PSTN)
+  Note over You,W: at login: SIP REGISTER over WSS to the<br/>"Odoo Phone Service" provider (wss://wazo-1…)
+  You->>O: log the call — voip.call create_and_format (state=calling)
+  You->>W: INVITE +1-555-0123 (over WSS)
+  Note over W: outcall pattern _X. / _+X. matches →<br/>caller ID stamped = YOUR active DID (server config)
+  W->>T: INVITE out the SIP trunk
+  Note over W,T: Telnyx checks the return address — its rules live here
+  T->>P: rings — shows your number
+  P-->>T: answers (200 OK)
+  T-->>W: 200 OK
+  W-->>You: 200 OK
+  Note over You,P: voice flows on the MEDIA lane (SRTP browser↔Wazo, RTP out the trunk)
+</pre>
+<figcaption>Same INVITE / 200 OK / ACK dance as <a href="./0003-sip-call-lifecycle.html">Lesson 3</a> — extended out through the trunk to a real phone. Signaling sets it up; the media lane carries the voice.<a class="cite" href="../reference/onboarding.html">(onboarding §10)</a></figcaption>
+</figure>
+
+<p>The players are exactly <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s. Your browser is registered to <strong>one</strong> place only: the <strong>Wazo switchboard</strong>, via the single "Odoo Phone Service" provider (<code>wss://wazo-1.voip.test.odoo.com/ws</code>). <strong>Kamailio</strong> (the signaling edge) forwards your INVITE to <strong>Asterisk</strong> (the engine), which matches it against the tenant's <strong>outcall patterns</strong> — <code>_X.</code> and <code>_+X.</code>, i.e. "any digits, with or without a leading <code>+</code>" — and sends it out the <strong>trunk</strong>, the permanent thick wire to Telnyx, which bridges onto the worldwide phone network (the <strong>PSTN</strong>).<a class="cite" href="../reference/onboarding.html">(onboarding §7 &amp; §10)</a></p>
+
+<p>Two side notes, each one sentence. <strong>Colleagues:</strong> if you dial a colleague's <em>public</em> DID, the softphone resolves it to their internal extension <em>before</em> sending the INVITE — otherwise the call would loop out the trunk and back in, losing your identity on the way. <strong>Odoo's call card:</strong> the <code>voip.call</code> row is created by the browser (<code>create_and_format</code>) and later updated by PBX events flowing through the shop — that pipeline is Lessons 5 and 9.</p>
+
+<h2>The return-address drama (a history lesson that still pays rent)</h2>
+<p>In the first Parrot prototype there was no switchboard in the path: the browser registered <strong>directly to <code>sip.telnyx.com</code></strong>. And outbound calls died instantly. Why? By default the SIP library writes your <strong>login name</strong> into the <code>From</code> header — the return-address slot — because that's all it knows. Telnyx looked at it and refused: error <strong>D35</strong>, "Caller Origination Number is Invalid".</p>
+
+<p>The old fix exploited a real SIP feature: an <code>INVITE</code> can carry <strong>several</strong> caller-ID headers, and Telnyx trusts some more than others:<a class="cite" href="https://www.rfc-editor.org/rfc/rfc3325" title="RFC 3325 — P-Asserted-Identity">RFC&nbsp;3325</a></p>
+
+<table>
+  <thead><tr><th>Caller-ID header</th><th>Telnyx trust</th><th>Who set it (old world)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>PPID</strong> — P-Preferred-Identity</td><td>highest</td><td>—</td></tr>
+    <tr><td><strong>PAID</strong> — P-Asserted-Identity</td><td>high ← <em>the old hack</em></td><td>browser JavaScript</td></tr>
+    <tr><td><strong>RPID</strong> — Remote-Party-Id</td><td>medium</td><td>—</td></tr>
+    <tr><td><strong>From</strong></td><td>lowest (the default)</td><td>SIP.js, automatically</td></tr>
+  </tbody>
+</table>
+
+<p style="margin-top:.3rem">So the browser added a <code>P-Asserted-Identity</code> header carrying a real DID, out-ranking the junk in <code>From</code>. It worked — and the whole envelope story, era by era:</p>
+
+<div class="envelope">
+  <div class="row bad"><span class="lbl">❌ Old world (D35)</span><div><div><code>INVITE</code> → Telnyx &nbsp; <span style="color:var(--faint)">From:</span> <code>u42-clienta</code></div><div style="margin-top:.3rem" class="verdict no">Telnyx: "that's not a number I gave you." → rejected (D35)</div></div></div>
+  <div class="row mid"><span class="lbl">🩹 The browser hack</span><div><div><code>INVITE</code> → Telnyx &nbsp; <span style="color:var(--faint)">P-Asserted-Identity:</span> <code>+18076958558</code> ← written by browser JS</div><div style="margin-top:.3rem" class="verdict yes">Accepted — but the browser is asserting its own identity…</div></div></div>
+  <div class="row good"><span class="lbl">✅ Today</span><div><div><code>INVITE</code> → Wazo → <em>fresh trunk leg</em> → Telnyx &nbsp; <span style="color:var(--faint)">caller ID:</span> <code>+18076958558</code> ← stamped by the switchboard from server config</div><div style="margin-top:.3rem" class="verdict yes">Accepted — and the browser had no say in it.</div></div></div>
+</div>
+
+<div class="warnbox">
+  <strong>⚠️ Why the old way was dangerous.</strong> That PAID header was written in <em>browser JavaScript</em> — which any determined user can edit. A user could assert <em>someone else's</em> DID and spoof their caller ID, made worse by everyone sharing one Telnyx connection. Rule to keep forever: <strong>the browser is untrusted; identity must be asserted by a server</strong>. That spoofing class is dead today: your INVITE terminates at Wazo, and the leg that reaches Telnyx is a fresh call whose identity comes from the switchboard's own records.
+</div>
+
+<p><strong>Why learn dead history?</strong> Two reasons. The trunk side is <em>still Telnyx</em> — D35 (and its paperwork sibling <strong>D51</strong>, "caller-ID unverified": the number reads fine but hasn't been authorised in the carrier portal's Outbound Voice Profile) are still the errors you'll see if the trunk-side identity is ever wrong. And the hack is <em>why</em> caller ID lives server-side now — the design only makes sense once you've seen what it replaced.</p>
+
+<h2>Today: the switchboard stamps the envelope</h2>
+<p>The return address is now plain <strong>server-side configuration</strong>: every Wazo user has an <code>outgoing_caller_id</code> field, and Asterisk stamps it onto every outbound trunk leg. Who fills that field in? Odoo — but remember <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s three-box rule: <strong>enterprise never talks to Wazo</strong>. It asks the shop.</p>
+
+<div class="codehook">
+  <div class="kicker">🔌 Where this lives in our code</div>
+  <p style="margin:.4rem 0 0">Enterprise computes your caller ID — simply your <strong>active DID</strong> — and ships it with the user sync (<code>voip/models/voip_extension.py</code>):</p>
+  <pre><code>def _get_outgoing_caller_id(self):
+    did = self.env["voip.did.number"].sudo().search([
+        ("extension_id", "=", self.id), ("state", "=", "active"),
+    ], order="id desc", limit=1)
+    return did.did_number or None
+# …passed as sync_user_extension(…, outgoing_caller_id=…) through the shop</code></pre>
+  <p style="margin:.4rem 0 0">The shop is the only one holding a Wazo pen (<code>phone_service_pbx_tenant_ops.py</code>):</p>
+  <pre><code>def _op_update_user_caller_id(self, *, user_id, outgoing_caller_id):
+    self._wazo().users.update(user_id, {"outgoing_caller_id": outgoing_caller_id})</code></pre>
+  <p style="margin:.4rem 0 0">And when you lose your last number, enterprise resets you to <code>outgoing_caller_id="default"</code> (<code>voip_did_number.py</code>) — a lost number must stop being presented as your identity. Read it back to yourself: <em>"set the caller ID" = "update one field on the Wazo user, through the shop."</em> No SIP headers in sight.</p>
+</div>
+
+<p>One more envelope arrives long after the call: the <strong>cost lines</strong>. Telnyx bills the trunk leg, the shop's <code>call.cost</code> webhooks attach the price to your <code>voip.call</code> — that's <a href="./0013-following-the-money.html">Lesson 13</a>.</p>
+
+<!-- ===== INTERACTIVE 1: order the outbound hops ===== -->
+<div class="exercise" id="ex-order">
+  <h3>① Trace the call — click the hops in order</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">From your click to the customer's ringing phone. A wrong click flashes red and hints.</p>
+  <div id="order-cards"></div>
+  <div class="score" id="order-score"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2: quiz ===== -->
+<div class="exercise" id="ex-quiz">
+  <h3>② Three quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><a href="../reference/onboarding.html">Onboarding Guide §10 — "You call someone"</a> is the canonical walk of this exact flow (plus the softphone's grown-up tricks: transfers, device pull, multi-tab). If the identity-assertion idea itched, the spec behind the old hack is <a href="https://www.rfc-editor.org/rfc/rfc3325">RFC&nbsp;3325 — P-Asserted-Identity</a> (the intro explains why only <em>trusted</em> networks may assert identity — the exact principle our migration enforced).</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask anything fuzzy: "show me the outcall patterns being created in the tenant state machine", "what exactly is the SIP <em>trunk</em> between Wazo and Telnyx?", "walk me through <code>resolveDialNumber</code>", or "what happens if my DID is suspended when I place a call?"
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding §10 (rendered, with diagram)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="./0003-sip-call-lifecycle.html"><span class="lbl">← Previous</span>Lesson 3 · The SIP call lifecycle</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="./0005-inbound-the-world-calls-you.html"><span class="lbl">Next →</span>Lesson 5 · Inbound: the world calls you<br><span style="color:var(--faint);font-weight:400">DID → incall → your browser rings (and Odoo finds out via the shop).</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery (from TEMPLATE.html) ============ */
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+function makeOrderer(containerId, scoreId, STEPS){
+  const el = document.getElementById(containerId);
+  const shuffled = STEPS.map((s,i)=>({s,i})).sort((a,b)=> (a.s.length%3 - b.s.length%3) || (b.i - a.i));
+  let expected = 0;
+  const status = document.getElementById(scoreId);
+  shuffled.forEach(({s,i})=>{
+    const b=document.createElement('button'); b.className='choice'; b.style.display='block'; b.style.width='100%';
+    b.textContent=s; b.dataset.idx=i;
+    b.onclick=()=>{
+      if(b.disabled) return;
+      if(+b.dataset.idx===expected){ b.classList.add('correct'); b.disabled=true; b.textContent=(expected+1)+'. '+s; expected++;
+        if(expected===STEPS.length) status.textContent='All '+STEPS.length+' hops in order. Caller ID was stamped at hop 3 — the switchboard, not you. 🦜';
+      } else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 600);
+        status.textContent='Not yet — which hop must happen before that one?'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+/* ---------- Interactive 1: the outbound hops ---------- */
+makeOrderer('order-cards','order-score',[
+  'Softphone — you click Call: voip.call row logged, INVITE sent to Wazo over WSS',
+  'Kamailio — the signaling edge forwards the INVITE to the engine',
+  'Asterisk — outcall pattern _X. / _+X. matches; caller ID stamped from server config',
+  'Telnyx — the trunk hands the call to the carrier; return-address rules checked here',
+  'PSTN phone — the customer’s phone rings, showing your DID'
+]);
+
+/* ---------- Interactive 2: quiz ---------- */
+makeQuiz('quiz','quiz-score',[
+  {stem:'Your customer’s phone shows your DID when you call them. Where was that decided?',
+   choices:[
+     {t:'Server-side — the Wazo user’s outgoing_caller_id, configured through the shop', ok:true},
+     {t:'Browser-side — user_agent.js attaches the caller ID header to its own INVITE', ok:false},
+     {t:'Carrier-side — Telnyx looks up the account’s default number and applies it', ok:false},
+     {t:'Enterprise-side — Odoo writes the caller ID straight into Wazo over confd', ok:false}
+   ],
+   why:'Enterprise computes your active DID and ships it via <code>sync_user_extension</code> / <code>update_user_caller_id</code> — the shop sets it on the Wazo user. The browser never decides identity, and enterprise never touches Wazo.'},
+  {stem:'In the old Telnyx-direct world, outbound calls died with error D35. Why?',
+   choices:[
+     {t:'The From header carried a SIP username, not a phone number Telnyx had issued us', ok:true},
+     {t:'The SDP offered an audio codec that the Telnyx trunk was refusing to negotiate', ok:false},
+     {t:'The account had run out of credit, so the carrier declined the outbound call leg', ok:false},
+     {t:'The INVITE arrived over WSS, a transport Telnyx rejects on its SIP trunk side', ok:false}
+   ],
+   why:'SIP.js stuffs the login name into <code>From</code> by default; Telnyx only mails envelopes whose return address it issued. The old hack out-ranked it with a browser-set PAID — the new world stamps identity server-side instead. (D51 is the paperwork sibling: valid number, not yet authorised in the portal.)'},
+  {stem:'You dial a colleague’s public DID from the softphone. What actually happens?',
+   choices:[
+     {t:'The softphone resolves it to their extension before the INVITE — it stays internal', ok:true},
+     {t:'The call exits through the trunk to Telnyx and re-enters through the DID’s incall', ok:false},
+     {t:'Wazo rejects the INVITE because internal contexts cannot reach external numbers', ok:false},
+     {t:'The shop rewrites the INVITE’s target to the extension before it reaches Wazo', ok:false}
+   ],
+   why:'<code>makeCall</code> calls <code>resolveDialNumber</code> first. At the PBX level the outcall patterns would happily send it out the trunk and back in — losing your caller identity on the way — so the softphone short-circuits in JS.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

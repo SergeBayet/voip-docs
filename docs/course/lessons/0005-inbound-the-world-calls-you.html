@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 · Inbound: the world calls you — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  .planes3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin:1.1rem 0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem}
+  .planes3 div{border-radius:6px;padding:.6rem .7rem}
+  .planes3 .s{background:var(--sig-bg);border:1px solid #cfe0e6} .planes3 .m{background:var(--med-bg);border:1px solid #ecd6c6} .planes3 .c{background:var(--cfg-bg);border:1px solid #d4e3d6}
+  .planes3 b{display:block;margin-bottom:.2rem}
+  @media (max-width:560px){.planes,.planes3{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 2 — A Call's Life · Lesson 5 of 13</div>
+  <h1>Inbound: the world calls you</h1>
+  <p class="lede">How a call from any phone on Earth finds <em>your</em> browser and makes it ring — while the call card runs a relay race through the shop to appear in your Odoo.</p>
+  <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: trace an inbound call end-to-end, shop hop included</span><span>🧩 Builds on: Lessons 2–4</span></div>
+</header>
+
+<div class="big-idea">
+  <span class="kicker">Start simple 🧒</span>
+  <p style="margin:.4rem 0 0">A big hotel has <strong>one</strong> public phone number on its sign, but <strong>hundreds of rooms</strong> inside. When you call it:</p>
+  <ol style="margin:.5rem 0 0">
+    <li>The phone company delivers your call to the hotel's <strong>front desk</strong>.</li>
+    <li>The front desk has a little list: <em>"calls to our main number → ring room 12"</em> — or ring the whole third floor at once, or seat the caller in the <strong>lobby</strong> until someone is free.</li>
+    <li>And the guest log? The front desk never writes in your diary itself. It rings the hotel chain's <strong>head office</strong>, which stamps the note and drops it in your mailbox.</li>
+  </ol>
+  <p style="margin:.5rem 0 0">The little list — <strong>"public number → what rings"</strong> — is called the <strong>incall</strong>. The stamped note travelling desk → head office → you is the <strong>call card</strong>. Both are new in this lesson.</p>
+</div>
+
+<h2>The journey, as a picture</h2>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  actor C as 📞 Caller
+  participant T as 🌍 Telnyx
+  participant W as 🏢 Wazo (your tenant)
+  participant B as 🖥️ Your browser
+  participant S as 🏪 Shop (IAP)
+  participant O as 🏠 Your Odoo DB
+  C->>T: dials +32 2 555 1234 (your DID)
+  T->>W: SIP INVITE over the trunk
+  Note over W: incall — this DID → user / group / queue
+  par ring the handset
+    W->>B: SIP INVITE over WSS — browser rings 🔔
+  and tell Odoo (via the shop)
+    W->>S: webhookd posts call_created (tenant secret)
+    S->>S: rename → call.initiated, filter legs, sign
+    S->>O: POST /voip/api/event (HMAC-signed)
+    O->>O: dedupe → call card (state=calling) + bus 🔔
+  end
+  B->>W: you click Answer (200 OK)
+  W->>T: bridge the audio
+  Note over C,B: voice flows PSTN ↔ trunk ↔ browser (MEDIA lane)
+  W-->>S: call_answered … call_ended (+ disposition)
+  S-->>O: call.answered … call.hangup → ongoing → terminated
+</pre>
+<figcaption><a href="./0003-sip-call-lifecycle.html">Lesson 3</a>'s INVITE/200 dance run backwards — from the world toward you — plus the call card's detour through the shop. Adapted from onboarding §9.</figcaption>
+</figure>
+
+<div class="callout"><strong>Zoom in on the PBX (<a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a> reminder).</strong> "Wazo" is still two programs: <strong>Kamailio</strong> (the edge) receives the inbound INVITE off the trunk, and <strong>Asterisk</strong> (the engine) does the incall lookup and rings you. Same split as outbound — just the other door.</div>
+
+<h2>New idea #1: the incall (DID → destination)</h2>
+<p>The whole trick of inbound is one routing rule that answers <em>"a call arrived for this public number — what should ring?"</em></p>
+<figure>
+<pre class="mermaid">
+flowchart LR
+  DID["+32 2 555 1234<br/>(your public DID)"] --> INCALL{"incall<br/>routing rule"}
+  INCALL --> USER["a user<br/>(one desk rings 🔔)"]
+  INCALL --> GRP["a call group<br/>(the whole team rings)"]
+  INCALL --> Q["a queue<br/>(waiting room — agents ring<br/>by strategy, in order)"]
+</pre>
+<figcaption>Three possible destinations: a user, a call group, or a queue. A user is a <strong>real Wazo user</strong> — the old per-user "personal queue" is gone.</figcaption>
+</figure>
+<p><strong>Nobody answers?</strong> Wazo walks the user's <em>fallbacks</em>: another extension, a forward to some outside number, or a <strong>voicemail box</strong> that plays a custom greeting and takes a message (that whole pipeline is <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>).</p>
+
+<h2>Inbound is the mirror of outbound</h2>
+<p>You learned outbound in <a href="./0004-outbound-calling-the-world.html">Lesson 4</a>. Inbound is the same picture flipped — which makes it easy to remember:</p>
+<table>
+  <thead><tr><th></th><th>Outbound (L4) — you call out</th><th>Inbound (L5) — they call in</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Carrier paperwork</strong> at Telnyx</td><td>DID allowed as your caller-ID</td><td>DID pointed back at us (inbound routing)</td></tr>
+    <tr><td><strong>The key question</strong></td><td>"Who am I?" → caller-ID stamped on the call</td><td>"What rings?" → <strong>incall</strong> → user / group / queue</td></tr>
+    <tr><td><strong>If the paperwork's missing</strong></td><td>Telnyx rejects the call (D35 / D51)</td><td>the call never reaches us — caller hears nothing</td></tr>
+  </tbody>
+</table>
+
+<h2>New idea #2: the call card's relay race 🏃</h2>
+<p><strong>Wazo never calls your DB.</strong> The event that becomes your call card is a baton passed through three hands — and each runner stamps it:</p>
+<figure>
+<pre class="mermaid">
+flowchart LR
+  W["Wazo webhookd<br/>call_created, call_ended…"] -->|"per-tenant secret"| S["Shop<br/>/webhooks/wazo/call_events"]
+  S -->|"rename + leg filters<br/>+ HMAC signature"| O["Your DB's ONE doorbell<br/>/voip/api/event"]
+  O --> E["voip.pbx.event<br/>dedupe on event_id"] --> CALL["voip.call<br/>+ bus notify 🔔"]
+</pre>
+<figcaption>Every PBX event transits the shop. Your DB has exactly one doorbell for all of them.</figcaption>
+</figure>
+<ul>
+  <li><strong>Rename</strong>: Wazo speaks its own dialect (<code>call_created</code>, <code>call_ended</code>); the shop translates to the stable names your DB knows (<code>call.initiated</code>, <code>call.hangup</code>). <code>call_ended</code> gains a computed <strong>disposition</strong>: <code>answered / busy / rejected / missed</code>.</li>
+  <li><strong>Leg filters</strong>: a call has several "legs" (one per participant). The shop forwards only the legs you care about — your softphone-recipient leg, or the inbound external leg — so your DB isn't spammed with the rest.</li>
+  <li><strong>Dedupe</strong>: <code>event_id = "&lt;call_id&gt;:&lt;event_name&gt;"</code> is UNIQUE in <code>voip.pbx.event</code> — a redelivered event is a harmless no-op.</li>
+  <li><strong>Redelivery, not retry tables</strong>: if your DB doesn't ack, the shop answers <strong>503</strong> to webhookd — and <em>Wazo</em> redelivers later. The retry queue lives upstream; nobody builds a new one.</li>
+  <li><strong>Two-clock discipline</strong>: <code>occurred_at</code> always carries the <strong>PBX clock</strong>, never <code>now()</code> — the event tells you when it happened, not when it finally arrived.</li>
+</ul>
+
+<div class="warnbox"><strong>Sleeping browsers: <code>call.push</code> / <code>call.push_cancel</code>.</strong> A browser tab that's asleep has no SIP connection to ring. Wazo emits <em>push</em> events that travel the same relay and wake the browser via a <strong>service-worker push notification</strong> — an interim mechanism ("waiting for Kamailio"). Declining from that notification hangs the call up <strong>server-side through the shop</strong>, because there is no browser SIP session to send the reject.</div>
+
+<h2>The payoff: one inbound call lights up all three planes</h2>
+<div class="planes3">
+  <div class="s"><b>◆ Signaling</b>The INVITE over WSS and your 200 OK — the ring and the answer.</div>
+  <div class="m"><b>● Media</b>The actual voice — RTP/SRTP bridged PSTN ↔ trunk ↔ your browser.</div>
+  <div class="c"><b>⬢ Config</b>The call card — a webhook relay race Wazo → shop → your DB.</div>
+</div>
+<p>The ring and the call card are <em>different lanes</em>. Your browser can ring even if your DB is briefly slow — and the call card, which now crosses one extra building, can appear slightly after the ring. That's by design, not a bug.</p>
+
+<div class="callout"><strong>Why you must be "registered" (<a href="./0003-sip-call-lifecycle.html">Lesson 3</a> callback).</strong> The incall points at your extension — but Asterisk rings it <em>wherever it last saw a REGISTER from you</em>. No registration (browser closed, not logged in) → there's nowhere to send the INVITE → the call goes straight to your fallbacks or voicemail. Registration is what makes your desk reachable.</div>
+
+<p><strong>Browser niceties</strong> (polish, not core): with several tabs open only one plays the ringtone (the "ringleader"), a background tab can ring via a service-worker notification, and <em>Do Not Disturb</em> silences everything.</p>
+
+<div class="codehook">
+  <span class="kicker">🔌 Where this lives in our code</span>
+  <ul style="margin:.4rem 0 0">
+    <li><strong>The incall route</strong> — <code>voip.did.number._sync_pbx_incall()</code> asks the shop (<code>sync_incall</code>) to route the DID to the extension's destination — user, group, or queue; the PBX ids come back as <code>pbx_incall_id</code> / <code>pbx_incall_extension_id</code>.</li>
+    <li><strong>Shop-side relay</strong> — IAP <code>phone_service</code>: <code>on_wazo_call_event</code> in <code>controllers/pbx_controller.py</code> + renames/leg-filters in <code>utils/wazo_events.py</code>.</li>
+    <li><strong>The doorbell</strong> — <code>/voip/api/event</code> (<code>voip/controllers/phone_service_api_controller.py</code>) verifies the HMAC, then <code>voip.pbx.event._handle_call_event()</code> (<code>voip/models/voip_pbx_event.py</code>) dedupes and creates/updates <code>voip.call</code> + bus-notifies your devices.</li>
+  </ul>
+  <span class="cite">(onboarding §8 provisioning &amp; §9 inbound)</span>
+</div>
+
+<!-- ===== INTERACTIVE 1 ===== -->
+<div class="exercise">
+  <h3>① Trace the inbound call — click the hops in order</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">From a stranger dialling your number to bridged audio. (In real life the ring and the webhook lane race in parallel — here, ring first.)</p>
+  <div id="order-steps"></div>
+  <div class="score" id="order-score"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2 ===== -->
+<div class="exercise">
+  <h3>② Four quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0">Onboarding <strong>§9 "Someone calls you (inbound)"</strong> has the authoritative sequence diagram, plus the grown-up details on leg filters, dispositions, and the push wake-up. For how a PBX routes incoming DIDs generally, the <a href="https://wazo-platform.org/documentation/">Wazo Platform docs</a> are the reference.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask anything fuzzy: "what exactly is inside a <code>call_created</code> payload?", "show me the leg filters in <code>wazo_events.py</code>", "walk me through <code>_handle_call_push</code>", or "what happens when two tabs are open and a call comes in?". The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+  <a href="./0004-outbound-calling-the-world.html">↩ Lesson 4 · Outbound</a>
+  <a href="./0002-two-planes-signaling-vs-media.html">↩ Lesson 2 · Two planes</a>
+</div>
+
+<div class="nav-foot">
+  <a href="0004-outbound-calling-the-world.html"><span class="lbl">← Previous</span>Lesson 4 · Outbound: calling the world</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="0006-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">Next →</span>Lesson 6 · From Telnyx-direct to our own switchboard<br><span style="color:var(--faint);font-weight:400">why Parrot exists — the migration and what it bought us.</span></a>
+</div>
+
+</div>
+
+<script>
+/* ============ Reusable interaction machinery — copy verbatim ============ */
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+function makeOrderer(containerId, scoreId, STEPS){
+  const el = document.getElementById(containerId);
+  const shuffled = STEPS.map((s,i)=>({s,i})).sort((a,b)=> (a.s.length%3 - b.s.length%3) || (b.i - a.i));
+  let expected = 0;
+  const status = document.getElementById(scoreId);
+  shuffled.forEach(({s,i})=>{
+    const b=document.createElement('button'); b.className='choice'; b.style.display='block'; b.style.width='100%';
+    b.textContent=s; b.dataset.idx=i;
+    b.onclick=()=>{
+      if(b.disabled) return;
+      if(+b.dataset.idx===expected){ b.classList.add('correct'); b.disabled=true; b.textContent=(expected+1)+'. '+s; expected++;
+        if(expected===STEPS.length) status.textContent='All '+STEPS.length+' hops in order. Locked in. 🦜';
+      } else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 600);
+        status.textContent='Not yet — which hop must happen before that one?'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+/* ---------- Lesson data ---------- */
+makeOrderer('order-steps','order-score',[
+  'A stranger dials your DID (+32 2 555 1234)',
+  'Telnyx pushes the call down the trunk to Wazo',
+  'The incall matches the DID → user / group / queue',
+  'SIP INVITE over WSS — your browser rings 🔔',
+  'Wazo webhookd posts the raw event to the shop',
+  'The shop renames + filters + signs → /voip/api/event',
+  'voip.pbx.event dedupes → a call card appears',
+  'You answer — 200 OK, audio bridges PSTN ↔ browser'
+]);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'What does the incall rule decide?',
+   choices:[
+     {t:'Which destination the dialled DID rings: a user, a call group, or a queue', ok:true},
+     {t:'Which audio codec the two ends of the call will negotiate before talking', ok:false},
+     {t:'Which caller-ID Telnyx stamps onto the call before it leaves the country', ok:false},
+     {t:'Which credit ledger the shop should bill the incoming call minutes against', ok:false}],
+   why:'incall = "this public number rings that destination". The outbound mirror is your caller-ID.'},
+  {stem:'How does the call card reach your DB?',
+   choices:[
+     {t:'Wazo webhookd → shop (rename, filter, sign) → your one doorbell /voip/api/event', ok:true},
+     {t:'Wazo POSTs straight to your DB at /voip/pbx/call_event using a per-tenant token', ok:false},
+     {t:'Your browser tells Odoo it is ringing, and Odoo then creates the call record', ok:false},
+     {t:'Telnyx forwards the event directly to your DB, since it saw the call arrive', ok:false}],
+   why:'Wazo never calls your DB. The old direct endpoint is gone — every PBX event transits the shop and arrives HMAC-signed at /voip/api/event.'},
+  {stem:'Your DB was down for a minute and never acked a call event. What happens?',
+   choices:[
+     {t:'The shop answers 503 to webhookd, so Wazo redelivers; dedupe absorbs the replays', ok:true},
+     {t:'The event is lost for good, and an hourly poll cron rebuilds the missing call card', ok:false},
+     {t:'The shop stores it in a retry table and its own cron re-sends it until you ack it', ok:false},
+     {t:'Wazo rings your browser one extra time so the softphone can recreate the record', ok:false}],
+   why:'The retry queue lives upstream (webhookd). UNIQUE(event_id) makes a replayed event a harmless no-op.'},
+  {stem:'The call reaches the PBX and the incall is correct, but your browser never rings. Likely?',
+   choices:[
+     {t:'Your softphone never sent a REGISTER, so Asterisk has nowhere to send the INVITE', ok:true},
+     {t:'Telnyx rejected your caller-ID with a D35 error before the call could be connected', ok:false},
+     {t:'The outcall pattern _+X. failed to match the number the caller dialled you on', ok:false},
+     {t:'The shop dropped your leg in the webhook filters, so the ring never went through', ok:false}],
+   why:'The ring is signaling, not a webhook — Asterisk rings wherever you last REGISTERed. No registration → fallbacks or voicemail.'}
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

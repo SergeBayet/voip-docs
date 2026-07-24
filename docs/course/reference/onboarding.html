@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrot VoIP — Onboarding Guide (rendered)</title>
+<style>
+  :root{--ink:#1c1a17;--muted:#6b655c;--faint:#9a948a;--rule:#e4ded3;--paper:#fbf9f4;--parrot:#1a7a4c;--parrot-deep:#0f5a37;--accent-bg:#eef3ec}
+  *{box-sizing:border-box}
+  html{font-size:16.5px}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:880px;margin:0 auto;padding:2.6rem 1.4rem 5rem}
+  header.doc{border-bottom:2px solid var(--ink);padding-bottom:1rem;margin-bottom:1.4rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  header.doc h1{font-size:2.1rem;margin:.3rem 0 .3rem}
+  .sub{color:var(--muted);font-size:.92rem;margin:0;font-family:ui-sans-serif,system-ui,sans-serif}
+  .md h1{font-size:1.9rem;margin:2.4rem 0 .4rem;padding-top:.8rem;border-top:2px solid var(--rule)}
+  .md h2{font-size:1.45rem;margin:2rem 0 .3rem;padding-top:.6rem;border-top:1px solid var(--rule)}
+  .md h3{font-size:1.15rem;margin:1.5rem 0 .2rem}
+  .md h4{font-size:1rem;margin:1.2rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  .md p,.md li{font-size:1.02rem}
+  .md a{color:var(--parrot-deep)}
+  .md code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  .md pre{background:#2a2722;color:#f3efe7;padding:1rem 1.1rem;border-radius:8px;overflow-x:auto;font-size:.84rem}
+  .md pre code{background:none;color:inherit;padding:0}
+  .md blockquote{border-left:3px solid var(--parrot);background:#fff;margin:1rem 0;padding:.6rem 1rem;color:var(--muted);border-radius:4px}
+  .md table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0;background:#fff;border-radius:6px;overflow:hidden}
+  .md th,.md td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  .md th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--accent-bg)}
+  .md hr{border:0;border-top:1px solid var(--rule);margin:2rem 0}
+  .mermaid{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1rem;margin:1.2rem 0;text-align:center;overflow-x:auto}
+  .backlink{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;margin-bottom:1rem}
+  @media print{body{background:#fff}.md pre{background:#f4f1ea;color:#000;border:1px solid var(--rule)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="doc">
+    <div class="kicker">🦜 Parrot VoIP · Reference</div>
+    <h1>Onboarding Guide</h1>
+    <p class="sub">Rendered snapshot of <code>parrot-onboarding.md</code> (canonical: Obsidian vault + <code>Data/Dev/Odoo/</code>). Mermaid diagrams render below. Regenerate with <code>reference/build_onboarding.py</code> when the doc changes. · snapshot 2026-07-06</p>
+    <p class="backlink"><a href="../index.html">🦜 ← Course home</a> · <a href="./glossary.html">📑 Glossary</a> · <a href="../lessons/0001-odoo-becomes-a-phone-company.html">▶ Start Lesson 1</a></p>
+  </header>
+  <article id="out" class="md">Rendering… (the Mermaid &amp; Markdown libraries load from the local <code>vendor/</code> folder — works offline).</article>
+</div>
+<script type="text/markdown" id="md"># 🦜 Parrot — The New VoIP Era in Odoo · Onboarding Guide
+
+> **Living document.** Keep it in sync with the PRs — see [§18 Keeping this document alive](#18-keeping-this-document-alive).
+>
+> | What | Where |
+> |---|---|
+> | Enterprise PR | [odoo/enterprise#107700](https://github.com/odoo/enterprise/pull/107700) — branch `master-parrot` (`voip/`) |
+> | IAP PR | [odoo/iap-apps#1370](https://github.com/odoo/iap-apps/pull/1370) — branch `18.0-add-voip-telnyx-service-basm` (`iap_services/phone_service/`) |
+> | Community PR | [odoo/odoo#249079](https://github.com/odoo/odoo/pull/249079) — draft; CRM settings view, `mail_thread` hook, mail/web service workers (push-wake plumbing) |
+> | Upgrade PR | [odoo/upgrade#9836](https://github.com/odoo/upgrade/pull/9836) — **closed** (pre-created `no_answer_timeout` column) |
+> | Last regenerated | 2026-07-06 · enterprise @ `d416ce5b278` · iap-apps @ `0e0600ba` (full re-read of both PRs; ~102 voip + ~65 phone_service commits since the 2026-06-19 revision) |
+> | Highlights since 2026-06-19 | **DB → IAP → WAZO** (`9f090a1757c`/`8b659b42`): enterprise Wazo client (~4.6k lines) deleted, every PBX op is now a named shop endpoint; **user as a user** (`b5d4df88591`+): personal queues gone, Odoo users map to real Wazo users; **queues & agents** subsystem (`0a4cdc1fc8b`, `810a0d66`); **voicemail & audio** subsystem built from scratch (boxes, greetings, TTS, listen flow); coverage-driven buy flow **landed** (was "staged"); webhook signing key now derived from `client_secret` (`39382d2f778`); tenant build 14 → **11 steps**, ending with a webhookd subscription; single "Odoo Phone Service" provider |
+> | Deep technical diagrams | `pr-107700-diagrams-updated.md` (same folder) — ⚠️ predates the DB→IAP→WAZO refactor; trust this file first |
+> | Excalidraw intro deck | `master-parrot/voip-wazo-onboarding/` (PSTN/SIP basics, ports, meeting decisions) |
+
+---
+
+## 1. The whole thing in one breath
+
+**Odoo is becoming a phone company that lives inside your Odoo database.**
+
+You click a button in Odoo, pick a phone number from a list, and pay with credits.
+From that moment, when somebody dials that number, **your web browser rings**.
+You answer with your headset — no desk phone, no telecom contract, no third-party
+account. Behind the curtain, four machines cooperate to make this magic happen,
+and this document explains who they are and how they talk.
+
+### The toy-story version
+
+Imagine you want a real phone line for your lemonade stand:
+
+1. 🍋 **You** (the Odoo database) don't know anything about phone companies.
+2. 🏪 You ask the **shop** (the IAP `phone_service`) — "I'd like a phone number in Belgium, please."
+3. 🏪 The shop buys the number from the **phone company** (Telnyx) — they own millions of numbers.
+4. 🏢 The shop also rents you a desk in a big **switchboard building** (the Wazo PBX) and tells the phone company: "when this number rings, send the call to that building."
+5. 🔔 The switchboard knows your **desk number** (your extension) and rings your **browser** (the softphone).
+
+You never talk to the phone company yourself — and since 2026-06 you never talk
+to the switchboard's office either. **Everything** goes through the shop; the
+only thing that touches the switchboard directly is your handset (the browser),
+because voice can't travel through a paperwork counter.
+
+---
+
+## 2. The cast of characters
+
+```mermaid
+flowchart LR
+    BROWSER["🖥️ Softphone<br/><i>your handset</i><br/>(JS in the browser)"]
+    ENT["🏠 enterprise / voip<br/><i>your office</i><br/>(the customer's Odoo DB)"]
+    IAP["🏪 IAP phone_service<br/><i>the shop</i><br/>(Odoo-run broker)"]
+    WAZO["🏢 Wazo PBX<br/><i>the switchboard</i><br/>(one building, one floor per customer)"]
+    TELNYX["🌍 Telnyx<br/><i>the phone company</i><br/>(owns the numbers & the wires)"]
+
+    BROWSER <-->|"WebRTC / SIP over WSS<br/>(the ONLY direct customer↔PBX link)"| WAZO
+    ENT <-->|"HTTPS + client credentials<br/>incl. /pbx/&lt;op&gt; proxy calls"| IAP
+    IAP <-->|"REST + webhooks (Ed25519)"| TELNYX
+    IAP <-->|"confd/calld/agentd (master token,<br/>Wazo-Tenant scoped)"| WAZO
+    WAZO -.->|"webhookd events<br/>(per-tenant secret)"| IAP
+    TELNYX <-->|"SIP trunk (the wire)"| WAZO
+    TELNYX <-->|"PSTN"| WORLD["📞 The outside world"]
+```
+
+| Character | Real name | What it is | Code lives in |
+|---|---|---|---|
+| 🖥️ The handset | **Softphone** | An Owl/JS app in the browser tab; speaks SIP over a secure WebSocket and carries the audio with WebRTC | `enterprise/voip/static/src/` |
+| 🏠 Your office | **enterprise `voip` module** | Odoo models, views, wizards: numbers, extensions, groups, queues, voicemail, call log, the buy-number wizard | `enterprise/voip/` (Python/XML) |
+| 🏪 The shop | **IAP `phone_service`** | An Odoo-hosted broker. The only holder of the Telnyx API key **and** the Wazo master token. Executes every PBX operation on your behalf. Bills you in IAP credits | `iap-apps/iap_services/phone_service/` |
+| 🏢 The switchboard | **Wazo PBX** | An open-source PBX (Asterisk + Kamailio + rtpengine + microservices). One server hosts many isolated **tenants** (one per customer). Four APIs: `confd` (config), `calld` (live calls), `agentd` (queue agents), `webhookd` (event push) | external; driven only by the shop |
+| 🌍 The phone company | **Telnyx** | The carrier (CPaaS). Owns the actual phone numbers and connects to the worldwide phone network | external; `api.telnyx.com/v2` |
+
+**The golden rules of the architecture:**
+
+- The customer database **never** talks to Telnyx. Never sees the word "Telnyx" in its UI. (In customer-facing code the PBX is just called "Odoo PBX".)
+- The customer database **never talks to Wazo either** — it holds zero Wazo URLs, tokens or tenant ids. It asks the shop for *outcomes* (`sync_user_extension`, `sync_incall`, `sync_voicemail`…) via `POST /api/phone_service/1/pbx/<op>`; the shop runs the Wazo choreography server-side, scoped to the caller's tenant. If you find enterprise code building a Wazo URL, it's a regression.
+- The **one carve-out is media**: the browser registers SIP-over-WSS straight to Wazo with per-user credentials, because audio can't transit a JSON API.
+- Tenancy is **structural**: the tenant is a pure function of the authenticated client (`UUID(hex=client_id)`); the caller never names it. Every shop→Wazo call must explicitly declare `tenant_uuid=…` or `master_scoped=True` — declaring neither (or both) is a hard `ValueError`.
+- Everything async (orders, billing, provisioning) is driven by **crons that retry idempotently** — every step can run twice safely.
+
+---
+
+## 3. Words you need (pocket glossary)
+
+| Word | Kid version | Grown-up version |
+|---|---|---|
+| **DID number** | The phone number people dial to reach you | "Direct Inward Dialing" — a public E.164 number (`+3225551234`) bought from Telnyx, stored in `voip.did.number` |
+| **Extension** | Your desk number inside the building (`1001`) | A 3–5 digit internal number (`voip.extension`, auto-allocated from 1000). Routes to a user, a call group **or a queue** via `destination_ref` |
+| **Call group** | One bell that rings several desks at once | `voip.call.group` — a set of extensions that ring together (Wazo group, ring strategy "all") |
+| **Queue** | A waiting room with music, served by staff in order | `voip.queue` — callers wait; the PBX rings **agents** by strategy (ringall/linear/rrmemory/…) with priorities |
+| **Agent** | A worker's badge for the waiting room | A Wazo agentd object, one per Odoo user (`res.users.voip_pbx_agent_id`), agent number = extension number. Distinct from the Wazo *user* (the phone identity) |
+| **Voicemail box** | A numbered answering machine | `voip.voicemail` — a Wazo voicemail with a dialable number (default `"90"+id`), an email target and an optional custom greeting |
+| **PBX** | The switchboard | Private Branch eXchange. Here: Wazo. Knows which number/extension reaches whom |
+| **Tenant** | Your own floor in the switchboard building | An isolated Wazo tenant per customer DB; own contexts, trunk, users. Other tenants can't see you — structurally |
+| **Trunk** | The thick wire between the building and the phone company | SIP trunk between Wazo and Telnyx; all external calls go through it |
+| **SIP** | The language phones use to say "ring!", "hello?", "bye" | Session Initiation Protocol — signaling. The audio itself goes over RTP/WebRTC |
+| **Softphone** | A phone that is just a program | The browser dialer; registers to Wazo with a username/secret over WSS |
+| **IAP credits** | The tokens you pay with | Odoo In-App-Purchase balance; numbers cost credits/month, calls cost credits/minute |
+| **Requirement** | The paperwork some countries demand | KYC: text fields, documents, addresses, or an identity-verification link — grouped per country+type in `voip.requirement.group` |
+| **Incall / Outcall** | The "coming in" door and the "going out" door | Wazo contexts: incall maps DID→destination (user, group **or queue**); outcall maps `_X.` / `_+X.` dialing→trunk |
+| **Webhook** | A doorbell one server rings at another | Signed HTTP POSTs, three flavours: Telnyx→shop (Ed25519), Wazo→shop (per-tenant secret via **webhookd**), shop→your DB (HMAC-SHA256, key derived from `client_secret`) |
+| **Cron** | A little robot that checks the to-do list every few minutes | `ir.cron` jobs that push orders, poll, bill, retry, and heal |
+
+---
+
+## 4. The big map
+
+The simple version — follow one arrow at a time:
+
+```mermaid
+flowchart TB
+    subgraph CUSTOMER["🏠 Customer Odoo database (enterprise/voip)"]
+        WIZ["Buy-number wizard<br/>search → requirements → confirm"]
+        DID["voip.did.number"]
+        EXT["voip.extension → user / group / queue"]
+        CALL["voip.call (the call log)"]
+        SOFT["🖥️ Softphone (browser)"]
+    end
+
+    subgraph SHOP["🏪 IAP phone_service (the broker)"]
+        API["Client API<br/>/api/phone_service/1/*"]
+        PBXOPS["PBX ops<br/>/api/phone_service/1/pbx/&lt;op&gt;"]
+        NUM["phone_service.number + order"]
+        TEN["phone_service.pbx_tenant<br/>(your floor, built in 11 steps)"]
+        BILL["phone_service.payment<br/>(credits ledger)"]
+    end
+
+    TELNYX["🌍 Telnyx (owns numbers)"]
+    WAZO["🏢 Wazo PBX (routes calls)"]
+
+    WIZ -->|"1. search & order"| API
+    API --> NUM -->|"2. buy"| TELNYX
+    API --> TEN -->|"3. build your floor"| WAZO
+    TELNYX -.->|"4. order done (webhook)"| API
+    API -.->|"5. number active (webhook)"| DID
+    EXT -->|"6. wire number → destination"| PBXOPS --> WAZO
+    SOFT <-->|"7. register & talk (WebRTC)"| WAZO
+    WAZO -.->|"8. call/voicemail events (webhookd)"| API
+    TELNYX <-->|"the actual phone wire"| WAZO
+    NUM --> BILL
+```
+
+The arrows to remember:
+
+1. **Buying** goes *down*: wizard → shop → Telnyx.
+2. **News** comes *back up* as webhooks: Telnyx → shop → your DB ("your number is active!").
+3. **The switchboard floor** is built once per customer by the shop (11 small steps, each retryable), kicked off the moment you place your first order.
+4. **Wiring** is per-number, but indirect: your DB tells the *shop* "this DID rings extension 1001", the shop tells Wazo.
+5. **Talking** never touches Odoo servers: browser ↔ Wazo ↔ Telnyx carry the audio.
+6. **Live-call news** flows Wazo → shop (webhookd) → your DB — that's how the call card appears while your browser is still ringing.
+7. **Money** flows in the shop: credits authorized at order, captured at success, billed monthly after; call costs post-paid per event.
+
+---
+
+## 5. Story 1 — Buying a phone number 🛒
+
+> *You go to the shop. The shop only shows you shelves that actually have stock
+> for your country. You point at a number, fill in paperwork if the country
+> wants it, and pay. A robot finishes the purchase while you go home; the shop
+> rings your doorbell when the number is yours.*
+
+The wizard (`voip.did.number.search.wizard`) has **three steps**: `search` →
+`assign_groups` (only if the country demands paperwork) → `confirm`.
+
+```mermaid
+sequenceDiagram
+    actor Admin as VoIP Admin
+    participant W as Buy-number wizard
+    participant E as voip.did.number
+    participant S as 🏪 Shop (IAP)
+    participant T as 🌍 Telnyx
+
+    Note over W: at open: coverage map (cached daily)<br/>filters countries AND number types
+    Admin->>W: pick country + type, click Search
+    W->>S: search_available_phone_numbers
+    S->>T: GET /available_phone_numbers
+    T-->>S: list of numbers + raw prices
+    S->>S: cache as drafts (1 h), add markup
+    S-->>W: numbers + monthly credits
+    Note over W: country needs paperwork?<br/>→ requirements step (Story 2)
+
+    Admin->>W: select numbers, click Pay
+    W->>E: reuse released/failed row else create<br/>(state=ordering)
+    W->>S: order_phone_numbers (max 50)
+    S->>S: kick tenant provisioning (Story 3)
+    S-->>W: accepted — statuses validated & written back
+
+    Note over S,T: ⏱ async — cron every minute
+    S->>S: authorize IAP credits (prorated month)
+    S->>T: POST /number_orders (Idempotency-Key)
+    T-->>S: webhook: order complete ✅
+    S->>S: capture credits, number → active
+    S-->>E: 🔔 webhook /voip/api/event (HMAC):<br/>phone_number.status = active
+    E->>E: state → active, chatter, bus toast,<br/>provision the user (Story 4)
+```
+
+Grown-up details:
+
+- **Coverage drives the UI.** At wizard open, `get_all_country_coverage()` fetches Telnyx's *entire* country-coverage table through the shop in **one call** (`POST /api/phone_service/1/get_country_coverage` → Telnyx `GET /country_coverage`), cached with `@api.ormcache("day", "is_demo")` — a daily TTL with zero invalidation code. The country dropdown is domain-filtered to covered countries; the type dropdown (`filterable_selection` widget) is whitelisted by `available_did_number_type_codes`. Broker down → fall back to the full sellable list (logged warning, never blocks). Country covers nothing → type field hidden, alert shown, Search disabled.
+- Sellable types are `DID_NUMBER_TYPES = [mobile, local, national, toll_free]` (`voip_did_number.py`) — `shared_cost` was removed entirely; there is no separate SEARCH constant and no "all types" search. The default type is the **first covered type in canonical order** (usually Mobile).
+- `iap_balance` is fetched **once** at wizard open (`default=lambda`) with an explicit Refresh button — not a compute (that caused an IAP round-trip per onchange). The credits-warning banner appears only after a search. "Buy Credits" opens the IAP store in a new tab so the dialog survives.
+- The first purchased number is auto-assigned to the buyer if nobody has one yet (`_assign_first_number_to_buyer` — sets `extension_id`, since `user_id` is now derived). PBX work is deferred until the number turns **active** and runs best-effort — a PBX hiccup can't abort a purchase.
+- Price quotes live **1 hour** on the shop side (`quoted_at`); stale drafts are GC'd. The shop authorizes a **prorated first month** at order time, captures on Telnyx success, cancels on failure; orders pending > 20 h are failed (IAP authorization TTL). The Telnyx Idempotency-Key is `sha256(client_id:order_id)`.
+- Enterprise DID rows are born in `ordering` (no draft state customer-side; the shop's `draft` is only its quote cache). Response statuses are **validated against the state selection** before being written (`order_from_phone_service`); unknown statuses raise instead of silently corrupting rows.
+- **Re-buying a released or failed number reuses that same row** (`_create_or_reuse_for_order`) — the global `UNIQUE(did_number)` would otherwise crash the purchase at Pay. Reuse keeps the number's chatter history; only the prior order's per-DID `action` requirements are cleared first (one batched query). Entering `released`/`failure` force-clears `extension_id`.
+- After module install, the first "open Odoo" todo lands the admin straight in the buy wizard (an `ir.actions.act_url` wrapper — a raw act_window todo crashed post-purchase navigation).
+- The shop stamps `customer_reference = client_id` on every Telnyx order — the **sole ownership marker**, used by release and by the daily local↔Telnyx reconcile (tear-down only, double-confirmed, final month billed first). The ~90-line doctrine comment atop `phone_service_number.py` is required reading for the two-ledger invariants.
+
+---
+
+## 6. Story 2 — Papers, please 📋 (regulatory requirements)
+
+> *Some countries say: "you can't have a phone number unless you show us who you
+> are." The shop collects your papers, hands them to the phone company, and the
+> phone company's humans look at them. You only fill the forms once per
+> country+type — they're reused for every later number.*
+
+Four kinds of requirement (`voip.requirement.field_type`):
+
+| Type | Example | What you do |
+|---|---|---|
+| `textual` | VAT number | type a value |
+| `document` | a scan of your ID | upload a file (≤ 10 MB) |
+| `address` | proof of local presence | fill an address; validated against Telnyx **as you type** (write-time), with per-field errors |
+| `action` | live identity verification | open a personal verification URL, do it on the carrier's site |
+
+```mermaid
+flowchart LR
+    A["Wizard finds the country<br/>needs paperwork"] --> B{"a group for this<br/>country+type exists?"}
+    B -- yes --> R["Reuse it<br/>(maybe already approved ✅)"]
+    B -- no --> C["Create voip.requirement.group<br/>(shop mirrors it at Telnyx)"]
+    C --> D["You fill text / upload docs / address"]
+    R --> D
+    D --> E["action_fulfill_requirements →<br/>status: pending_approval"]
+    E --> F["🌍 Telnyx humans review (async)"]
+    F -- webhook --> G{"verdict"}
+    G -- approved --> H["🎉 numbers activate"]
+    G -- declined / expired --> D
+```
+
+- The wizard carries **one** `requirement_group_id` (m2o) + a plain `has_requirements` Boolean, both set by a single `get_requirements` probe during search. `_assign_requirement_group` does one find-or-create per `(country, type)` — UNIQUE constraint — shared by all DIDs of that combo.
+- Group statuses: `unapproved → pending_approval → approved | declined | expired | no_longer_eligible`, driven by `requirement_group.status` webhooks; each verdict posts a chatter note on **every** linked DID and refetches Telnyx sub-order comments (deduped via `telnyx_synced_comment_ids`).
+- `action` requirements are special: they belong to **one specific DID** (`did_number_id`), created at purchase from the group's template, and are what keeps a number `pending`.
+- **Shared-group warning**: `shared_pending_count` counts not-yet-active DIDs on the group; the submit form warns when > 1 — resubmitting shared paperwork affects *all* pending orders of that country+type (active numbers keep their approved papers).
+- Address validation happens **on write** of any address field: format checks, then broker `validate_address`; Telnyx's numeric error codes are translated shop-side into semantic `invalid_address_fields` and rendered as per-field translated bullets. Any data change resets `telnyx_address_id`/`telnyx_document_id` so the next fulfill re-creates the upstream resource (Telnyx GCs unlinked documents after ~30 min — the fulfill PATCH failure path rolls back the document id for the same reason).
+
+---
+
+## 7. Story 3 — Building your floor in the switchboard 🏗️ (tenant provisioning)
+
+> *The moment you place your first order, the shop starts building you a whole
+> floor in the switchboard building: walls (contexts), a door to the phone
+> company (trunk), and — last brick — a doorbell wire back to the shop, so the
+> switchboard can report everything that happens on your floor. It builds brick
+> by brick, writing down each finished one — if the power goes out, it resumes
+> exactly where it stopped.*
+
+The shop's `phone_service.pbx_tenant` walks an **11-step state machine**, each step
+idempotent (look-before-create), committed after each success, resumed by a cron
+every 5 minutes. Grouped into 4 phases:
+
+```mermaid
+flowchart LR
+    subgraph P1["Phase 1 · The floor"]
+        S1["tenant<br/>(uuid = UUID(client_id))"]
+    end
+    subgraph P2["Phase 2 · Rooms (contexts)"]
+        S2["incall"] --> S3["outcall"] --> S4["internal"] --> S5["attach outcall<br/>to internal"]
+    end
+    subgraph P3["Phase 3 · The door to Telnyx"]
+        S6["SIP endpoint"] --> S7["trunk"] --> S8["attach"] --> S9["outcall routes<br/>_X. and _+X."] --> S10["bind trunk"]
+    end
+    subgraph P4["Phase 4 · The doorbell"]
+        S11["webhookd subscription<br/>(per-tenant secret) → READY ✅"]
+    end
+    P1 --> P2 --> P3 --> P4
+```
+
+Full state names, in order: `planned → tenant_created → incall_context_created →
+outcall_context_created → internal_context_created →
+outcall_context_attached_to_internal_context → trunk_sip_endpoint_created →
+trunk_created → trunk_attached_to_sip_endpoint → outcall_created → trunk_bound →
+ready` (plus `disabled` ↔ `ready` for billing suspensions, `released`, and
+`failed` after **2 h** without progress — `PROVISIONING_TTL`).
+
+What **no longer exists** (pre-2026-06-19 readers, unlearn this): the per-tenant
+ACL policy, the per-tenant API user, the scoped-token minting step, and the
+`/pbx/get_auth_data` route. Customers get **no Wazo credentials at all** anymore.
+
+Clever bits worth knowing:
+
+- The tenant UUID is **deterministic**: `UUID(hex=client_id)` — re-running provisioning always finds its own bricks. Provisioning is kicked at `_place_orders` (order time), not first activation.
+- The internal context attaches only the **outcall** context (not incall), and the outcall patterns are `_X.` / `_+X.` — at the *PBX* level dialing a colleague's public DID leaves via the trunk and comes back in the front door. The **softphone short-circuits this in JS**: `makeCall` resolves a dialed own-DID to its extension *before* the SIP INVITE, so Odoo-dialed colleague-to-colleague calls stay internal.
+- The final step registers **one Wazo webhookd subscription** per tenant (events: `call_created/answered/ended`, `call_push_notification` + cancel, `global/user_voicemail_message_created`) pointing at the shop, authenticated by a per-tenant `wazo_webhook_secret`.
+- The 503-until-ready behaviour moved into `_require_active_tenant`, which guards **every** `/pbx/<op>` call: no tenant & no orderable number → 403; tenant still building → kick the provisioning cron and return 503 (the client's retry eventually succeeds).
+- **The 401-vs-404 trap**: Wazo answers **401** (not 404) for an unknown `Wazo-Tenant`. On a 401 the shop probes "was our tenant deleted?" with an explicit master-scoped existence check; confirmed gone → re-plan + 503 (self-healing), still there → surface a real auth error. Never treat a bare 401 as "rebuild everything".
+- Tenant isolation is structural: every shop→Wazo call carries the `Wazo-Tenant` header derived from the authenticated client (caller-supplied headers cannot override it), and cross-tenant reads are impossible by construction.
+
+---
+
+## 8. Story 4 — Your desk, your team, your waiting room 🪑 (users, extensions, groups, queues)
+
+> *A number on the wall is useless until the switchboard knows whose desk it
+> rings. When a number is assigned to a desk, Odoo asks the shop to give that
+> person a real switchboard identity: a phone登記 (a Wazo user), a socket for the
+> handset (a line), and a desk number (an extension). Teams can share one bell
+> (a group), or open a proper waiting room with staff on rotation (a queue).*
+
+### 8.1 A user is a user
+
+The "user as a user" refactor killed the old per-user personal queue. Today an
+Odoo user maps to a **real Wazo user** with a WebRTC line:
+
+- PBX identity lives on `res.users` (all `groups="base.group_system"`): `voip_pbx_user_id`, `voip_pbx_user_uuid`, `voip_pbx_line_id`, `voip_pbx_agent_id`, `voip_pbx_auth_password`, `voip_pbx_wakeup_token_minted`.
+- Naming is **server-side** in the shop (`odoo-<login>-<odoo_id>`; SIP username suffixed `_<tenant_uuid>`, auth username `-<tenant_uuid>`) — enterprise never constructs Wazo names. The SIP username comes back and is stored on `res.users.settings`.
+- Personal routing (busy / no-answer / always-forward + ring timeout) is pushed as **Wazo user fallbacks**; destinations may be E.164, an internal extension, a feature code (`*97…`), or a voicemail box (typed destination with `skip_instructions` when a custom greeting exists).
+- Healing is built in: a vanished Wazo user is recreated; a create-conflict **adopts** the orphan from a crashed earlier attempt (found via the deterministic SIP username) and re-issues its secrets; a `not_found` on caller-id reset clears stale PBX ids.
+
+### 8.2 Extensions & assignment
+
+```mermaid
+flowchart TD
+    ASSIGN["DID.extension_id set<br/>(the ONLY writable link)"] --> DERIVE["did.user_id = computed<br/>from extension.destination_ref"]
+    ASSIGN --> WAIT{"DID active?"}
+    WAIT -->|"not yet — best-effort,<br/>never blocks"| HEAL
+    WAIT -->|yes| SYNC["extension._sync_pbx()<br/>→ shop /pbx/sync_user_extension"]
+    SYNC --> CRED["SIP username + secret<br/>on res.users.settings"]
+    SYNC --> WUSER["Wazo: user + WebRTC line<br/>+ extension in internal context"]
+    ASSIGN --> INCALL["shop /pbx/sync_incall:<br/>+32... → user / group / queue"]
+    HEAL["🩹 heal cron (30 min) +<br/>60 s retrigger after failures"] -.->|"checklist: creds, pbx ids,<br/>wakeup token, incall ids"| SYNC
+```
+
+- `voip.extension`: number unique, 3–5 digits not starting 0, auto-allocated from 1000; `destination_ref` → `res.users` | `voip.call.group` | `voip.queue`.
+- **`did.user_id` is derived** (stored compute from `extension_id.destination_ref`) — assignment flows through `extension_id` only; the old `_resolve_assignment` two-way dance is gone. `UNIQUE(user_id)` (one DID per user) remains, deliberately.
+- Admins can manage a user's extension **from user settings** (`pbx_extension_number` compute/inverse on `res.users.settings`, VoIP-admin-gated; creates/renumbers/unlinks the extension).
+- Provisioning is **level-triggered**: `_sync_user_provisioning` checks a completeness checklist (settings creds, `pbx_extension_id`, `voip_pbx_user_id`, wakeup token, incall ids) and re-drives whatever's missing. Events (webhook/poll transitions) trigger *checks*; the 30-min heal cron + 60-s post-failure retrigger catch a DID that went active before its floor was ready. User provisioning and incall routing run in **separate savepoints** so a routing failure can't discard freshly persisted PBX ids.
+- **Credentials outlive numbers**: releasing/suspending a DID never clears SIP identity; only deleting the extension does (which also unroutes DIDs *via write* — Odoo's FK `set null` bypasses Python `write()` and would leak the Wazo incall — deletes PBX objects, revokes the wakeup token and clears creds).
+- Deleting a call group cascades: its extension and the DIDs' incall routes are cleaned up on Wazo too.
+
+### 8.3 Queues & agents (the waiting room)
+
+Two-layer membership model — never hand-edit the roster, edit the sources:
+
+- `voip.queue.agent.source` = **declared intent**: ordered lines referencing users or whole call groups.
+- `voip.queue.agent` = **materialized roster**: one row per resolved user with the Wazo runtime status (`logged_out / available / paused / in_call`, refresh = manual button, no cron). Resolution expands groups (and descendant groups — recursion forbidden), order-preserving dedupe: first occurrence = highest priority.
+- One Wazo **agent** per Odoo user (`res.users.voip_pbx_agent_id`), shared across queues; agent number = the user's extension number. The queue's Wazo name embeds the Odoo id + tenant uuid, enabling conflict-adoption.
+- Queue sync sends ordered `agent_ids`; the shop reconciles Wazo queue members by priority and strips legacy user-type members. Editing a call group or an extension destination re-resolves every queue that transitively references it.
+- Strategies: `ringall, linear, rrmemory, leastrecent, fewestcalls, random` (`wrandom` hidden until per-member weights exist) + agent/queue timeouts, retry delay, max waiting calls.
+- The full agentd surface (login/logoff/pause per agent) is **exposed plumbing with no business callers yet** — a future agent-presence UI. Note: whether a never-logged-in agent receives queue calls is Wazo-side behaviour to verify when that lands.
+- ⚠️ Naming trap: `voip.queue.mixin` has *nothing* to do with PBX queues — it's the softphone "Next Activities" to-call list.
+
+The relationships, in one picture:
+
+```mermaid
+erDiagram
+    VOIP_DID_NUMBER }o--o| VOIP_EXTENSION : "extension_id (the writable link)"
+    VOIP_DID_NUMBER }o--o| RES_USERS : "user_id (COMPUTED, UNIQUE)"
+    VOIP_EXTENSION }o--o| RES_USERS : "destination_ref"
+    VOIP_EXTENSION }o--o| VOIP_CALL_GROUP : "destination_ref"
+    VOIP_EXTENSION }o--o| VOIP_QUEUE : "destination_ref"
+    VOIP_CALL_GROUP }o--o{ VOIP_EXTENSION : "members (ring together)"
+    VOIP_QUEUE ||--o{ VOIP_QUEUE_AGENT_SOURCE : "ordered intent (users/groups)"
+    VOIP_QUEUE ||--o{ VOIP_QUEUE_AGENT : "materialized roster + status"
+    VOIP_DID_NUMBER }o--|| VOIP_REQUIREMENT_GROUP : "paperwork"
+```
+
+---
+
+## 9. Story 5 — Someone calls you 📞 (inbound)
+
+> *A stranger dials your number. The phone company sees "that number belongs to
+> the Odoo building" and pushes the call through the thick wire. The switchboard
+> reads the number, finds your desk, and makes your browser ring — and at the
+> same time rings the shop's doorbell, and the shop rings yours, so a call card
+> appears in Odoo while the phone is still ringing.*
+
+```mermaid
+sequenceDiagram
+    actor C as 📞 Caller
+    participant T as 🌍 Telnyx
+    participant W as 🏢 Wazo (your tenant)
+    participant B as 🖥️ Browser softphone
+    participant S as 🏪 Shop (IAP)
+    participant O as 🏠 Odoo server
+
+    C->>T: dials +32 2 555 1234
+    T->>W: SIP INVITE over the trunk
+    W->>W: incall matches the DID<br/>→ user / group / queue
+    par ring the handset
+        W->>B: SIP INVITE (over WSS — browser rings 🔔)
+    and tell Odoo (via the shop)
+        W->>S: webhookd: call_created (tenant secret)
+        S->>S: rename → call.initiated, filter legs,<br/>event_id = call_id:event_name
+        S->>O: POST /voip/api/event (HMAC-signed)
+        O->>O: voip.pbx.event dedupe → voip.call<br/>(state=calling) + bus notify devices
+    end
+    B->>W: user clicks Answer → 200 OK
+    W->>T: bridge audio
+    C-->>B: 🗣️ WebRTC audio flows (PSTN ↔ trunk ↔ browser)
+    W-->>S: webhookd: call_answered … call_ended (+ disposition)
+    S-->>O: call.answered … call.hangup → ongoing → terminated
+```
+
+Grown-up details:
+
+- **Wazo never calls your DB directly.** All PBX events transit the shop: webhookd → `/api/phone_service/1/webhooks/wazo/call_events` (per-tenant secret, constant-time compare) → renamed (`call_created`→`call.initiated`, `call_ended`→`call.hangup`, …) → **leg filters** (forward only softphone-recipient legs or inbound-external legs) → HMAC-signed to the single enterprise doorbell `/voip/api/event`. Not acked → the shop answers 503 → **Wazo webhookd redelivers** (the retry queue is upstream; the shop stores nothing).
+- Enterprise ingestion: `voip.pbx.event` — race-safe dedupe on `UNIQUE(event_id)` (`event_id = "<call_id>:<event_name>"`), then creates/updates `voip.call` + `voip.call.session`, resolves the ringing user (dialed extension / DID / `voip_pbx_user_uuid`), bus-notifies devices. 12 h retention autovacuum. `occurred_at` always carries the **PBX clock**, never `now()`.
+- `call_ended` gains a computed `disposition` (`answered / busy / rejected / missed`, from SIP hangup causes 17/21).
+- `call.push` / `call.push_cancel` (Wazo `dial_mobile` push events) wake a sleeping browser via service-worker push — the interim ring-wake mechanism "waiting for Kamailio". Declining from the notification hangs up **server-side** (`hangup_call` through the shop) since no browser SIP session exists to send the reject.
+- No answer? The call can fall to the user's fallbacks — another extension, a forward, or a **voicemail box** with a custom greeting (Story 7).
+- Browser niceties: a service-worker notification can ring a background tab, only one tab plays the ringtone (the "ringleader"), and DND (`do_not_disturb_until_dt`) silences everything.
+
+---
+
+## 10. Story 6 — You call someone 📤 (outbound)
+
+> *You press Call. Your browser whispers to the switchboard: "connect me to
+> +1 555…". The switchboard pushes the call out the door to the phone company,
+> stamping your own number on it so the other side knows who's calling.*
+
+```mermaid
+sequenceDiagram
+    participant B as 🖥️ Browser softphone
+    participant O as 🏠 Odoo server
+    participant W as 🏢 Wazo
+    participant T as 🌍 Telnyx
+    actor X as 📞 Callee
+
+    Note over B: at login: SIP REGISTER to Wazo<br/>(sip username/secret over WSS)
+    B->>O: voip.call create_and_format (state=calling)
+    B->>W: SIP INVITE +1555...
+    W->>W: outcall pattern _X. / _+X. matches<br/>caller ID = your active DID
+    W->>T: out the trunk
+    T->>X: phone rings, shows your DID
+    X-->>B: 🗣️ answered — WebRTC audio
+    B->>O: state → ongoing … → terminated (+ duration)
+```
+
+The call log (`voip.call`) states: `calling → ongoing → terminated`, with side
+exits `missed`, `rejected`, `aborted` and a janitor state `ended_unexpectedly`
+(a monthly cron sweeps calls stuck "calling" > 5 min or "ongoing" > 4 h).
+Each call may carry **cost lines** (`voip.call.cost.line`) pushed later by the
+shop's `call.cost` webhooks (Story 8), and a **recording** (uploaded by the
+browser to `/voip/upload_recording`, policy: always / per-user / disabled).
+
+The softphone also does grown-up tricks (all in `static/src/core/web/user_agent.js`):
+multi-tab coordination over a BroadcastChannel, **pulling a live call to another
+device** (SIP REFER ballet), attended transfers, mute/hold, PiP mini-window, and
+SIP-registration retry while provisioning is still converging. Dialing a
+colleague's public DID is resolved to their extension *before* the INVITE, so
+internal calls stay internal.
+
+---
+
+## 11. Story 7 — Leaving a message 📼 (voicemail & audio)
+
+> *Nobody answers, so the switchboard plays your recorded greeting and takes a
+> message on a numbered answering machine. The switchboard rings the shop's
+> doorbell — "new message on machine 9012!" — the shop rings yours, and a row
+> appears in Odoo. When you press ▶, Odoo quietly walks back through the shop to
+> fetch the audio.*
+
+Four enterprise models (all VoIP-admin gated):
+
+| Model | What it is |
+|---|---|
+| `voip.voicemail` | a **box**: name, dialable number (default `"90"+id`, admin-editable, digits+unique), notification email, optional custom greeting; mirrors a Wazo confd voicemail (`pbx_voicemail_id`) |
+| `voip.voicemail.message` | one received message: caller, duration, folder, the recording (fetched lazily), raw payload. Exactly-once via **two** unique indexes: `(event_id)` and `(voicemail_id, pbx_message_id)` |
+| `voip.audio.message` | a reusable audio asset: uploaded file **or** local TTS (`tts_text` + voice); `data_version` cache-buster |
+| `voip.voice` | a Piper TTS voice: ONNX model downloaded on demand from a hard-allowlisted Hugging Face repo (md5-checked, 256 MB cap) |
+
+The flows:
+
+- **Box & greeting sync** (create-or-update, keyed on the stored PBX id): `sync_voicemail` → Wazo confd voicemail in the tenant's internal context, `attach_audio=True` so Wazo emails the recording. A custom greeting is transcoded **in pure stdlib Python** to telephony format (8 kHz / mono / 16-bit WAV — channel-averaging downmix + linear-interpolation resample, no ffmpeg) and pushed to the **calld** greetings API, slot fixed to `"unavailable"`. Box-sync failures raise (admin must know); sound uploads and recording fetches only warn.
+- **Routing callers in**: a user's no-answer/busy destination that matches a box number (or `*97<number>`) becomes a typed voicemail destination with `skip_instructions` when a custom greeting exists. Dial-in: `*98` = own box (softphone voicemail button), `*97<n>` = box *n*.
+- **The listen flow — push the metadata, pull the audio**: Wazo webhookd → shop (`global_voicemail.message_created`, per-tenant secret) → HMAC-signed to `/voip/api/event` → idempotent message row (savepoint + `UniqueViolation` re-search) → if non-empty, immediately pull the recording back through the shop (`get_voicemail_message_recording`, base64-over-JSON — there is **no multipart anywhere** in the pipe) → stored as attachment, streamed to the browser via `/voip/voicemail/message/<id>` with an inline play widget. Fetch failure = logged warning, row survives, replay is idempotent. `user_voicemail.*` events are forwarded but deliberately unhandled (Odoo boxes are standalone, not attached to Wazo users).
+- **Audio messages & sounds**: TTS runs **on the Odoo server** (Piper; voices download on demand; clean UserErrors when piper/voice missing). Every asset with data also mirrors best-effort to the Wazo confd sound category `"odoo"` — forward-compat, nothing consumes those sounds yet, and deletion leaves orphan sounds behind. Editing an asset re-uploads the greeting of every box that uses it.
+- ⚠️ Box numbers are only checked unique against other voicemails, not extensions. And the recording download is issued under the **confd** URL prefix where upstream Wazo documents calld — mocked in tests; if listen-to-message misbehaves live, look there first.
+
+---
+
+## 12. Story 8 — Paying the bill 💳
+
+> *The shop keeps a little notebook. Every number costs tokens each month; every
+> call costs a few tokens, written down after you hang up. If your token jar
+> goes empty, the shop politely turns your numbers off — and turns them back on
+> the minute you refill the jar.*
+
+```mermaid
+flowchart TD
+    subgraph CHARGES["What costs credits"]
+        M["📅 Monthly fee per number<br/>(prorated the first month;<br/>rotation cursor spreads the cron)"]
+        CC["🗣️ Call costs (post-paid)<br/>Telnyx sip-trunking parts only ×<br/>markup (ICP, ≥1); zero ⇒ dropped"]
+    end
+    M --> PAY["phone_service.payment ledger<br/>UNIQUE(reference_type, reference_id)"]
+    CC --> PAY
+    PAY -->|"charge fails"| RETRY["retry cron 10 min:<br/>exponential backoff 30 min·2ⁿ<br/>(cap 1 day)"]
+    RETRY -->|"≥ 5 tries"| DELINQ["delinquent ⚠️"]
+    PAY -->|"balance < 0 (post-paid<br/>captures may overdraw)"| OFF
+    DELINQ --> OFF["client disabled 🔒<br/>Telnyx connection detached,<br/>tenant trunk unbound,<br/>numbers suspended"]
+    OFF -->|"reconcile cron 1 min:<br/>balance ≥ 0 again?"| ON["re-enable ✨<br/>rebind, suspended → active"]
+    OFF -->|"still unpaid on the 25th"| GONE["monthly cron releases<br/>suspended numbers 🗑️"]
+```
+
+How a call becomes a charge (the identifier gap, bridged twice):
+
+1. **Correlate**: Telnyx call lifecycle events (`call.initiated/bridged/answered/hangup`, Ed25519-verified) are only *recorded* into `phone_service.telnyx.call` — `call_control_id` → client + from/to/direction (client found via the DID; 12 h GC). Real-time call handling is Wazo's job, not Telnyx events'.
+2. **Enrich**: the sip-trunking `call.cost` event that arrives after hangup is **anonymous** (no from/to). It's joined to the correlation row by `call_control_id`. No resolvable client yet → answer **503 so Telnyx redelivers later** — no local retry queue.
+3. **Mark up & forward**: keep only `sip-trunking` cost parts (`_CUSTOMER_BILLABLE_CALL_PARTS` — other parts are absorbed by Odoo), multiply by the markup ICP (floor 1.0), round to 4 dp; zero after filtering ⇒ swallowed. Forward `{data, meta}` HMAC-signed to the client.
+4. **Charge once**: one `phone_service.webhook.event` row per `event_id` (UNIQUE + savepoint); only a fresh event charges — `payment._reserve(client, "call_cost", event_id, …)` with `UNIQUE(reference_type, reference_id)`; capture uses `allow_negative_balance=True` (post-paid — the charge always lands, `overdrawn` flagged when balance < 0).
+5. **Enterprise receipt**: `/voip/api/event` `call.cost` → `voip.call.cost.line` (dedupe by `event_id`; stores the **marked-up** credits — the customer's price, not Telnyx's). No shared call id exists between Telnyx and the Wazo call, so the line attaches to its `voip.call` **heuristically**: direction + last-9-digit number match + time window, closest end-time wins; orphans re-matched by a 30-min cron (24 h horizon). Deliberate best-effort, not a bug.
+6. **Enforce asynchronously**: the 1-min reconcile cron recomputes the `disabled` intent from the live IAP balance (falling back to overdrawn/delinquent snapshots when IAP is unreachable) and drives Telnyx routing (connection detach via tagged bulk job) + tenant trunk to match. Re-enable is symmetric.
+
+Where money state lives, side by side:
+
+| Enterprise `voip.did.number.state` | Shop `phone_service.number.state` | Meaning |
+|---|---|---|
+| — | `draft` | price quote cached (1 h TTL) — never visible to the customer |
+| `ordering` | `ordering` | waiting for the submit cron |
+| `pending` | `pending` | Telnyx is working on it |
+| `active` | `active` | yours, ringing, billed monthly |
+| `suspended` | `suspended` | turned off for non-payment (reversible; stays provisioned so the softphone can explain itself) |
+| `failure` | `failure` | order failed for good (credits released) |
+| `released` | `released` | given back; someone else may buy it |
+
+Shop constants: `CHARGEABLE_STATES = (active, pending, suspended)`,
+`REORDERABLE_STATES = (draft, failure, released)` — "re-orderable" is exactly
+"we don't currently own it on Telnyx". The order's own life:
+`ordering → pending → success | failure | cancelled`.
+
+---
+
+## 13. The shape of the data 🗄️
+
+Enterprise side (customer DB):
+
+```mermaid
+erDiagram
+    VOIP_DID_NUMBER ||--o{ VOIP_REQUIREMENT : "action reqs (per-DID)"
+    VOIP_DID_NUMBER }o--|| VOIP_REQUIREMENT_GROUP : "requirement_group_id"
+    VOIP_REQUIREMENT_GROUP }o--o{ VOIP_REQUIREMENT : "shared reqs"
+    VOIP_DID_NUMBER }o--o| VOIP_EXTENSION : "extension_id (writable)"
+    VOIP_DID_NUMBER }o--o| RES_USERS : "user_id (computed, UNIQUE)"
+    VOIP_EXTENSION }o--o| VOIP_CALL_GROUP : "destination_ref"
+    VOIP_EXTENSION }o--o| VOIP_QUEUE : "destination_ref"
+    VOIP_QUEUE ||--o{ VOIP_QUEUE_AGENT_SOURCE : "intent"
+    VOIP_QUEUE ||--o{ VOIP_QUEUE_AGENT : "roster"
+    VOIP_CALL ||--o{ VOIP_CALL_COST_LINE : "cost lines (UNIQUE event_id)"
+    VOIP_CALL }o--o| VOIP_CALL_SESSION : "legs of one session"
+    VOIP_PBX_EVENT }o--o| VOIP_CALL : "drives state (UNIQUE event_id, 12 h GC)"
+    VOIP_VOICEMAIL ||--o{ VOIP_VOICEMAIL_MESSAGE : "messages (2 unique keys)"
+    VOIP_VOICEMAIL }o--o| VOIP_AUDIO_MESSAGE : "custom greeting"
+    VOIP_AUDIO_MESSAGE }o--o| VOIP_VOICE : "TTS voice (Piper)"
+    RES_USERS ||--o| RES_USERS_SETTINGS : "SIP creds, DND, forwards, extension number"
+```
+
+Shop side (IAP):
+
+```mermaid
+erDiagram
+    PHONE_SERVICE_CLIENT ||--o{ PHONE_SERVICE_NUMBER : owns
+    PHONE_SERVICE_NUMBER ||--o{ PHONE_SERVICE_ORDER : "order_ids (retries)"
+    PHONE_SERVICE_CLIENT ||--o| PHONE_SERVICE_PBX_TENANT : "exactly one floor"
+    PHONE_SERVICE_PBX_TENANT }o--|| PHONE_SERVICE_PBX : "hosted on"
+    PHONE_SERVICE_PBX }o--o{ RES_COUNTRY : "serves countries"
+    PHONE_SERVICE_CLIENT ||--o{ PHONE_SERVICE_PAYMENT : "credit ledger"
+    PHONE_SERVICE_CLIENT ||--o{ PHONE_SERVICE_CLIENT_EXTERNAL_RESOURCE : "owns Telnyx resources (anti-IDOR)"
+    PHONE_SERVICE_CLIENT ||--o{ PHONE_SERVICE_WEBHOOK_EVENT : "deduped events"
+    PHONE_SERVICE_TELNYX_CALL }o--|| PHONE_SERVICE_CLIENT : "call_control_id correlation (12 h)"
+```
+
+Key invariants (the database promises):
+
+- one DID per user (`UNIQUE(user_id)` — computed but still unique), one row per phone number globally (`UNIQUE(did_number)` — re-buying reuses the released/failed row), one extension number globally (`UNIQUE(number)`, 3–5 digits, not starting 0), one extension per queue/group destination
+- one requirement group per `(country, type)`; one Telnyx resource owned by exactly one client (`customer_reference`)
+- one tenant per client (deterministic uuid); at most one PBX per country (+ exactly one default PBX)
+- one payment per `(reference_type, reference_id)` — bills can't double-charge
+- events unique by `event_id` at **every** hop: shop webhook events, enterprise `voip.pbx.event`, enterprise cost lines, voicemail messages (×2 keys) — doorbells can't ring twice
+
+---
+
+## 14. Who is allowed to do what 🔐
+
+```mermaid
+flowchart TD
+    USER["base.group_user<br/>sees own calls, makes calls"] --> OFFICER["voip officer<br/>+ sees all company calls"]
+    OFFICER --> ADMIN["voip admin<br/>+ buys numbers, manages extensions,<br/>queues, voicemail, requirements"]
+    ADMIN --> SYSTEM["base.group_system<br/>+ raw PBX technical fields"]
+```
+
+And between machines:
+
+| Door | Lock |
+|---|---|
+| enterprise → shop (incl. every PBX op) | IAP `client_id` + `client_secret` (shop stores only HMAC hashes, constant-time compare) |
+| Telnyx → shop | Ed25519 signature on every webhook (±300 s timestamp tolerance) |
+| Wazo → shop | **webhookd** POSTs carrying a per-tenant secret (`wazo_webhook_secret`, constant-time compare) |
+| shop → enterprise | HMAC-SHA256 (`X-IAP-Phone-Service-Signature`) on `/voip/api/event`; key = HMAC(client_secret, "iap-phone-service-webhook-signing") — derived because the shop keeps only a *hash* of the secret, and client_id (the old key) travels in every request |
+| shop → Wazo | master token + mandatory explicit `Wazo-Tenant` scoping (or explicit `master_scoped=True`) |
+| browser → Wazo | per-user SIP username/secret over WSS |
+| enterprise → Wazo | **nothing** — no tokens, no confd; this row exists to remind you it's gone |
+| Wazo tenant ↔ tenant | structurally impossible — tenant tree isolation (verified live: cross-tenant = 401) |
+
+PBX technical fields (`pbx_queue_id`, `voip_pbx_user_id`, …) are
+`groups="base.group_system"`; the sync paths use `sudo()` internally after the
+business-level access check, so a non-system VoIP admin can still buy and assign
+numbers. Error surface: the shop returns stable `error` keys + structured
+`details` (e.g. `invalid_address_fields`); the enterprise maps keys to translated
+messages and **never** shows or parses raw server text (`PhoneServiceError.error_key`
+is what code branches on — e.g. `not_found` ⇒ clear stale PBX ids and heal).
+
+---
+
+## 15. The robots 🤖 (crons & self-healing)
+
+Nothing in this system trusts a single HTTP call to succeed. Every async path
+has a robot that retries it.
+
+| Side | Robot | Every | Job |
+|---|---|---|---|
+| 🏪 | submit ordering | 1 min | authorize credits + send orders to Telnyx |
+| 🏪 | poll pending | 5 min | ask Telnyx "done yet?"; fail orders older than 20 h |
+| 🏪 | resume PBX provisioning | 5 min | lay the next tenant brick; mark `failed` after 2 h stuck (`PROVISIONING_TTL`) |
+| 🏪 | sync tenant state | 10 min | unbind/rebind trunk to mirror client disabled flag |
+| 🏪 | recover payments | 10 min | retry pending (>10 min) and failed charges on **exponential backoff** (30 min·2ⁿ, cap 1 day); ≥5 tries ⇒ delinquent |
+| 🏪 | monthly billing | 1 day | charge every chargeable number once per month (rotation cursor spreads the load) |
+| 🏪 | reconcile client state | 1 min | drive Telnyx routing + number state to match the `disabled` intent (balance < 0, or overdrawn/delinquent fallback when IAP is unreachable) |
+| 🏪 | reconcile Telnyx drift | 1 day | tear-down-only cleanup of local↔Telnyx divergence (double-confirmed, final month billed first) |
+| 🏪 | GC stale drafts | 1 day | delete quote-cache numbers > 2 h |
+| 🏪 | release abandoned | 1 month (25th) | release numbers still suspended |
+| 🏠 | sync number statuses | 1 h | belt-and-braces poll of the shop (webhooks can be missed) |
+| 🏠 | sync webhook URL | 1 h | make sure the shop knows where our doorbell is |
+| 🏠 | sync outbound destinations | 1 h | keep allowed destination countries in sync |
+| 🏠 | **heal provisioning** | 30 min (+60 s retrigger after any sync failure) | re-drive under-provisioned active DIDs against the completeness checklist |
+| 🏠 | **link orphan cost lines** | 30 min | re-match cost lines that arrived before their call record (24 h horizon) |
+| 🏠 | cleanup stuck calls | 1 month | sweep zombie `calling`/`ongoing` records |
+
+(Plus 12 h autovacuums on the event tables: shop webhook events & telnyx-call
+correlations, enterprise `voip.pbx.event`.)
+
+The matching design rules: every webhook has a **polling fallback**; a handler
+that can't finish answers **503 and lets the upstream redeliver** (Telnyx and
+Wazo webhookd both retry — no local dead-letter queues); every state machine
+step is **idempotent** (lookup-before-create, adopt orphans on conflict); every
+dedup is a **unique constraint**, not an if.
+
+---
+
+## 16. Demo vs production 🎭
+
+| | Demo (ICP `voip.test_mode`) | Production |
+|---|---|---|
+| SIP / audio | none — mock sessions, UI only (provider `mode=demo`) | real SIP.js + WebRTC |
+| Buying numbers | `PhoneServiceAPIDemo` returns canned answers instantly (BE/US, all types) | full shop → Telnyx → webhook loop |
+| PBX ops | echoed ids (`PBX_SYNC_ECHO_IDS`) — sync flows "work" without a PBX | real Wazo via the shop |
+| Credits | fake balance (500) | real IAP account |
+| What it proves | the UI flows | everything |
+
+⚠️ Demo short-circuits at the very first layer (`get_phone_service_api()` checks
+the ICP); it exercises **none** of the broker, crons, signatures, Wazo or
+billing. Don't let a green demo lull you.
+
+**One provider ships in the data**: `voip.odoo_provider` — "Odoo Phone Service"
+(`mode=prod`, `ws_server=wss://wazo-1.voip.test.odoo.com/ws`, voicemail code
+`*98`), self-healing via `get_or_create_odoo_provider()`. The legacy
+"Odoo"/"Odoo PBX" pair is gone. User-facing provider pickers are filtered to
+`mode='prod'`; the demo *API* switch (ICP) and the provider *mode* (softphone
+mock) are two different demo switches — know which one you're flipping.
+`res.config.settings` retains only Allowed Calling Destinations (+ a
+testing-only endpoint field slated for removal).
+
+---
+
+## 17. Where the code lives 🗺️
+
+```
+enterprise/voip/                            ← the customer side (PR #107700)
+├── models/
+│   ├── voip_did_number.py                  ← the number + its life; DID_NUMBER_TYPES; heal cron
+│   ├── voip_extension.py                   ← desks; sync entry point; owns SIP identity lifecycle
+│   ├── voip_call_group.py                  ← teams (ring together)
+│   ├── voip_queue{,_agent,_agent_source}.py ← waiting rooms: intent → roster → Wazo agents
+│   ├── voip_voicemail{,_message}.py        ← boxes + received messages (listen flow)
+│   ├── voip_audio_message.py, voip_voice.py ← audio assets, Piper TTS voices
+│   ├── voip_requirement{,_group}.py        ← paperwork
+│   ├── voip_call{,_session,_cost_line}.py  ← the call log + billing lines
+│   ├── voip_pbx_event.py                   ← PBX events → call states (dedupe, 12 h GC)
+│   ├── phone_service_api.py                ← HTTP client to the shop (+Demo); pbx_call(); error keys
+│   ├── pbx_service.py                      ← named-op facade: every method = one /pbx/<op> call
+│   └── res_users{,_settings}.py            ← PBX identity (system fields), SIP creds, forwards, extension number
+├── controllers/
+│   ├── phone_service_api_controller.py     ← /voip/api/event (the ONE signed doorbell)
+│   ├── pbx_status.py                       ← /voip/pbx/status (proxied health check)
+│   └── voip_controller.py                  ← phone parsing, recordings, audio/voicemail streaming
+├── wizards/voip_did_number_search_wizard*  ← the buy flow; coverage cache; single requirement group
+└── static/src/                             ← the softphone (Owl + SIP.js)
+    ├── core/web/{voip_service,user_agent,session,registerer}.js
+    ├── softphone/                          ← UI: dialer, tabs, in-call view
+    └── {service_worker,worker/}            ← notifications, ringtone dedup, push wake
+
+iap-apps/iap_services/phone_service/        ← the shop (PR #1370)
+├── models/
+│   ├── phone_service_client.py             ← who you are, billing switch, signing secret
+│   ├── phone_service_number.py             ← numbers + monthly fees + the two-ledger doctrine comment
+│   ├── phone_service_order.py              ← purchases (IAP auth/capture, status forwarding)
+│   ├── phone_service_payment.py            ← the credits ledger (backoff, delinquency)
+│   ├── phone_service_pbx{,_tenant}.py      ← Wazo servers + the 11-step floor build + webhookd step
+│   ├── phone_service_pbx_tenant_ops.py     ← every _op_* : the confd/calld/agentd choreography
+│   ├── phone_service_webhook_event.py      ← dedupe + markup + forward + charge
+│   ├── phone_service_telnyx_call.py        ← call_control_id correlation (12 h)
+│   ├── phone_service_client_external_resource.py ← anti-IDOR ownership
+│   └── wazo_api.py                         ← transport: master token, mandatory scoping
+├── controllers/
+│   ├── client_controller.py, number_controller.py, regulatory_controller.py
+│   ├── pbx_controller.py                   ← /pbx/<op> routes; _require_active_tenant (403/503); Wazo error mapping
+│   ├── webhook_controller.py               ← Telnyx webhooks (Ed25519) in
+│   └── common.py                           ← @require_client, validators, anti-IDOR helpers
+├── utils/{config,cron,errors,telnyx_client,telnyx_events,wazo_client,wazo_events,webhook}.py
+│                                           ← wazo_client = resource-style Wazo API; *_events = normalize/filter; webhook = send_webhook (HMAC)
+└── data/ir_cron.xml                        ← the shop robots
+```
+
+---
+
+## 18. Keeping this document alive 🌱
+
+This file is the onboarding source of truth for the Parrot system. When you push
+to either PR, walk this checklist (5 minutes):
+
+1. **States changed?** (any `fields.Selection` on did_number / number / order / payment / tenant / requirement group / call) → fix §5–§12 tables and diagrams. They claim *exact* values.
+2. **Route added/removed?** → fix §14 (locks) and §17 (file map). PBX ops count too (`/pbx/<op>`).
+3. **Cron added/renamed/re-timed?** → fix the robots table in §15.
+4. **New model or relationship?** → fix the ERDs in §13.
+5. **Provisioning step added?** → fix the 11-step list in §7 (and the count!).
+6. **Webhook event added/renamed?** → fix §9 (pipeline), §11 (voicemail), §14 (locks).
+7. Bump the *Last regenerated* line in the header with the new commit hashes.
+8. The gaps doc (`parrot-gaps-and-improvements.md`) follows the same rule; the deep-dive twin (`pr-107700-diagrams-updated.md`) is currently ⚠️ stale (pre-DB→IAP→WAZO) — update or retire it.
+
+> Tip: regenerating is cheap — ask your agent to "re-verify parrot-onboarding.md
+> against the current branches and update the deltas only".
+</script>
+<script src="../vendor/marked.min.js"></script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+(function(){
+  var md = document.getElementById("md").textContent;
+  var out = document.getElementById("out");
+  if(!window.marked){
+    out.innerHTML="";
+    var pre=document.createElement("pre");
+    pre.style.whiteSpace="pre-wrap"; pre.style.background="none"; pre.style.color="inherit";
+    pre.textContent=md; out.appendChild(pre); return;
+  }
+  var renderer=new marked.Renderer();
+  var origCode=renderer.code.bind(renderer);
+  renderer.code=function(code, lang){
+    if((lang||"").trim()==="mermaid"){ return '<div class="mermaid">'+code+'</div>'; }
+    return origCode(code, lang);
+  };
+  marked.setOptions({renderer:renderer, headerIds:true, mangle:false, gfm:true});
+  out.innerHTML=marked.parse(md);
+  if(window.mermaid){
+    mermaid.initialize({startOnLoad:false, theme:"neutral", securityLevel:"loose"});
+    try{ mermaid.run({querySelector:".mermaid"}); }catch(e){ console.warn("mermaid:", e); }
+  }
+})();
+</script>
+</body>
+</html>
