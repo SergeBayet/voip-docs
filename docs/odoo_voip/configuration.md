@@ -16,6 +16,7 @@ We strongly recommend you use your own data module with:
     <!-- Allows to contact your own Phone Service instance -->
     <record id="phone_service_endpoint" model="ir.config_parameter">
         <field name="key">phone_service.endpoint</field>
+        <!-- You may use your localhost address here -->
         <field name="value">https://your-tunneling-address.ngrok.free</field>
     </record>
 
