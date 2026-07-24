@@ -13,21 +13,25 @@ Kamailio configuration file is not just a set of 'parameter=value' line. It has 
 The actions are exported by Kamailio core or modules and are like functions exported by a library. Those actions can be combined in conditional statements like IF and SWITCH or in loops like WHILE. Modularity is provided by the ability to execute a routing block from another routing block.
 
 !!! tip
-    To copy all these configuration files, you can use:
+    To copy all these configuration files, you can put yourself in the root of `brboi/voip-infra` GH repo and use:
     ```bash
-    scp -r ./_etc_kamailio/* root@voip.test.odoo.com:/etc/kamailio/
+    scp -r ./conf/kamailio/etc/kamailio/* root@edge-XXX.voip.test.odoo.com:/etc/kamailio/
     ```
     Or, to keep the folder in sync (transfers only what changed and removes files deleted locally), use `rsync` over SSH:
     ```bash
-    rsync -avz --delete ./_etc_kamailio/ root@voip.test.odoo.com:/etc/kamailio/
+    rsync -avz --delete ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/
+    ```
+    The first time you also must configure the systemd kamailio service itself:
+    ```bash
+    rsync -avz --delete ./conf/kamailio/etc/systemd/ root@edge-XXX.voip.test.odoo.com:/etc/systemd/ && ssh root@edge-XXX.voip.test.odoo.com systemctl daemon-reload
     ```
     After copying the configuration files, the Kamailio service needs to be restarted for the changes to take effect. You can do this remotely over SSH:
     ```bash
-    ssh root@voip.test.odoo.com systemctl restart kamailio
+    ssh root@edge-XXX.voip.test.odoo.com systemctl restart kamailio
     ```
     To sync from local to the server and restart in a single command:
     ```bash
-    rsync -avz --delete ./_etc_kamailio/ root@voip.test.odoo.com:/etc/kamailio/ && ssh root@voip.test.odoo.com systemctl restart kamailio
+    rsync -avz --delete ./conf/kamailio/etc/kamailio/ root@edge-XXX.voip.test.odoo.com:/etc/kamailio/ && ssh root@edge-XXX.voip.test.odoo.com systemctl restart kamailio
     ```
 
 ## Environment Variables
