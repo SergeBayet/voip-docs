@@ -4,7 +4,7 @@ After having installed the Phone Service, you must go to `Settings > Phone Servi
 and configure the following:
 - Telnyx API Keys
 - IAP Service Key
-- Edge Token: must be the same as the edge token defined in the edge environment
+- Edge shared key: must be the same as the edge shared key defined in the edge environment
 - Edge Permit CIDRs: all public IP of the known edges, CIDR formatted, comma-separated.
 
 ## Development tips
@@ -35,10 +35,10 @@ We strongly recommend you create your own data module with:
         <value>True</value>
     </function>
 
-    <!-- must be the same as the edge token defined in the edge environment -->
-    <record id="ir_config_parameter_phone_service_edge_token" model="ir.config_parameter">
-        <field name="key">phone_service.edge_token</field>
-        <field name="value">the-magnificent-edge-token</field>
+    <!-- must be the same as the edge shared key defined in the edge environment -->
+    <record id="ir_config_parameter_phone_service_edge_shared key" model="ir.config_parameter">
+        <field name="key">phone_service.edge_shared key</field>
+        <field name="value">the-magnificent-edge-shared key</field>
     </record>
 
     <!-- Your Telnyx API Keys -->
