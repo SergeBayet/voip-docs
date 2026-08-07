@@ -3,3 +3,5 @@
 !.gitignore
 docs/superpowers/
 site/
+__pycache__/
+*.pyc

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 3 · The SIP call lifecycle — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 14 · The SIP call lifecycle — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17;--muted:#6b655c;--faint:#9a948a;--rule:#e4ded3;--paper:#fbf9f4;
@@ -77,10 +78,10 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 1 — The Map · Lesson 3 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Map · Lesson 14 of 28</div>
   <h1>The SIP call lifecycle</h1>
   <p class="lede">What actually travels on the signaling lane — from "I'm online" to "goodbye" — in plain words first, then the real SIP names.</p>
-  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Goal: trace a call hop-by-hop and name every message</span><span>🧩 Builds on: Lesson 2 (two planes)</span></div>
+  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Goal: trace a call hop-by-hop and name every message</span><span>🧩 Builds on: Lesson 13 (two planes)</span></div>
 </header>
 
 <div class="kidbox">
@@ -91,7 +92,7 @@
     <li>You ask <em>"please connect me to Sara"</em> — her phone rings — she picks up — you both say "ok!"</li>
     <li>You <strong>talk</strong>. When you're done, someone says <em>"bye"</em> and the line drops.</li>
   </ol>
-  <p style="margin:.5rem 0 0">That's a phone call. <strong>SIP</strong> is just the polite back-and-forth that arranges steps 1, 2 and the goodbye. The actual <em>talking</em> in step 3 is the <strong>media plane</strong> from <a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a> — a different lane entirely.</p>
+  <p style="margin:.5rem 0 0">That's a phone call. <strong>SIP</strong> is just the polite back-and-forth that arranges steps 1, 2 and the goodbye. The actual <em>talking</em> in step 3 is the <strong>media plane</strong> from <a href="./0013-two-planes-signaling-vs-media.html">Lesson 13</a> — a different lane entirely.</p>
 </div>
 
 <h2>The whole conversation, as a picture</h2>
@@ -112,7 +113,7 @@ sequenceDiagram
   Sara-->>PBX: hello (I will speak Opus too)
   PBX-->>You: Sara answered
   You->>PBX: great, got it
-  Note over You,Sara: 3 — now you actually talk = MEDIA plane (Lesson 2)
+  Note over You,Sara: 3 — now you actually talk = MEDIA plane (Lesson 13)
   You->>PBX: bye
   PBX-->>You: line dropped
 </pre>
@@ -142,7 +143,7 @@ sequenceDiagram
 </ul>
 
 <h2>The same call, in <em>our</em> stack</h2>
-<p>Remember from <a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a> that the "PBX" is really two programs. Here's who carries those SIP messages in Parrot: the browser talks <strong>SIP over WSS</strong> to <strong>Kamailio</strong> (the edge), which passes them to <strong>Asterisk</strong> (the engine):</p>
+<p>Remember from <a href="./0013-two-planes-signaling-vs-media.html">Lesson 13</a> that the "PBX" is really two programs. Here's who carries those SIP messages in Parrot: the browser talks <strong>SIP over WSS</strong> to <strong>Kamailio</strong> (the edge), which passes them to <strong>Asterisk</strong> (the engine):</p>
 <figure>
 <pre class="mermaid">
 sequenceDiagram
@@ -158,11 +159,11 @@ sequenceDiagram
   K-->>B: 200 OK
   Note over B,T: then audio flows on the media lane (rtpengine - Telnyx)
 </pre>
-<figcaption>Kamailio <em>forwards</em> the messages (a proxy); Asterisk <em>runs</em> the call (a B2BUA). Exactly the Lesson-2 split, now in motion.</figcaption>
+<figcaption>The public Kamailio edge <em>forwards</em> messages (a proxy); Wazo/Asterisk <em>runs</em> the call (a B2BUA). Exactly the Lesson 13 split, now in motion.</figcaption>
 </figure>
 
 <div class="codehook">
-  <strong>🔌 Where this lives in our code.</strong> Caller identity is just <em>another header line inside the INVITE</em>. In the old Telnyx-direct softphone, "set the caller ID" literally meant browser JS adding a <code>P-Asserted-Identity</code> line to the outbound INVITE (in <code>user_agent.js</code>) — a hack Parrot has since retired by moving identity <em>server-side</em>, onto the Wazo user's configuration. The mechanism is the same message you just learned; only the author of the header changed. <a href="./0004-outbound-calling-the-world.html">Lesson 4</a> tells that whole story, and why the move mattered for security.
+  <strong>🔌 Where this lives in our code.</strong> Caller identity is just <em>another header line inside the INVITE</em>. In the old Telnyx-direct softphone, "set the caller ID" literally meant browser JS adding a <code>P-Asserted-Identity</code> line to the outbound INVITE (in <code>user_agent.js</code>) — a hack Parrot has since retired by moving identity <em>server-side</em>, onto the Wazo user's configuration. The mechanism is the same message you just learned; only the author of the header changed. <a href="./0015-outbound-calling-the-world.html">Lesson 15</a> tells that whole story, and why the move mattered for security.
 </div>
 
 <!-- ===== INTERACTIVE 1: order the call ===== -->
@@ -186,7 +187,7 @@ sequenceDiagram
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and try: "show me a real INVITE message line by line," "what's actually inside SDP?", "where does Kamailio decide where to send the INVITE?", or "what happens to this diagram for an <em>incoming</em> call from the outside world?" The back-and-forth is where the learning compounds.
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and try: "show me a real INVITE message line by line," "what's actually inside SDP?", "where does Kamailio decide where to send the INVITE?", or "what happens to this diagram for an <em>incoming</em> call from the outside world?" The back-and-forth is where the learning compounds.
 </div>
 
 <div class="links">
@@ -195,9 +196,9 @@ sequenceDiagram
 </div>
 
 <div class="nav-foot">
-  <a href="./0002-two-planes-signaling-vs-media.html"><span class="lbl">← Previous</span>Lesson 2 · The two planes: signaling vs media</a>
+  <a href="./0013-two-planes-signaling-vs-media.html"><span class="lbl">← Previous</span>Lesson 13 · The two planes: signaling vs media</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="./0004-outbound-calling-the-world.html"><span class="lbl">Next →</span>Lesson 4 · Outbound: calling the world<br><span style="color:var(--faint);font-weight:400">out the trunk door — with your number stamped on the envelope by the switchboard.</span></a>
+  <a href="./0015-outbound-calling-the-world.html"><span class="lbl">Next →</span>Lesson 15 · Outbound: calling the world<br><span style="color:var(--faint);font-weight:400">out the trunk door — with your number stamped on the envelope by the switchboard.</span></a>
 </div>
 
 </div>
@@ -265,13 +266,13 @@ const QUIZ=[
      {t:'rtpengine — because the media must be set up before any signaling', ok:false},
      {t:'Telnyx — the carrier receives the browser INVITE before the PBX', ok:false}
    ],
-   why:'Browser → Kamailio (edge, over SIP/WSS) → Asterisk (engine). The Lesson-2 split, in motion.'}
+   why:'Browser → Kamailio (edge, over SIP/WSS) → Wazo/Asterisk (engine). The Lesson 13 split, in motion.'}
 ];
 const quizEl=document.getElementById('quiz'); let qDone=0,qRight=0;
 QUIZ.forEach((q,i)=>{
   const wrap=document.createElement('div'); wrap.className='q';
   const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-  const fb=document.createElement('div'); fb.className='qfb'; fb.id='qfb'+i;
+  const fb=document.createElement('div'); fb.className='qfb'; fb.id='qfb'+i; fb.setAttribute('aria-live','polite');
   q.choices.forEach(c=>{
     const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
     b.onclick=()=>{
@@ -279,7 +280,7 @@ QUIZ.forEach((q,i)=>{
       if(c.ok){b.classList.add('correct'); qRight++;}
       else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
       [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
       if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent='Score: '+qRight+'/'+QUIZ.length+'. '+(qRight===QUIZ.length?'You can narrate a call now. 🦜':'Revisit the picture above for the one you missed.');
     };
     wrap.appendChild(b);

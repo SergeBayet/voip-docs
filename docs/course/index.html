@@ -1,130 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🦜 Parrot VoIP Course — team onboarding curriculum</title>
-<style>
-  :root{
-    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
-    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
-    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
-    --both:#5a4b86; --both-bg:#eee9f5;
-  }
-  *{box-sizing:border-box}
-  html{font-size:17px}
-  body{margin:0;background:var(--paper);color:var(--ink);
-    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:860px;margin:0 auto;padding:3rem 1.4rem 5rem}
-  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;color:var(--parrot);font-weight:700}
-  h1{font-size:2.5rem;line-height:1.05;margin:.35rem 0 .5rem}
-  .lede{font-size:1.15rem;color:var(--muted);margin:.2rem 0 0;max-width:44rem}
-  header.ch{border-bottom:2px solid var(--ink);padding-bottom:1.3rem;margin-bottom:1.6rem}
-  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--faint);margin-top:1rem;display:flex;gap:1.2rem;flex-wrap:wrap}
-  .how{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.3rem;margin:1.4rem 0;font-size:.97rem}
-  .how b{color:var(--parrot-deep)}
-  .module{margin:2.2rem 0 0}
-  .module-head{display:flex;align-items:baseline;gap:.8rem;border-top:1px solid var(--rule);padding-top:1.1rem}
-  .module-num{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .55rem;border-radius:99px}
-  .m1 .module-num{color:var(--parrot-deep);background:var(--accent-bg)}
-  .m2 .module-num{color:var(--sig);background:var(--sig-bg)}
-  .m3 .module-num{color:var(--both);background:var(--both-bg)}
-  .m4 .module-num{color:var(--med);background:var(--med-bg)}
-  .module h2{font-size:1.35rem;margin:0}
-  .module .blurb{color:var(--muted);font-size:.95rem;margin:.3rem 0 .9rem}
-  .lessons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem}
-  @media (max-width:720px){.lessons{grid-template-columns:1fr}}
-  .lesson{display:block;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:8px;padding:.85rem 1rem;transition:.12s}
-  .lesson:hover{border-color:var(--parrot);transform:translateY(-1px)}
-  .lesson .n{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
-  .lesson .t{font-weight:700;font-size:.98rem;line-height:1.25;display:block;margin:.15rem 0 .25rem}
-  .lesson .d{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--muted);line-height:1.4}
-  .refs{margin-top:2.6rem;border-top:2px solid var(--ink);padding-top:1.2rem}
-  .refs h2{font-size:1.2rem;margin:0 0 .6rem}
-  .reflinks{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.88rem;display:flex;gap:.8rem;flex-wrap:wrap}
-  .reflinks a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;color:var(--parrot-deep)}
-  .foot{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--faint);margin-top:2.4rem}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Odoo VoIP Team Onboarding</title>
+  <link rel="stylesheet" href="assets/course.css">
+  <style>
+    .wrap{max-width:1040px}.course-head{border-bottom:2px solid var(--ink);padding-bottom:1.3rem}
+    .module{margin-top:2.2rem}.module-title{align-items:baseline;border-top:1px solid var(--rule);display:flex;gap:.7rem;padding-top:1rem}
+    .module-title h2{border:0;margin:0;padding:0}.module-title span{background:var(--accent-bg);border-radius:99px;color:var(--parrot-deep);font-size:.7rem;font-weight:750;letter-spacing:.1em;padding:.15rem .55rem;text-transform:uppercase}
+    .module>p{color:var(--muted);margin:.3rem 0 .8rem}.lessons{display:grid;gap:.7rem;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .lesson{background:var(--panel);border:1px solid var(--rule);border-radius:8px;color:var(--ink);display:block;padding:.8rem .9rem;text-decoration:none}
+    .lesson:hover,.lesson:focus-visible{border-color:var(--parrot);transform:translateY(-1px)}.lesson small{color:var(--faint);display:block;font-size:.68rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+    .lesson strong{display:block;line-height:1.25;margin:.15rem 0}.lesson em{color:var(--muted);font-size:.78rem;font-style:normal;line-height:1.35}
+    .shelf{border-top:2px solid var(--ink);margin-top:2.7rem;padding-top:1rem}.shelf h2{border:0;margin:0 0 .6rem;padding:0}
+    @media(max-width:780px){.lessons{grid-template-columns:1fr}.wrap{padding-top:2rem}}
+  </style>
 </head>
-<body>
-<div class="wrap">
-
-<header class="ch">
-  <div class="kicker">🦜 Parrot · The New VoIP Era in Odoo</div>
-  <h1>The Parrot VoIP Course</h1>
-  <p class="lede">Thirteen short lessons that take you from "what's a SIP?" to tracing a purchase, a call, a voicemail
-  and a charge across all four machines — ready to contribute as a member of the VoIP team.</p>
-  <div class="meta">
-    <span>📚 15 lessons · 4 modules</span>
-    <span>⏱ ~3 hours total, in 8–12 min sittings</span>
-    <span>🎓 Audience: Odoo dev, zero telecom assumed</span>
-    <span>🔄 Synced to the PRs · 2026-08-07</span>
-  </div>
+<body><main class="wrap">
+<header class="course-head">
+  <div class="kicker">🦜 Odoo · VoIP team onboarding</div>
+  <h1>From first Odoo request to first VoIP contribution</h1>
+  <p class="lede">A code-grounded course for a new engineer: learn the Odoo platform, then own Buy Number, Phone Service, IAP, Telnyx, Wazo, the SIP edge, routing, calls and billing.</p>
+  <div class="meta"><span>28 core lessons · field lessons · 8 modules</span><span>≈ 5 hours + capstone</span><span>Zero Odoo and zero telecom assumed</span><span>Post-merge architecture · verify deployment state</span></div>
 </header>
 
-<div class="how">
-  <b>How to take this course.</b> In order — each lesson leans on the previous ones. Do the interactive exercises
-  (that's where it sticks, not the reading), and when anything is fuzzy, <b>interrupt your agent</b>: open a Claude Code
-  session in the repo and ask it to show you the real message, the real code path, or to quiz you harder. Everything
-  here is grounded in the living <a href="reference/onboarding.html">Onboarding Guide</a> — the course teaches you to
-  <em>think</em> in the system; the guide is the reference you'll return to.
-</div>
+<div class="big-idea"><strong>How to use it.</strong> Take the lessons in order and do the exercises. Experienced Odoo developers may start at Lesson 11 and keep Lessons 1–10 as reference. When a term or claim is fuzzy, use the lesson's agent prompt to inspect the current code; the point is learning how to navigate reality, not memorizing a frozen snapshot.</div>
+<div class="warnbox"><strong>Internal course.</strong> It describes unreleased/internal architecture and local repository state. Keep it on Odoo-approved infrastructure and re-verify changeable release/branch claims before repeating them.</div>
 
-<section class="module m1">
-  <div class="module-head"><span class="module-num">Module 1</span><h2>The Map</h2></div>
-  <p class="blurb">Who the machines are, the one mental model that organizes them, and the language they speak.</p>
-  <div class="lessons">
-    <a class="lesson" href="lessons/0001-odoo-becomes-a-phone-company.html"><span class="n">Lesson 1</span><span class="t">Odoo becomes a phone company</span><span class="d">The four machines behind a ringing browser tab — and the golden rules that keep them honest.</span></a>
-    <a class="lesson" href="lessons/0002-two-planes-signaling-vs-media.html"><span class="n">Lesson 2</span><span class="t">The two planes: signaling vs media</span><span class="d">The one lens that makes Kamailio, Asterisk, rtpengine and Telnyx snap into place.</span></a>
-    <a class="lesson" href="lessons/0003-sip-call-lifecycle.html"><span class="n">Lesson 3</span><span class="t">The SIP call lifecycle</span><span class="d">REGISTER → INVITE → 200 OK → ACK → BYE — plain words first, then the real names.</span></a>
-  </div>
-</section>
+<section class="module"><div class="module-title"><span>Module 1</span><h2>Odoo as a platform</h2></div><p>See the whole request and know which repository and addon owns it.</p><div class="lessons">
+  <a class="lesson" href="lessons/0001-one-odoo-request.html"><small>Lesson 1 · 10 min</small><strong>One Odoo request, end to end</strong><em>Browser → controller → ORM → PostgreSQL → response.</em></a>
+  <a class="lesson" href="lessons/0002-repositories-and-branch-families.html"><small>Lesson 2 · 10 min</small><strong>Repositories &amp; branch families</strong><em>Community, Enterprise, Upgrade, IAP and infrastructure.</em></a>
+  <a class="lesson" href="lessons/0003-anatomy-of-an-addon.html"><small>Lesson 3 · 12 min</small><strong>Anatomy of an addon</strong><em>Manifest, models, security, data, views, assets and tests.</em></a>
+</div></section>
 
-<section class="module m2">
-  <div class="module-head"><span class="module-num">Module 2</span><h2>A Call's Life</h2></div>
-  <p class="blurb">Follow real calls in both directions, then understand why the whole system was rebuilt this way.</p>
-  <div class="lessons">
-    <a class="lesson" href="lessons/0004-outbound-calling-the-world.html"><span class="n">Lesson 4</span><span class="t">Outbound: calling the world</span><span class="d">Out the trunk door — with your number stamped on the envelope by the switchboard, not by you.</span></a>
-    <a class="lesson" href="lessons/0005-inbound-the-world-calls-you.html"><span class="n">Lesson 5</span><span class="t">Inbound: the world calls you</span><span class="d">DID → incall → your browser rings, while the call card arrives through the shop.</span></a>
-    <a class="lesson" href="lessons/0006-from-telnyx-direct-to-our-own-switchboard.html"><span class="n">Lesson 6</span><span class="t">From Telnyx-direct to our own switchboard</span><span class="d">Why Parrot exists — what the migration killed, bought, and still owes us.</span></a>
-  </div>
-</section>
+<section class="module"><div class="module-title"><span>Module 2</span><h2>Writing Odoo code</h2></div><p>Use Odoo's extension mechanisms without bypassing its security or batching model.</p><div class="lessons">
+  <a class="lesson" href="lessons/0004-orm-recordsets-and-inheritance.html"><small>Lesson 4 · 12 min</small><strong>ORM, recordsets &amp; inheritance</strong><em>Batch semantics, computed fields and model extension.</em></a>
+  <a class="lesson" href="lessons/0005-data-views-actions-and-translations.html"><small>Lesson 5 · 12 min</small><strong>Data, views, actions &amp; translations</strong><em>How XML records become a user journey.</em></a>
+  <a class="lesson" href="lessons/0006-owl-services-registries-and-assets.html"><small>Lesson 6 · 12 min</small><strong>Owl, services, registries &amp; assets</strong><em>The web-client extension map.</em></a>
+  <a class="lesson" href="lessons/0007-security-and-trust-boundaries.html"><small>Lesson 7 · 12 min</small><strong>Security &amp; trust boundaries</strong><em>ACLs, record rules, sudo, public routes and signed callbacks.</em></a>
+</div></section>
 
-<section class="module m3">
-  <div class="module-head"><span class="module-num">Module 3</span><h2>The Machine Rooms</h2></div>
-  <p class="blurb">The broker, the tenant floors, and the event pipeline — the architecture you'll actually change.</p>
-  <div class="lessons">
-    <a class="lesson" href="lessons/0007-the-shop-the-broker-in-the-middle.html"><span class="n">Lesson 7</span><span class="t">The shop: the broker in the middle</span><span class="d">One keyholder, a capability API, and error keys as the contract.</span></a>
-    <a class="lesson" href="lessons/0008-your-floor-tenancy-and-provisioning.html"><span class="n">Lesson 8</span><span class="t">Your floor: tenancy &amp; provisioning</span><span class="d">Eleven idempotent bricks and a doorbell — tenancy you can't escape.</span></a>
-    <a class="lesson" href="lessons/0009-doorbells-and-robots.html"><span class="n">Lesson 9</span><span class="t">Doorbells &amp; robots</span><span class="d">Three webhook flavours, one dedup discipline, and the crons that heal everything.</span></a>
-  </div>
-</section>
+<section class="module"><div class="module-title"><span>Module 3</span><h2>The contribution loop</h2></div><p>Choose the cheapest proof, debug locally and hand off a small change faithfully.</p><div class="lessons">
+  <a class="lesson" href="lessons/0008-tests-python-hoot-and-tours.html"><small>Lesson 8 · 12 min</small><strong>Tests: Python, Hoot &amp; tours</strong><em>One behavior, the narrowest reliable layer.</em></a>
+  <a class="lesson" href="lessons/0009-run-debug-and-profile-odoo.html"><small>Lesson 9 · 12 min</small><strong>Run, debug &amp; profile Odoo</strong><em>Logs, shell, browser tools and query evidence.</em></a>
+  <a class="lesson" href="lessons/0010-shipping-an-odoo-change.html"><small>Lesson 10 · 12 min</small><strong>Shipping an Odoo change</strong><em>Stable/master, upgrades, CI, review and factual proof.</em></a>
+  <a class="lesson" href="lessons/0011-your-voip-workbench.html"><small>Lesson 11 · 12 min</small><strong>Your VoIP workbench</strong><em>Core/integration addons and local-vs-shared boundaries.</em></a>
+</div></section>
 
-<section class="module m4">
-  <div class="module-head"><span class="module-num">Module 4</span><h2>The Product</h2></div>
-  <p class="blurb">The features customers touch — buying, routing, voicemail, call flows, AI transcription, and the money underneath.</p>
-  <div class="lessons">
-    <a class="lesson" href="lessons/0010-buying-a-number-end-to-end.html"><span class="n">Lesson 10</span><span class="t">Buying a number, end to end</span><span class="d">Coverage → paperwork → pay → the robots finish it while you go home.</span></a>
-    <a class="lesson" href="lessons/0011-desks-teams-and-waiting-rooms.html"><span class="n">Lesson 11</span><span class="t">Desks, teams &amp; waiting rooms</span><span class="d">Users become Wazo users; queues get agents with priorities.</span></a>
-    <a class="lesson" href="lessons/0012-leaving-a-message-voicemail.html"><span class="n">Lesson 12</span><span class="t">Leaving a message</span><span class="d">Voicemail boxes, telephone-grade greetings, and push-the-metadata-pull-the-audio.</span></a>
-    <a class="lesson" href="lessons/0013-following-the-money.html"><span class="n">Lesson 13</span><span class="t">Following the money</span><span class="d">An anonymous cost event becomes a charge — twice-bridged, once-charged, never doubled.</span></a>
-    <a class="lesson" href="lessons/0014-the-call-flow-editor.html"><span class="n">Lesson 14</span><span class="t">The Call Flow editor</span><span class="d">Route callers on a drag-and-drop canvas — menus, queues, groups and schedules wired into one graph that compiles to the PBX.</span></a>
-    <a class="lesson" href="lessons/0015-ai-transcription-and-voices.html"><span class="n">Lesson 15</span><span class="t">AI: transcription &amp; voices</span><span class="d">Whisper turns calls into text and a summary; the shop speaks your greetings with Telnyx voices.</span></a>
-  </div>
-</section>
+<section class="module"><div class="module-title"><span>Module 4</span><h2>The VoIP map</h2></div><p>Name every component, then separate the lane that rings from the lane that carries voice.</p><div class="lessons">
+  <a class="lesson" href="lessons/0012-odoo-becomes-a-phone-company.html"><small>Lesson 12 · 10 min</small><strong>Odoo becomes a phone company</strong><em>Enterprise, Phone Service, edge, Wazo, Telnyx and browser.</em></a>
+  <a class="lesson" href="lessons/0013-two-planes-signaling-vs-media.html"><small>Lesson 13 · 8 min</small><strong>Signaling versus media</strong><em>The lens behind most call failures.</em></a>
+  <a class="lesson" href="lessons/0014-sip-call-lifecycle.html"><small>Lesson 14 · 10 min</small><strong>The SIP call lifecycle</strong><em>REGISTER, INVITE, responses, ACK, media and BYE.</em></a>
+</div></section>
 
-<section class="refs">
-  <h2>Reference shelf</h2>
-  <div class="reflinks">
-    <a href="reference/onboarding.html">📘 Onboarding Guide — the living source of truth (rendered)</a>
-    <a href="reference/glossary.html">📑 Glossary — the canonical vocabulary, plane-tagged</a>
-  </div>
-  <p class="foot">This course is generated and maintained alongside the Parrot PRs
-  (odoo/enterprise#107700 · odoo/iap-apps#1370). When the branches move, regenerate: ask your agent to
-  "re-verify the Parrot course against the current branches". Lessons are self-contained HTML — share or clone this
-  whole folder as-is — the diagram libraries are vendored, so it works fully offline.</p>
-</section>
+<section class="module"><div class="module-title"><span>Module 5</span><h2>A call's life</h2></div><p>Trace calls both ways and understand why Odoo owns the switchboard layer.</p><div class="lessons">
+  <a class="lesson" href="lessons/0015-outbound-calling-the-world.html"><small>Lesson 15 · 10 min</small><strong>Outbound: calling the world</strong><em>Caller identity, trunk signaling and the PSTN.</em></a>
+  <a class="lesson" href="lessons/0016-inbound-the-world-calls-you.html"><small>Lesson 16 · 10 min</small><strong>Inbound: the world calls you</strong><em>DID → edge → incall → browser, plus the event relay.</em></a>
+  <a class="lesson" href="lessons/0017-from-telnyx-direct-to-our-own-switchboard.html"><small>Lesson 17 · 10 min</small><strong>Why Parrot replaced Telnyx-direct</strong><em>Server-side identity, tenants and richer PBX behavior.</em></a>
+</div></section>
 
-</div>
-</body>
-</html>
+<section class="module"><div class="module-title"><span>Module 6</span><h2>The machine rooms</h2></div><p>The broker, tenant and event contracts that make the product safe to operate.</p><div class="lessons">
+  <a class="lesson" href="lessons/0018-the-shop-the-broker-in-the-middle.html"><small>Lesson 18 · 11 min</small><strong>Phone Service: the broker</strong><em>Capability routes, stable errors, secrets and ownership.</em></a>
+  <a class="lesson" href="lessons/0019-your-floor-tenancy-and-provisioning.html"><small>Lesson 19 · 12 min</small><strong>Tenancy &amp; provisioning</strong><em>One authenticated client, one Wazo tenant, resumable steps.</em></a>
+  <a class="lesson" href="lessons/0020-doorbells-and-robots.html"><small>Lesson 20 · 12 min</small><strong>Doorbells &amp; robots</strong><em>Events, signed tokens, dedupe, reconciliation and crons.</em></a>
+</div></section>
+
+<section class="module"><div class="module-title"><span>Module 7</span><h2>The product</h2></div><p>Walk the customer features and every external side effect underneath them.</p><div class="lessons">
+  <a class="lesson" href="lessons/0021-buying-a-number-end-to-end.html"><small>Lesson 21 · 14 min</small><strong>Buying a number, end to end</strong><em>Coverage, requirements, IAP authorization, Telnyx order and activation.</em></a>
+  <a class="lesson" href="lessons/0022-desks-teams-and-waiting-rooms.html"><small>Lesson 22 · 11 min</small><strong>Desks, teams &amp; waiting rooms</strong><em>DIDs, extensions, groups, queues, agents and healing.</em></a>
+  <a class="lesson" href="lessons/0023-leaving-a-message-voicemail.html"><small>Lesson 23 · 10 min</small><strong>Leaving a message</strong><em>Mailboxes, events, recording pull, attachment and email.</em></a>
+  <a class="lesson" href="lessons/0024-following-the-money.html"><small>Lesson 24 · 12 min</small><strong>Following the money</strong><em>Call cost, monthly fees and remote IAP idempotency.</em></a>
+  <a class="lesson" href="lessons/0025-the-call-flow-editor.html"><small>Lesson 25 · 11 min</small><strong>The Call Flow editor</strong><em>A validated graph compiled to PBX destinations.</em></a>
+  <a class="lesson" href="lessons/0026-ai-transcription-and-voices.html"><small>Lesson 26 · 9 min</small><strong>AI transcription &amp; Telnyx voices</strong><em>Whisper artifacts and Phone Service text-to-speech.</em></a>
+</div></section>
+
+<section class="module"><div class="module-title"><span>Module 8</span><h2>Shipping VoIP work</h2></div><p>Turn the architecture into a diagnosis and a reviewer-ready first contribution.</p><div class="lessons">
+  <a class="lesson" href="lessons/0027-debugging-across-the-stack.html"><small>Lesson 27 · 12 min</small><strong>Debugging across the stack</strong><em>Name the boundary, follow one stable identifier, stop at divergence.</em></a>
+  <a class="lesson" href="lessons/0028-your-first-contribution.html"><small>Lesson 28 · 15 min + task</small><strong>Your first contribution</strong><em>Reproduce, test, fix the root cause, verify and hand off.</em></a>
+  <a class="lesson" href="lessons/0029-user-offline-forwarding.html"><small>Field lesson · 20 min</small><strong>When the user is offline</strong><em>Confd, wakeup tokens, Fail Destination, Asterisk hooks and call-record proof.</em></a>
+</div></section>
+
+<section class="shelf"><h2>Reference shelf</h2><div class="links">
+  <a href="reference/onboarding.html">Onboarding guide</a>
+  <a href="reference/source-walkthrough.html">Source walkthrough</a>
+  <a href="reference/glossary.html">VoIP glossary</a>
+  <a href="reference/repo-module-map.html">Repository &amp; module map</a>
+  <a href="reference/debugging-playbook.html">Debugging playbook</a>
+  <a href="reference/contribution-checklist.html">Contribution checklist</a>
+  <span><code>parrot-local-testing-guide.md</code> (maintained in the Odoo workspace)</span>
+</div><p class="meta">The source walkthrough starts with the planes, then teaches money, audio, ownership, transactions, provisioning, events, browser and edge code in short sittings. Its source-derived function cards show execution order and have a freshness check. Paths, symbols and re-find commands replace temporary branch names, commit IDs and line numbers. Re-resolve the target checkout and deployment state before maintenance.</p></section>
+</main></body></html>

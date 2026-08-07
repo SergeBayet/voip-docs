@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 1 · Odoo becomes a phone company — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 12 · Odoo becomes a phone company — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,9 +91,9 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 1 — The Map · Lesson 1 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Map · Lesson 12 of 28</div>
   <h1>Odoo becomes a phone company</h1>
-  <p class="lede">The four machines behind a ringing browser tab — and the golden rules that keep them honest.</p>
+  <p class="lede">The six players behind a ringing browser tab — and the golden rules that keep them honest.</p>
   <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: name every player and every rule from memory</span><span>🧩 Builds on: nothing — start here</span></div>
 </header>
 
@@ -112,7 +113,7 @@ your Odoo database. You click a button, pick a number, pay with credits — and 
 dials that number, <strong>your browser rings</strong>.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide §1">§1</a></div>
 
 <h2>The cast, drawn</h2>
-<p>Now earn the real names. Five players, five kinds of arrows. Read one arrow at a time.</p>
+<p>Now earn the real names. Six players, two live-call lanes, and one control path. Read one arrow at a time.</p>
 
 <figure>
 <pre class="mermaid">
@@ -120,20 +121,24 @@ flowchart LR
     BROWSER["🖥️ Softphone<br/><i>your handset</i><br/>(JS in the browser tab)"]
     ENT["🏠 enterprise voip<br/><i>your office</i><br/>(the customer's Odoo DB)"]
     IAP["🏪 IAP phone_service<br/><i>the shop</i><br/>(Odoo-run broker)"]
+    EDGE["🚪 Kamailio edge<br/><i>the receptionist</i><br/>(SIP routing, no media)"]
     WAZO["🏢 Wazo PBX<br/><i>the switchboard</i><br/>(one floor per customer)"]
     TELNYX["🌍 Telnyx<br/><i>the phone company</i><br/>(owns numbers &amp; wires)"]
     WORLD["📞 The outside world"]
     ENT ---|"same Odoo tab"| BROWSER
-    BROWSER <-->|"SIP over WSS + WebRTC<br/>the ONLY direct customer↔PBX link"| WAZO
+    BROWSER <-->|"SIP over WSS"| EDGE
+    EDGE <-->|"SIP over TCP"| WAZO
+    BROWSER <-.->|"WebRTC media<br/>(bypasses edge + shop)"| WAZO
     ENT <-->|"HTTPS + client credentials<br/>incl. /pbx/&lt;op&gt; calls"| IAP
     IAP <-->|"REST + webhooks"| TELNYX
     IAP <-->|"master token,<br/>tenant-scoped"| WAZO
     WAZO -.->|"webhookd events"| IAP
-    TELNYX <-->|"SIP trunk (the wire)"| WAZO
+    TELNYX <-->|"SIP over TLS"| EDGE
+    TELNYX <-.->|"RTP/SRTP media<br/>(bypasses edge + shop)"| WAZO
     TELNYX <-->|"PSTN"| WORLD
 </pre>
-<figcaption>The cast. Notice how few arrows touch the customer's side: the office talks only to the shop,
-and the handset talks only to the switchboard.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide §2 — the cast of characters">§2</a></figcaption>
+<figcaption>The cast. The office uses HTTPS only; live SIP signaling crosses the edge; audio bypasses both
+the shop and the edge.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide §2 — the cast of characters">§2</a></figcaption>
 </figure>
 
 <table>
@@ -142,6 +147,7 @@ and the handset talks only to the switchboard.<a class="cite" href="../reference
     <tr><td>🖥️ The handset</td><td><strong>Softphone</strong></td><td>An Owl/JS app in the browser tab. It rings, you answer with a headset; it carries the audio with WebRTC.</td><td><code>enterprise/voip/static/src/</code></td></tr>
     <tr><td>🏠 Your office</td><td><strong>enterprise <code>voip</code></strong></td><td>Odoo models, views, wizards: numbers, extensions, queues, voicemail, the call log, the Buy Number wizard.</td><td><code>enterprise/voip/</code></td></tr>
     <tr><td>🏪 The shop</td><td><strong>IAP <code>phone_service</code></strong></td><td>An Odoo-hosted broker. The <em>only</em> holder of the Telnyx API key and the Wazo master token. Bills you in IAP credits.</td><td><code>iap-apps/iap_services/phone_service/</code></td></tr>
+    <tr><td>🚪 The receptionist</td><td><strong>Kamailio edge</strong></td><td>A stateless SIP router. It accepts browser WSS, carrier TLS and Wazo TCP, asks Phone Service where traffic belongs, and never carries audio.</td><td><code>voip-infra/conf/kamailio/</code></td></tr>
     <tr><td>🏢 The switchboard</td><td><strong>Wazo PBX</strong></td><td>An open-source PBX. One server hosts many isolated <em>tenants</em> — think one locked floor per customer, each with its own desks and wiring.<a class="cite" href="https://wazo-platform.org/documentation/" title="Wazo Platform documentation">wazo</a></td><td>external; driven only by the shop</td></tr>
     <tr><td>🌍 The phone company</td><td><strong>Telnyx</strong></td><td>The carrier. Owns the actual numbers and connects them to the worldwide phone network.<a class="cite" href="https://developers.telnyx.com/" title="Telnyx developer docs">telnyx</a></td><td>external; <code>api.telnyx.com/v2</code></td></tr>
   </tbody>
@@ -165,39 +171,39 @@ switchboard instructions, it asks the shop for <em>outcomes</em>: "make this use
 <em>Why:</em> the choreography lives in exactly one place, upgraded centrally, and the master token stays home.
 <strong>If you ever find enterprise code building a Wazo URL, it's a regression.</strong></p>
 
-<h3>Rule 3 — The one carve-out is media</h3>
-<p>Look back at the diagram: one arrow does cross from the customer's side straight to Wazo — the softphone.
-The browser registers SIP-over-WSS to Wazo with its own per-user credentials. <em>Why:</em> your voice is a
-live stream, dozens of packets per second in both directions. A request/response JSON API can carry
-"please create a desk"; it cannot carry a conversation. So paperwork goes through the shop, sound goes direct.</p>
+<h3>Rule 3 — The one carve-out is live phone traffic</h3>
+<p>The browser registers SIP-over-WSS <strong>through the public Kamailio edge</strong> to Wazo with per-user
+credentials. Its audio then bypasses the edge and the JSON API entirely. <em>Why:</em> signaling needs a hardened
+receptionist; voice is a live stream and needs the PBX media relay. Paperwork goes through the shop, SIP through
+the edge, and sound around both.</p>
 
 <h3>Rule 4 — Tenancy is structural, not polite</h3>
 <p>Each customer gets their own locked floor in the switchboard — a <strong>tenant</strong>. Here's the trick:
-the floor number is <em>derived</em> from who's asking (<code>tenant = UUID(hex=client_id)</code>), so the caller
+the authenticated client identity is reused verbatim as the floor key (<code>wazo_tenant_uuid = client_uuid</code>), so the caller
 never gets to name a tenant at all. And inside the shop, every call to Wazo must explicitly declare
 <code>tenant_uuid=…</code> or <code>master_scoped=True</code> — declaring neither, or both, is a hard
 <code>ValueError</code>. <em>Why:</em> you can't sneak onto someone else's floor if there is no field
 for "which floor" in the first place.</p>
 
-<h3>Rule 5 — Everything async is a cron retrying idempotently</h3>
-<p>Buying numbers, billing, building your floor — anything that spans machines is driven by little
-robots (<code>ir.cron</code> jobs) that retry, and every step is written so that running it twice is safe.
-<em>Why:</em> networks fail mid-way, guaranteed. Retry-safe steps are the honest alternative to
-pretending "exactly once" exists.</p>
+<h3>Rule 5 — Async work is idempotent; reconciliation is added only where needed</h3>
+<p>Webhook consumers and scheduled jobs assume retries and make repeated work safe with stable keys and database
+constraints. Number ordering and payment recovery have explicit robots because their state spans machines; other
+events are acknowledged, persisted once, and processed after the response without a permanent cron. <em>Why:</em>
+networks fail, but every hypothetical failure does not justify another queue.</p>
 
-<div class="warnbox"><strong>⚠️ Watch out: demo mode proves almost nothing.</strong> One system parameter
-(<code>voip.test_mode</code>) short-circuits everything at the very first layer: <code>get_phone_service_api()</code>
-returns a demo class with canned answers, PBX ops echo fake ids, credits are a fake 500. A green demo run
-exercises <em>none</em> of the shop, Telnyx, Wazo, signatures or billing — it proves only the UI flows.
-Don't let it lull you.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide §16 — demo vs production">§16</a></div>
+<div class="warnbox"><strong>⚠️ Watch out: demo provider mode simulates calls, not the whole product.</strong>
+It is useful for learning the softphone UI without registering SIP or ringing a device. It does <em>not</em> turn
+the Buy Number, carrier, regulatory or IAP paths into fake data. State precisely which path you exercised instead
+of treating “demo” as a system-wide switch.<a class="cite" href="../reference/onboarding.html" title="Onboarding Guide — demo vs production">onboarding</a></div>
 
 <div class="codehook">
   <div class="kicker">🔩 Where this lives in our code</div>
   <ul style="margin:.5rem 0 0 1rem">
     <li><code>enterprise/voip/</code> — the whole customer side: models, wizards, and the softphone under <code>static/src/</code>.</li>
-    <li><code>enterprise/voip/models/phone_service_api.py</code> — the HTTP client to the shop. <code>pbx_call(name, …)</code> posts to <code>/api/phone_service/1/pbx/&lt;name&gt;</code>; <code>get_phone_service_api()</code> at the bottom is the demo-mode switch.</li>
+    <li><code>enterprise/voip/models/phone_service_api.py</code> — the production HTTP client to the shop. <code>pbx_call(name, …)</code> posts to <code>/api/phone_service/1/pbx/&lt;name&gt;</code>.</li>
     <li><code>enterprise/voip/models/pbx_service.py</code> — the named-op facade: every method (<code>sync_user_extension</code>, <code>sync_incall</code>, …) is exactly one <code>/pbx/&lt;op&gt;</code> call. This is Rule 2, as a file.</li>
-    <li><code>iap-apps/iap_services/phone_service/</code> — the shop. <code>models/wazo_api.py</code> is the transport that enforces Rule 4's mandatory scoping; <code>utils/telnyx_client.py</code> is the only code anywhere that speaks to Telnyx.</li>
+    <li><code>iap-apps/iap_services/phone_service/</code> — the shop. <code>models/wazo_api.py</code> enforces Rule 4's scoping; <code>utils/telnyx_client.py</code> speaks to Telnyx.</li>
+    <li><code>voip-infra/conf/kamailio/</code> — the separate signaling edge that routes browser, carrier and Wazo SIP traffic.</li>
   </ul>
 </div>
 
@@ -224,7 +230,7 @@ Don't let it lull you.<a class="cite" href="../reference/onboarding.html" title=
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
   code path for Y". The back-and-forth is where the learning compounds.
 </div>
@@ -237,7 +243,7 @@ Don't let it lull you.<a class="cite" href="../reference/onboarding.html" title=
 <div class="nav-foot">
   <span></span>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0002-two-planes-signaling-vs-media.html"><span class="lbl">Next →</span>Lesson 2 · The two planes: signaling vs media<br><span style="color:var(--faint);font-weight:400">the one lens that explains every box in the stack.</span></a>
+  <a href="0013-two-planes-signaling-vs-media.html"><span class="lbl">Next →</span>Lesson 13 · The two planes: signaling vs media<br><span style="color:var(--faint);font-weight:400">the one lens that explains every box in the stack.</span></a>
 </div>
 
 </div>
@@ -252,7 +258,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -263,7 +269,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -278,7 +284,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -286,7 +292,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -317,12 +323,13 @@ function makeOrderer(containerId, scoreId, STEPS){
 
 /* ============ Lesson content ============ */
 makeSorter('sorter','sort-score',
-  [{k:'br',label:'Browser'},{k:'db',label:'Customer DB'},{k:'shop',label:'Shop'},{k:'wazo',label:'Wazo'},{k:'tel',label:'Telnyx'}],
+  [{k:'br',label:'Browser'},{k:'db',label:'Customer DB'},{k:'shop',label:'Shop'},{k:'edge',label:'Edge'},{k:'wazo',label:'Wazo'},{k:'tel',label:'Telnyx'}],
   [
     {name:'Holds the Telnyx API key', ans:'shop', why:'<b>The shop.</b> It is the only holder of the Telnyx API key and the Wazo master token — master credentials live in exactly one place.'},
     {name:'Shows the Buy Number wizard', ans:'db', why:'<b>The customer DB.</b> The wizard is Odoo models and views in enterprise/voip — it asks the shop to do the actual buying.'},
     {name:'Owns the phone number itself', ans:'tel', why:'<b>Telnyx.</b> The carrier owns the numbers and the connection to the worldwide phone network; the shop rents them on your behalf.'},
-    {name:'Rings when a call arrives', ans:'br', why:'<b>The browser.</b> The softphone is your handset — it registers to Wazo over WSS and plays the ringtone in your tab.'},
+    {name:'Routes SIP but never audio', ans:'edge', why:'<b>The Kamailio edge.</b> It is the public receptionist between browsers/carrier and Wazo.'},
+    {name:'Rings when a call arrives', ans:'br', why:'<b>The browser.</b> The softphone is your handset — it registers through the edge and plays the ringtone in your tab.'},
     {name:'Runs one isolated floor per customer', ans:'wazo', why:'<b>Wazo.</b> One PBX server, many tenants — each customer gets a structurally isolated floor with its own desks and wiring.'},
     {name:'Bills you in IAP credits', ans:'shop', why:'<b>The shop.</b> Money flows in the broker: credits authorized at order, captured on success, call costs post-paid per event.'},
   ]);
@@ -335,13 +342,13 @@ makeQuiz('quiz','quiz-score',[
      {t:'a fallback — it only runs when the shop is briefly unreachable', ok:false},
    ],
    why:'<b>Rule 2.</b> The customer DB holds zero Wazo URLs, tokens or tenant ids. It asks the shop for outcomes via /pbx/&lt;op&gt;; the choreography lives server-side, in one place.'},
-  {stem:'Why is the browser allowed to talk straight to Wazo when nothing else on the customer side is?',
+  {stem:'How does browser phone traffic reach the PBX?',
    choices:[
-     {t:'audio is a live stream that cannot transit a request/response API', ok:true},
-     {t:'browsers are unable to attach the client credentials the shop uses', ok:false},
-     {t:'Wazo only accepts connections that originate inside a web browser', ok:false},
+     {t:'SIP signaling goes through the edge; audio bypasses the edge and shop', ok:true},
+     {t:'all signaling and audio are proxied through the IAP JSON API', ok:false},
+     {t:'the browser connects directly to Telnyx for both lanes', ok:false},
    ],
-   why:'<b>Rule 3, the one carve-out.</b> Voice is dozens of packets per second, both directions. Paperwork goes through the shop; sound goes SIP-over-WSS direct, with per-user credentials.'},
+   why:'<b>Rule 3.</b> The public edge routes SIP/WSS; realtime media follows the PBX-negotiated path and never transits the JSON API or edge.'},
   {stem:'Who may hold master credentials — the Telnyx API key and the Wazo master token?',
    choices:[
      {t:'only the shop — the IAP phone_service broker holds both of them', ok:true},

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 1 — One Odoo request, end to end</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main class="wrap">
+  <header class="lh">
+    <div class="kicker">Module 1 · Odoo as a platform · Lesson 1 of 28</div>
+    <h1>One Odoo request, end to end</h1>
+    <p class="lede">Odoo is a city: the browser asks at the front desk, the model applies the rules, and PostgreSQL keeps the records.</p>
+    <div class="meta"><span>⏱ 10 min</span><span>🎯 Put each responsibility in the right layer</span></div>
+  </header>
+
+  <div class="big-idea"><strong>The practical rule:</strong> controllers translate transport; models own business rules; the ORM owns persistence and access checks. A UI is another caller, not the source of truth.</div>
+
+  <figure>
+    <pre class="mermaid">flowchart LR
+      B[Browser / client] -->|HTTPS / RPC| H[HTTP route]
+      H -->|request.env| M[Model method]
+      M -->|ORM query| P[(PostgreSQL)]
+      M -->|records / action| H
+      H -->|JSON / HTML| B
+      S[ACLs + record rules] -. guard .-> M</pre>
+    <figcaption>The common path. Jobs, tests, imports and shell scripts can call the same model methods without a browser.</figcaption>
+  </figure>
+
+  <h2>The five objects to recognize</h2>
+  <table>
+    <thead><tr><th>Thing</th><th>Job</th><th>Typical clue</th></tr></thead>
+    <tbody>
+      <tr><td>Route/controller</td><td>Parse the request, authenticate, return a transport response.</td><td><code>@http.route</code></td></tr>
+      <tr><td>Environment</td><td>Carry the database cursor, current user, context and superuser state.</td><td><code>request.env</code> or <code>self.env</code></td></tr>
+      <tr><td>Model</td><td>Name data and enforce business behavior for every caller.</td><td><code>models.Model</code></td></tr>
+      <tr><td>Recordset</td><td>Represent zero, one or many records and provide model methods.</td><td><code>self</code>, <code>browse()</code>, <code>search()</code></td></tr>
+      <tr><td>Transaction</td><td>Commit the whole request on success; roll it back on failure.</td><td>Usually invisible—do not call <code>commit()</code> in normal model code.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Put the invariant below the UI</h2>
+  <p>If a DID may only belong to its own database, the check cannot live only in a wizard. Imports, RPC calls and tests would bypass it. Put the rule in the model/service boundary used by every caller; let the wizard explain the error.</p>
+
+  <div class="codehook">
+    <div class="kicker">Trace it in this checkout</div>
+    <p>Compare <code>master/odoo/addons/web/controllers/dataset.py</code> (transport) with <code>master/enterprise/voip/models/voip_did_number.py</code> (domain behavior). Follow one method call until the ORM operation becomes visible.</p>
+  </div>
+
+  <section class="exercise">
+    <h3>Check the boundary</h3>
+    <div id="quiz"></div><div id="score" class="score"></div>
+  </section>
+
+  <div class="source-rec"><div class="kicker">Primary source</div>
+    <p><a href="https://www.odoo.com/documentation/master/developer/tutorials/server_framework_101.html">Odoo Server Framework 101</a> explains models, actions, views, security and tests as one progressively built module.</p>
+  </div>
+
+  <div class="ask"><b>Ask your agent:</b> “Trace one click in <code>voip</code> from its Owl handler to the final model write. Name every trust boundary and show me the exact files.”</div>
+
+  <nav class="nav-foot">
+    <a class="home" href="../index.html" aria-label="Course home">⌂</a>
+    <a href="0002-repositories-and-branch-families.html"><span class="lbl">Next</span>Repositories and branch families →</a>
+  </nav>
+</main>
+<script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script>
+<script>
+initializeCourseDiagrams();
+makeQuiz("quiz", "score", [
+  {stem:"A rule must hold for forms, imports and RPC. Where does it belong?", choices:[{text:"Only in the Owl form",correct:false},{text:"In the shared model/service path",correct:true},{text:"Only in a controller",correct:false}], why:"Every caller can reach the model; not every caller uses the same UI or route."},
+  {stem:"A model method raises before the request ends. What normally happens to its writes?", choices:[{text:"They are committed one by one",correct:false},{text:"The request transaction rolls back",correct:true},{text:"The browser decides",correct:false}], why:"Odoo normally commits a successful request as a unit and rolls back a failed one."}
+]);
+</script></body></html>

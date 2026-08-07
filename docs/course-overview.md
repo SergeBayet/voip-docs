@@ -1,80 +1,65 @@
-# Parrot VoIP Onboarding Course
+# Odoo VoIP Team Onboarding
 
-A self-contained onboarding curriculum for engineers joining Odoo's VoIP team:
-**15 short lessons in 4 modules** that take you from "what's a SIP?" to tracing a
-purchase, a call, a voicemail and a charge across the whole Parrot stack —
-enterprise `voip` → IAP `phone_service` → Wazo (Asterisk + Kamailio + rtpengine) → Telnyx.
+A code-grounded course for engineers joining Odoo's VoIP team: **28 short core
+lessons in 8 modules, plus focused field lessons**, from the Odoo framework and
+contribution loop through Phone Service, IAP charging, Telnyx, Wazo, the SIP edge,
+routing, calls, voicemail and billing.
 
 !!! danger "Internal only"
-    These lessons describe **unreleased architecture and security reasoning** for open PRs
-    (odoo/enterprise#107700 · odoo/iap-apps#1370). Don't host or mirror them outside Odoo
-    infrastructure.
+    The course describes internal and unreleased architecture. Keep it on
+    Odoo-approved infrastructure. The architecture is taught by stable
+    repository/module ownership; verify the actual checkout and deployment
+    target before making a release claim.
+
+    Publication is blocked in the local Pages workflow until repository access
+    and hosting are approved. This does not remove the existing public site or
+    conceal already-pushed branches.
 
 !!! tip "Start here"
-    **[▶ Open the interactive course](course/index.html)** — the lessons are self-contained
-    HTML with in-browser retrieval exercises; the diagram libraries are vendored, so it works
-    fully offline. Take them **in order** — each one leans on the previous — and do the
-    exercises; that's where it sticks. Budget ~2½ hours total, in 8–12 minute sittings.
+    **[▶ Open the interactive course](course/index.html)**. Take the lessons in
+    order and do the in-browser exercises. It works offline and assumes no prior
+    Odoo or telecom knowledge. Budget about five hours plus the capstone.
 
 ```mermaid
 flowchart LR
-    O["Odoo<br/>enterprise · voip"] -->|capability API| S["IAP · phone_service<br/>the shop"]
-    S -->|provisions, commands| W["Wazo<br/>Asterisk · Kamailio · rtpengine"]
-    W -->|SIP trunk| T["Telnyx<br/>PSTN carrier"]
-    B["🌐 Browser softphone"] -.->|SIP / WSS + media| W
+    B["Browser softphone"] <-->|"SIP signaling"| E["Public SIP edge"]
+    B <-.->|"media"| W["Wazo PBX"]
+    E <-->|"tenant-scoped SIP"| W
+    O["Odoo Enterprise"] <-->|"capability API"| S["IAP Phone Service"]
+    S <-->|"provisioning + events"| W
+    S <-->|"REST + webhooks"| T["Telnyx"]
+    T <-->|"carrier SIP"| E
+    T <-.->|"media"| W
 ```
 
-## What you come out able to do
+## Learning path
 
-| Module | Lessons | You come out able to… |
-|---|---|---|
-| **1 · The Map** | 1–3 | name the four machines, the golden rules, the two planes, and every SIP message in a call |
-| **2 · A Call's Life** | 4–6 | trace outbound and inbound calls hop-by-hop, and argue why the Telnyx-direct world was replaced |
-| **3 · The Machine Rooms** | 7–9 | explain the broker, structural tenancy, the 11-step floor build, and the webhook/robot reliability playbook |
-| **4 · The Product** | 10–15 | walk a number purchase, routing (users/groups/queues), voicemail, billing, the visual Call Flow editor, and AI transcription end-to-end |
+| Module | Lessons | Outcome |
+|---|---:|---|
+| Odoo as a platform | 1–3 | Trace a request and find the owning repository and addon |
+| Writing Odoo code | 4–7 | Use the ORM, XML data, Owl and security boundaries correctly |
+| The contribution loop | 8–11 | Test, run, debug and ship a focused Odoo change |
+| The VoIP map | 12–14 | Name every component and separate signaling from media |
+| A call's life | 15–17 | Trace inbound and outbound calls and explain the Parrot architecture |
+| The machine rooms | 18–20 | Work with Phone Service, tenancy, provisioning, events and recovery |
+| The product | 21–26 | Trace Buy Number, routing, queues, voicemail, charging, Call Flow and AI |
+| Shipping VoIP work | 27–28 + field lessons | Diagnose across repositories, prepare a reviewer-ready contribution and review active features |
 
-## The lessons
-
-### Module 1 · The Map
-Who the machines are, the one mental model that organizes them, and the language they speak.
-
-- **[Lesson 1 — Odoo becomes a phone company](course/lessons/0001-odoo-becomes-a-phone-company.html)** — the four machines behind a ringing browser tab, and the golden rules that keep them honest.
-- **[Lesson 2 — The two planes: signaling vs media](course/lessons/0002-two-planes-signaling-vs-media.html)** — the one lens that makes Kamailio, Asterisk, rtpengine and Telnyx snap into place.
-- **[Lesson 3 — The SIP call lifecycle](course/lessons/0003-sip-call-lifecycle.html)** — REGISTER → INVITE → 200 OK → ACK → BYE, plain words first, then the real names.
-
-### Module 2 · A Call's Life
-Follow real calls in both directions, then understand why the whole system was rebuilt this way.
-
-- **[Lesson 4 — Outbound: calling the world](course/lessons/0004-outbound-calling-the-world.html)** — out the trunk door, with your number stamped on the envelope by the switchboard, not by you.
-- **[Lesson 5 — Inbound: the world calls you](course/lessons/0005-inbound-the-world-calls-you.html)** — DID → incall → your browser rings, while the call card arrives through the shop.
-- **[Lesson 6 — From Telnyx-direct to our own switchboard](course/lessons/0006-from-telnyx-direct-to-our-own-switchboard.html)** — why Parrot exists: what the migration killed, bought, and still owes us.
-
-### Module 3 · The Machine Rooms
-The broker, the tenant floors, and the event pipeline — the architecture you'll actually change.
-
-- **[Lesson 7 — The shop: the broker in the middle](course/lessons/0007-the-shop-the-broker-in-the-middle.html)** — one keyholder, a capability API, and error keys as the contract.
-- **[Lesson 8 — Your floor: tenancy & provisioning](course/lessons/0008-your-floor-tenancy-and-provisioning.html)** — eleven idempotent bricks and a doorbell; tenancy you can't escape.
-- **[Lesson 9 — Doorbells & robots](course/lessons/0009-doorbells-and-robots.html)** — three webhook flavours, one dedup discipline, and the crons that heal everything.
-
-### Module 4 · The Product
-The features customers touch — buying, routing, voicemail, and the money underneath.
-
-- **[Lesson 10 — Buying a number, end to end](course/lessons/0010-buying-a-number-end-to-end.html)** — coverage → paperwork → pay → the robots finish it while you go home.
-- **[Lesson 11 — Desks, teams & waiting rooms](course/lessons/0011-desks-teams-and-waiting-rooms.html)** — users become Wazo users; queues get agents with priorities.
-- **[Lesson 12 — Leaving a message](course/lessons/0012-leaving-a-message-voicemail.html)** — voicemail boxes, telephone-grade greetings, and push-the-metadata-pull-the-audio.
-- **[Lesson 13 — Following the money](course/lessons/0013-following-the-money.html)** — an anonymous cost event becomes a charge; twice-bridged, once-charged, never doubled.
-- **[Lesson 14 — The Call Flow editor](course/lessons/0014-the-call-flow-editor.html)** — route callers on a drag-and-drop canvas of menus, queues, groups and schedules; a graph that *compiles* to the PBX.
-- **[Lesson 15 — AI: transcription & voices](course/lessons/0015-ai-transcription-and-voices.html)** — Whisper turns calls into text and a summary; the shop speaks your greetings with Telnyx voices.
+The interactive course home is the single canonical lesson map; lesson links are
+kept there so this overview cannot drift when lessons are renamed.
 
 ## Reference shelf
 
-- **[📘 Onboarding Guide](course/reference/onboarding.html)** — the living source of truth every lesson cites (rendered from `parrot-onboarding.md`).
-- **[📑 Glossary](course/reference/glossary.html)** — the canonical vocabulary, plane-tagged.
+- **[Onboarding guide](course/reference/onboarding.html)** — the detailed living architecture map.
+- **[Source walkthrough](course/reference/source-walkthrough.html)** — planes first, slow authored code readings, then source-derived function execution cards with a freshness check.
+- **[Repository and module map](course/reference/repo-module-map.html)** — ownership and contribution entry points.
+- **[Debugging playbook](course/reference/debugging-playbook.html)** — one-identifier, boundary-first diagnosis.
+- **[Contribution checklist](course/reference/contribution-checklist.html)** — the first-task handoff contract.
+- **[VoIP glossary](course/reference/glossary.html)** — canonical Odoo and telecom vocabulary.
 
-## Keeping it current
-
-The course is generated against a specific state of the PRs — see the sync date in the course
-home header (currently **2026-08-07**, enterprise `b8ab6403a14` / iap-apps `333b603a` / community `beed9ed0448a`). When the
-branches move substantially, the maintenance protocol lives in `docs/course/NOTES.md`; the short
-version is to re-verify the course against the current branches, regenerate the onboarding guide,
-and touch only the lessons the change invalidates.
+The current teaching baseline assumes the shared `voip-common` and
+`phone-service-common` foundations, the `voip-boi` provisioning-policy work,
+and the Community/Enterprise scheduled-call changes are integrated and
+deployed through their normal release paths. The walkthrough deliberately
+uses stable paths, symbols, ownership boundaries and re-find commands rather
+than commit or line-number anchors.

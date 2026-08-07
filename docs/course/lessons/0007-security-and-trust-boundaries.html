@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 7 — Security and trust boundaries</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 2 · Writing Odoo code · Lesson 7 of 28</div><h1>Security &amp; trust boundaries</h1><p class="lede">Every request carries a claim about who sent it. Authentication proves the claim; authorization limits what that identity may do.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Review an Odoo path from attacker to record</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  X[Untrusted input] --> AU[Authenticate]
+  AU --> VA[Validate shape + ownership]
+  VA --> ACL[Model access rights]
+  ACL --> RR[Record rules]
+  RR --> OP[Business operation]
+  OP --> OUT[Minimal response]
+  SU["sudo()"] -. bypasses ACL + rules .-> OP</pre><figcaption>Each gate answers a different question. Skipping one does not make the others stronger.</figcaption></figure>
+
+<h2>The server-side layers</h2>
+<ul>
+  <li><strong>Route authentication</strong> decides whether the caller is public, a user, bearer-authenticated, and so on.</li>
+  <li><strong>ACLs</strong> grant create/read/write/delete at model level.</li>
+  <li><strong>Record rules</strong> filter which records an operation may touch.</li>
+  <li><strong>Field groups and model checks</strong> protect sensitive fields and domain-specific actions.</li>
+  <li><strong>Validation</strong> treats IDs, JSON, filenames, amounts and external payloads as hostile until checked.</li>
+</ul>
+
+<div class="warnbox"><strong><code>sudo()</code> is a trust-boundary crossing.</strong> It is sometimes necessary for a signed webhook or system job, but it removes normal ACL and record-rule protection. Resolve and verify ownership before elevating, minimize the elevated block, and never use it to silence an unexplained access error.</div>
+
+<h2>A real public webhook</h2>
+<p><code>phone_service_api_controller.py</code> accepts a public POST because no user session exists. It first requires a signed, scoped, expiring token derived from the database's client secret; rejects malformed envelopes; allowlists event types; validates required fields; then persists the event once. Only that validated event is processed with elevated access.</p>
+
+<div class="codehook"><div class="kicker">Security review drill</div><p>Read <code>master/enterprise/voip/controllers/phone_service_api_controller.py</code> beside <code>models/phone_service_event.py</code>. Identify authentication, input validation, idempotency, authorization/elevation and the HTTP acknowledgement boundary.</p></div>
+
+<section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary source</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/backend/security.html">Odoo security reference</a>. Also study <a href="https://www.odoo.com/documentation/master/developer/reference/backend/http.html">web controllers</a> before exposing a route.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Threat-model this route. Trace attacker-controlled data, authentication, ownership checks, every <code>sudo()</code>, and what gets logged.”</div>
+<nav class="nav-foot"><a href="0006-owl-services-registries-and-assets.html"><span class="lbl">Previous</span>← Owl</a><a class="home" href="../index.html">⌂</a><a href="0008-tests-python-hoot-and-tours.html"><span class="lbl">Next</span>Tests: Python, Hoot &amp; tours →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"A public webhook must update a record. What comes before sudo?",choices:[{text:"Verify its signed identity, shape and target ownership",correct:true},{text:"Trust the numeric ID",correct:false},{text:"Hide the button",correct:false}],why:"Elevation is safe only after the external claim is authenticated and its scope resolved."},
+{stem:"Do record rules replace ACLs?",choices:[{text:"Yes",correct:false},{text:"No; they answer different authorization questions",correct:true}],why:"ACLs grant operations on a model; record rules restrict the records for an allowed operation."}
+]);</script></body></html>

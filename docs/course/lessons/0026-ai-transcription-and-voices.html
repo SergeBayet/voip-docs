@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 15 · AI: transcription &amp; voices — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 26 · AI: transcription &amp; voices — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -83,16 +84,16 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 15 of 15</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 7 — The Product · Lesson 26 of 28</div>
   <h1>AI: transcription &amp; voices</h1>
   <p class="lede">Every call can write its own minutes, and every greeting can be spoken without a microphone — two AI-flavoured features that hang off the call log.</p>
-  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Goal: know what gets transcribed, where it lands, and what triggers it</span><span>🧩 Builds on: <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a></span></div>
+  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Goal: know what gets transcribed, where it lands, and what triggers it</span><span>🧩 Builds on: <a href="./0023-leaving-a-message-voicemail.html">Lesson 23</a></span></div>
 </header>
 
-<p>Two very different features share this last lesson because both wear an "AI" badge — but they live
+<p>Two very different features share this lesson because both wear an "AI" badge — but they live
 in different places and it is worth knowing which is which. One <strong>listens</strong> to calls and
 writes them down (<code>voip_ai</code>). The other <strong>speaks</strong> your greetings out loud
-(<code>voip.sound</code>, from <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>). Keep
+(<code>voip.sound</code>, from <a href="./0023-leaving-a-message-voicemail.html">Lesson 23</a>). Keep
 them apart and you will never mis-answer the interview question "where does transcription live?"</p>
 
 <h2>Part 1 — Calls that write their own minutes</h2>
@@ -156,13 +157,13 @@ should.<a class="cite" href="../reference/onboarding.html">(voip_ai/models/voip_
 </div>
 
 <h2>Part 2 — Greetings that speak themselves</h2>
-<p>The <em>other</em> AI feature you already met in <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>,
+<p>The <em>other</em> AI feature you already met in <a href="./0023-leaving-a-message-voicemail.html">Lesson 23</a>,
 and it is important to place it correctly: <strong>text-to-speech lives in the base <code>voip</code>
-module on <code>voip.sound</code> — NOT in <code>voip_ai</code></strong>. When you type a greeting,
-<code>voip.sound._generate_tts_audio()</code> hands the text to the shop
+module on <code>voip.sound</code> — NOT in <code>voip_ai</code></strong>. Typing does not itself generate audio.
+The Generate action calls <code>voip.sound.generate_tts_audio_preview()</code>, which hands the text to the shop
 (<code>PhoneServiceAPI.generate_speech</code>), which returns audio synthesised by <strong>Telnyx</strong>.
-The voices are Telnyx voice ids, fetched once and <strong>filtered by language</strong> (matched to
-your <code>res.lang</code>) so the picker isn't one endless global list.<a class="cite" href="../reference/onboarding.html">(voip/models/voip_sound.py)</a></p>
+The voices are Telnyx voice ids, cached per day and <strong>filtered by language</strong> (matched to
+your <code>res.lang</code>) so the picker isn't one endless global list. The preview returns audio plus the text and voice used to generate it; saving requires matching generation metadata. Changing text or voice requires generating again. Saving then synchronizes the audio to the PBX in the current transaction, not through an after-commit callback.<a class="cite" href="../reference/onboarding.html">(voip/models/voip_sound.py)</a></p>
 
 <div class="callout">
   <strong>Two AIs, two homes.</strong> <em>Listening</em> (speech → text) is <code>voip_ai</code> +
@@ -177,7 +178,7 @@ your <code>res.lang</code>) so the picker isn't one endless global list.<a class
   agent call.<br>
   <code>voip_ai/models/voip_provider.py</code> — <code>transcription_policy</code> and its OpenAI-token
   check.<br>
-  <code>voip/models/voip_sound.py</code> — <code>_generate_tts_audio()</code> and the Telnyx voice
+  <code>voip/models/voip_sound.py</code> — <code>generate_tts_audio_preview()</code> and the Telnyx voice
   catalogue, filtered by language. (TTS is base <code>voip</code>, not <code>voip_ai</code>.)</p>
 </div>
 
@@ -214,9 +215,9 @@ your <code>res.lang</code>) so the picker isn't one endless global list.<a class
 </div>
 
 <div class="nav-foot">
-  <a href="./0014-the-call-flow-editor.html"><span class="lbl">← Previous</span>Lesson 14 · The Call Flow editor</a>
+  <a href="./0025-the-call-flow-editor.html"><span class="lbl">← Previous</span>Lesson 25 · The Call Flow editor</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="../index.html"><span class="lbl">🎓 Course complete</span>Back to the course home<br><span style="color:var(--faint);font-weight:400">you can now contribute to the VoIP team</span></a>
+  <a href="./0027-debugging-across-the-stack.html"><span class="lbl">Next →</span>Lesson 27 · Debugging across the stack<br><span style="color:var(--faint);font-weight:400">turn a symptom into one owned boundary</span></a>
 </div>
 
 </div>
@@ -228,7 +229,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -239,7 +240,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -252,7 +253,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -260,7 +261,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);

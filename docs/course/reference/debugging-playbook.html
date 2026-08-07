@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Debugging playbook — Odoo VoIP onboarding</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="wrap">
+<header class="lh"><div class="kicker">Reference · read-only first</div><h1>VoIP debugging playbook</h1><p class="lede">Use this when a report says only “Phone does not work.” The goal is a first broken handoff with evidence.</p></header>
+
+<h2>1 · Freeze the context</h2>
+<ul><li>Repository, branch and exact SHA.</li><li>Database, installed/updated addon and provider mode.</li><li>User, number, direction, approximate UTC time and sanitized event/order id.</li><li>Expected versus observed behavior.</li><li>Whether shared staging or any real carrier resource is involved.</li></ul>
+
+<h2>2 · Name the lane</h2>
+<table><tr><th>Observation</th><th>Lane</th><th>Do not start with</th></tr>
+  <tr><td>Wrong button, validation, state or RPC</td><td>Browser/Enterprise control plane</td><td>RTP/audio debugging</td></tr>
+  <tr><td>Phone Service error key</td><td>Enterprise → broker HTTPS</td><td>Browser SIP credentials</td></tr>
+  <tr><td>Order changes in shop but not Enterprise</td><td>Callback/poll mirror</td><td>Telnyx search UI</td></tr>
+  <tr><td>REGISTER/INVITE rejected</td><td>SIP signaling through edge/Wazo</td><td>IAP payment cron</td></tr>
+  <tr><td>Call rings/answers but audio is absent</td><td>Media/device/ICE/RTP</td><td>Phone Service; it does not carry audio</td></tr>
+  <tr><td>Wrong/double/missing charge</td><td>Telnyx correlation → ledger → IAP key → cost line</td><td>Adding a retry before tracing stable keys</td></tr>
+</table>
+
+<h2>3 · Follow the identity</h2>
+<table><tr><th>Flow</th><th>Identifiers in order</th></tr>
+  <tr><td>Purchase</td><td>E.164 number → DID id → shop number/order id → Telnyx order/sub-order → requirement group.</td></tr>
+  <tr><td>Provisioning</td><td><code>client_uuid</code> → tenant → named PBX op → Wazo object ids → Enterprise mirror fields.</td></tr>
+  <tr><td>PBX call</td><td>event id → conversation id / SIP call id → Enterprise event → call/leg.</td></tr>
+  <tr><td>Carrier cost</td><td>Telnyx <code>call_control_id</code> → enriched event id → payment reference → remote line key → cost line → heuristic call match.</td></tr>
+  <tr><td>Voicemail</td><td>event id → PBX mailbox/message id → Enterprise message → attachment/email.</td></tr>
+</table>
+
+<h2>4 · Check the boundary contract</h2>
+<ol><li>Was the request sent?</li><li>Was it authenticated for the intended client?</li><li>Did the receiver persist a milestone?</li><li>What response/status came back?</li><li>Who owns retries?</li><li>What stable key absorbs replay?</li><li>Did later state mirror the committed result?</li></ol>
+
+<div class="warnbox"><strong>Security hygiene:</strong> never paste client secrets, account tokens, Wazo credentials, webhook tokens, carrier keys or customer audio into tickets, screenshots or agent prompts. Prefer ids, state names and redacted structural payloads.</div>
+
+<h2>5 · Choose the cheapest proof</h2>
+<ul><li>Pure ORM/state branch: one Python model test.</li><li>JS calculation/component: one Hoot unit.</li><li>Browser integration: tour only when component tests cannot prove it.</li><li>Phone Service: model/controller test with explicit Telnyx/Wazo/IAP mocks.</li><li>Edge config: repository harness.</li><li>True SIP/media/carrier behavior: controlled shared-staging check after automated proof.</li></ul>
+
+<h2>6 · Report the diagnosis</h2>
+<pre><code>Observed: …
+Expected: …
+First divergence: X → Y over Z
+Stable identifier: …
+Evidence: file/log/test (sanitized)
+Owning repo/addon: …
+Confirmed cause: …
+Unverified hypotheses: …</code></pre>
+
+<div class="source-rec"><div class="kicker">Local runbook</div><p>The maintained environment details—shared Phone Service, edge and Wazo, tunnel requirements and exact launch/test commands—live in <code>/home/odoo/Data/Dev/Odoo/parrot-local-testing-guide.md</code>. Verify that guide's baseline path before running it.</p></div>
+<nav class="nav-foot"><a href="repo-module-map.html"><span class="lbl">Previous reference</span>← Repository map</a><a href="../index.html"><span class="lbl">Course</span>Course home</a><a href="contribution-checklist.html"><span class="lbl">Next reference</span>Contribution checklist →</a></nav>
+</main></body></html>

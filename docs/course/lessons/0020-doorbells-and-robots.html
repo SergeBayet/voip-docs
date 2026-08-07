@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 9 · Doorbells &amp; robots — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 20 · Doorbells &amp; robots — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,14 +91,14 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 9 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 6 — The Machine Rooms · Lesson 20 of 28</div>
   <h1>Doorbells &amp; robots</h1>
-  <p class="lede">How news travels between four machines that all crash sometimes — and why the answer is never a new queue table.</p>
-  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: apply the reliability playbook (sign, dedupe, 503, poll, heal) to any new event</span><span>🧩 Builds on: Lessons 5, 7, 8</span></div>
+  <p class="lede">How news travels between machines that all fail sometimes — with one durable owner at each handoff.</p>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: choose the correct ack, dedup and recovery contract</span><span>🧩 Builds on: Lessons 7, 16, 18</span></div>
 </header>
 
 <div class="big-idea">
-  <strong>Start with the letterbox. 🏠</strong> A doorbell ring is gone the moment it stops — if you were in the shower, that news is lost forever. Registered mail solves this differently, and notice <em>who</em> does the work: your house does <strong>not</strong> keep a warehouse of half-delivered letters. The <strong>postman keeps the letter</strong> and comes back tomorrow, and the day after, until you <strong>sign the receipt</strong>. You do exactly three things: check the <strong>wax seal</strong> (is this really from who it claims?), check <em>"did I already get this one?"</em> (duplicates happen), and sign — <em>or refuse to sign</em>, which just means "ring me again". Parrot's entire event system is that postal contract in HTTP: signing = answering <code>200</code>, refusing = answering <code>503</code>, and the sender keeps the letter.
+  <strong>Start with registered mail. 🏠</strong> An HTTP <code>2xx</code> means “the next owner accepted responsibility,” not necessarily “all downstream work finished.” Telnyx and Wazo keep a letter when the shop answers <code>503</code>. The shop tries the database. The database verifies the signed token, persists the event once, answers <code>200</code>, then processes it after the response. Durable acceptance is the handoff point.
 </div>
 
 <h2>The event geography — every doorbell on the street</h2>
@@ -109,21 +110,21 @@ flowchart LR
   subgraph SHOP["🏪 the shop (IAP)"]
     TE["/webhooks/telnyx/<br/>call + account events"]
     WE["/webhooks/wazo/<br/>call_events"]
-    N["rename · filter legs · markup<br/>event_id = call_id:event_name"]
+    N["normalize · filter legs · markup<br/>stable event id"]
   end
   subgraph ENT["🏠 your DB (enterprise)"]
     D["/voip/api/phone_service/event<br/>the ONE doorbell"]
-    E1["phone_number.status → voip.did.number"]
-    E2["requirement_group.status → voip.requirement.group"]
-    E3["call.* → voip.phone.service.event"]
-    E4["global_voicemail.message_created → voip.voicemail.message"]
-    E5["call.cost → voip.call.cost.line"]
+    E1["phone_number_status → voip.did.number"]
+    E2["requirement_group_status → requirement records"]
+    E3["call_created / answered / updated / ended"]
+    E4["global_voicemail_message_created"]
+    E5["call_cost → voip.call.cost.line"]
   end
   T -- "Ed25519 seal, ±300 s" --> TE
   W -- "per-tenant body secret" --> WE
   TE --> N
   WE --> N
-  N -- "HMAC-SHA256, derived key" --> D
+  N -- "short-lived scoped signed token" --> D
   D --> E1
   D --> E2
   D --> E3
@@ -133,7 +134,7 @@ flowchart LR
 <figcaption>Two doorbells into the shop, one doorbell into your DB, and a dispatch table behind it. Every arrow carries a different seal.<a class="cite" href="../reference/onboarding.html">§9</a></figcaption>
 </figure>
 
-<p>Read the picture left to right. The carrier and the PBX both push news to the <strong>shop</strong> (number bought, call started, call ended, cost known). The shop cleans it up — renames Wazo events to a stable vocabulary, drops call legs you don't care about, applies the billing markup — and forwards it to <strong>one single URL</strong> on your database: <code>/voip/api/phone_service/event</code>. Behind that one door, a plain dispatch on <code>event_type</code> hands each letter to the model that owns it. One door means one place to check seals, one place to log, one place to debug.</p>
+<p>Read the picture left to right. The carrier and PBX push news to the <strong>shop</strong>. Telnyx names are translated only where needed (<code>call.cost</code> → <code>call_cost</code>; number and requirement events get stable underscored names). Wazo call names stay <code>call_created</code>, <code>call_answered</code>, <code>call_updated</code> and <code>call_ended</code> after normalization and leg filtering. Everything reaches one database route: <code>/voip/api/phone_service/event</code>.</p>
 
 <h2>Three doors, three locks — and why each</h2>
 <p>Each hop uses a different signature scheme. That's not inconsistency — each lock fits its door:<a class="cite" href="../reference/onboarding.html">§14</a></p>
@@ -142,44 +143,44 @@ flowchart LR
   <tbody>
     <tr><td><span class="pill p-sig">Telnyx → shop</span></td><td><strong>Ed25519</strong> signature over <code>timestamp|body</code>, ±300 s tolerance</td><td>Public internet. The carrier publishes one public key; anyone can verify, nobody can forge, and the timestamp window kills replay attacks.</td></tr>
     <tr><td><span class="pill p-med">Wazo → shop</span></td><td><strong>Per-tenant secret</strong> in the body, constant-time compare</td><td>An intra-infrastructure hop over TLS. The secret (minted at tenant provisioning) both authenticates the sender <em>and identifies which tenant</em> is talking.</td></tr>
-    <tr><td><span class="pill p-cfg">Shop → your DB</span></td><td><strong>HMAC-SHA256</strong>, key <em>derived</em> from <code>client_secret</code></td><td>The shop stores only a <em>hash</em> of your secret, so it can't use the secret itself as a key — it derives a purpose-bound key once, at registration, and stores that instead.</td></tr>
+    <tr><td><span class="pill p-cfg">Shop → your DB</span></td><td><strong>Purpose-scoped, expiring signed token</strong> over the complete envelope</td><td>The token is signed with that client's stored <code>client_secret_hash</code>; Enterprise derives the same verifier from its local secret. No separate body can drift from the signature.</td></tr>
   </tbody>
 </table>
 <div class="warnbox">
-  <strong>The bug that motivated "derived".</strong> The shop→DB signing key used to be built from <code>client_id</code>. But <code>client_id</code> travels in <em>every request</em> your DB makes — it is effectively <strong>public</strong>. Anyone who saw one request could forge "signed" events into your database. The fix (commit <code>39382d2f778</code>): derive the key from the <em>secret</em> — <code>HMAC(client_secret, "iap-phone-service-webhook-signing")</code>. Rule of thumb: a signing key must come from something that <em>never</em> crosses the wire.
+  <strong>The rule behind the token.</strong> Public identity such as <code>client_uuid</code> cannot authenticate a callback. The verifier must derive from the secret, be scoped to <code>phone_service_webhook</code>, expire quickly, and cover the whole envelope.
 </div>
-<p>The fourth arrow — your DB calling the shop (<code>sync_queue</code>, <code>buy_number</code>…) — isn't a webhook at all: it's an ordinary API call authenticated with <code>client_id</code> + <code>client_secret</code> on every request. Keep the two directions distinct in your head; the sorter below will check.</p>
+<p>The fourth arrow — your DB calling the shop (<code>sync_queue</code>, <code>buy_number</code>…) — is an ordinary API call authenticated with <code>client_uuid</code> + <code>client_secret</code>. Keep request authentication and callback-token verification distinct.</p>
 
 <h2>"Did I already get this letter?" — dedup is a constraint, not an if</h2>
 <p>Refusing to sign means the sender rings again — so <em>every</em> event can arrive twice, and your handler must treat a replay as a no-op. Parrot's answer is mechanical and identical at every hop:</p>
 <ul>
   <li><strong>Deterministic ids.</strong> The shop names Wazo events <code>event_id = call_id:event_name</code> — a <em>fact</em> has one name, so its redelivery collides with its first delivery. A random UUID per delivery would make every replay look new.</li>
-  <li><strong>A UNIQUE constraint at every table that stores events</strong>: the shop's webhook-event log, enterprise <code>voip.phone.service.event</code>, <code>voip.call.cost.line</code>, and <code>voip.voicemail.message</code> (that one twice — by <code>event_id</code> <em>and</em> by PBX message id). Payments too: <code>UNIQUE(reference_type, reference_id)</code> means a replayed cost event can never charge twice.</li>
-  <li><strong>Race-safe insert.</strong> A cheap <code>search_count</code> pre-check, then <code>create</code> inside a savepoint, catching <code>UniqueViolation</code> as "already seen" (<code>voip_pbx_event._register_event</code>). Two workers processing the same replay concurrently both survive; exactly one wins.</li>
+  <li><strong>A UNIQUE constraint where facts are stored</strong>: the shop's cost webhook event, Enterprise <code>voip.phone.service.event</code>, cost lines and voicemail messages. Payments reserve one row per <code>(client, reference_type, reference_id)</code>.</li>
+  <li><strong>Race-safe insert.</strong> A cheap pre-check may avoid the common duplicate, but the unique index inside a savepoint handles concurrent delivery. Two workers can race; exactly one creates the fact.</li>
 </ul>
 <div class="big-idea"><strong>Every dedup is a constraint, not an <code>if</code>.</strong> An <code>if seen: return</code> check has a race window between the check and the write. A database UNIQUE index has none — the database itself is the referee. If you catch yourself writing a "have I processed this?" flag, reach for a constraint instead.<a class="cite" href="../reference/onboarding.html">§15</a></div>
 
 <h2>When you can't finish: refuse to sign</h2>
-<p>Say a <code>call.cost</code> event arrives at the shop before the lifecycle events that identify whose call it was — the handler literally cannot attribute it yet. What now? The playbook says: <strong>answer 503 and store nothing</strong>. Telnyx keeps the letter and rings again in a few minutes, by which time the correlation row exists and the same handler succeeds. The shop does the same to Wazo webhookd, and your DB's ack (or missing ack) does the same to the shop: not acknowledged → the shop answers 503 upstream → the whole letter is re-sent later. The retry queue <em>always lives at the sender</em> — that's the postal contract, and it's why no box in the diagram has a dead-letter table.</p>
+<p>Say a <code>call.cost</code> reaches the shop before its lifecycle correlation identifies a client. The shop <strong>answers 503 and stores nothing</strong>; Telnyx redelivers later. Once the client is known, the shop forwards, stores the event once and reserves the payment. If database delivery fails, it still returns 503 so Telnyx redelivers; the stored event/payment keys prevent a second charge while the callback gets another chance.</p>
 <div class="warnbox">
-  <strong>The silent-200 anti-pattern.</strong> A <code>200</code> tells the sender "delivered — <em>never send this again</em>". So a handler that hits a problem, logs a warning, and returns success anyway hasn't handled the error — it has <strong>destroyed the only retry</strong> the system had. For a billing event that is unrecoverable revenue loss, and the only trace is a log line. Smell test: any <code>_logger.warning(...)</code> immediately followed by a successful return on a path that was supposed to do real work.
+  <strong>Ack only after ownership transfers.</strong> Before persistence, an unexplained <code>200</code> can destroy the sender's retry. After Enterprise has durably registered a unique event, answering <code>200</code> before slower processing is deliberate: the database now owns the work. Find the durability boundary before judging the status code.
 </div>
-<p><strong>And the client-side mirror: push what you can, poll what you can't.</strong> A 503 protects you when a webhook <em>arrives broken</em> — but some webhooks never arrive at all (your server was down for an hour; a network path ate the POST). So every push has a slow polling fallback: an hourly cron re-asks the shop for number statuses, and another hourly cron re-tells the shop where your doorbell URL is. The poll is deliberately dumb and slow — it's the residue, never the design. If you find yourself building a clever fast poll, first ask: is there a push I'm ignoring?</p>
+<p><strong>Recovery is flow-specific.</strong> Number status has a slow poll as well as push; webhook URL synchronization has a one-off retry; PBX provisioning and payments have explicit state machines. Live call events do not all have a polling reconstruction. Add recovery only when the source and business consequence justify it.</p>
 
 <h2>The robots — who heals what</h2>
-<p>Nothing here trusts a single HTTP call to succeed; every async path has a robot that re-drives it. The six most instructive (full table: onboarding §15):<a class="cite" href="../reference/onboarding.html">§15</a></p>
+<p>Some multi-step paths need scheduled reconciliation. The six most instructive are:<a class="cite" href="../reference/onboarding.html">§15</a></p>
 <table>
   <thead><tr><th>Side</th><th>Robot</th><th>Every</th><th>What it heals</th></tr></thead>
   <tbody>
     <tr><td>🏪</td><td>submit ordering</td><td>1 min</td><td>authorize credits + send number orders to Telnyx</td></tr>
-    <tr><td>🏪</td><td>resume PBX provisioning</td><td>5 min</td><td>lay the next tenant brick; mark <code>failed</code> after 24 h stuck</td></tr>
+    <tr><td>🏪</td><td>resume PBX provisioning</td><td>5 min</td><td>lay the next tenant brick; mark <code>failed</code> after 2 h stuck</td></tr>
     <tr><td>🏪</td><td>recover payments</td><td>10 min</td><td>retry charges on <strong>exponential backoff</strong> (30 min·2ⁿ, cap 1 day; ≥5 tries ⇒ delinquent)</td></tr>
     <tr><td>🏪</td><td>reconcile client state</td><td>1 min</td><td>drive Telnyx routing to match the <code>disabled</code> intent</td></tr>
     <tr><td>🏠</td><td>heal provisioning</td><td>30 min</td><td>re-drive under-provisioned active DIDs against the checklist</td></tr>
     <tr><td>🏠</td><td>link orphan cost lines</td><td>30 min</td><td>re-match cost lines that arrived before their call record</td></tr>
   </tbody>
 </table>
-<p>Notice what makes robots <em>safe to run forever</em>: every step is <strong>idempotent</strong> (lookup-before-create, adopt orphans on conflict), every webhook they back up has a <strong>polling fallback</strong>, and every "only once" rule is a <strong>constraint</strong>. A robot that re-runs a finished job must change nothing — that's the test for adding one.</p>
+<p>Notice what makes robots safe: steps converge when repeated, and “only once” facts use constraints. A robot that re-runs finished work must change nothing. That does not imply every webhook needs a robot.</p>
 
 <div class="callout">
   <strong>⚠️ The cautionary tale — the quarantine that got reverted.</strong> Once, an unattributable <code>call.cost</code> event looked like it deserved real machinery: the team built a <em>quarantine model</em> + <em>retry cron</em> + <em>escalation email</em> for events that couldn't find their client. It worked. It was also <strong>reverted as over-engineered</strong>: three new moving parts, each needing observability and maintenance, to handle a rare case for which the upstream <em>already had a retry queue</em>. The fix that survived is one line of behavior: <strong>answer 503 and let Telnyx redeliver.</strong> The team's philosophy, verbatim from its engineering notes: <em>fix what is broken; do not harden what merely could break</em> — and when a failure is silent, the cheap reusable fix is logging the reason well, not building infrastructure around it. Before you add a table, a cron, or an alert: who already holds this letter?
@@ -188,9 +189,9 @@ flowchart LR
 <div class="codehook">
   <div class="kicker">🔌 Where this lives in the code</div>
   <ul style="margin:.4rem 0 0">
-    <li><strong>Shop, receiving:</strong> <code>phone_service/controllers/webhook_controller.py</code> (both Telnyx routes + Ed25519 check), <code>utils/telnyx_events.py</code> (cost correlation, the 503s), <code>utils/wazo_events.py</code> (rename, leg filters, <code>call_id:event_name</code>).</li>
-    <li><strong>Shop, sending:</strong> <code>utils/webhook.py</code> — <code>send_webhook()</code>: body, HMAC header, 5 s timeout, returns the ack boolean the 503 decision hangs on.</li>
-    <li><strong>Enterprise, receiving:</strong> <code>voip/controllers/phone_service_api_controller.py</code> (the one doorbell + dispatch), <code>voip/models/voip_pbx_event.py</code> (savepoint dedup, PBX-clock timestamps, 12 h autovacuum).</li>
+    <li><strong>Shop, receiving:</strong> <code>controllers/webhook_controller.py</code>, <code>utils/telnyx_events.py</code> and <code>utils/wazo_events.py</code>.</li>
+    <li><strong>Shop, sending:</strong> <code>utils/webhook.py</code> — signed-token envelope, checked redirects, split connect/read timeout, ack boolean.</li>
+    <li><strong>Enterprise, receiving:</strong> <code>controllers/phone_service_api_controller.py</code> verifies the token; <code>models/phone_service_event.py</code> persists once, acks, then processes after response.</li>
   </ul>
 </div>
 
@@ -213,8 +214,8 @@ flowchart LR
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
-  anything fuzzy: "show me the savepoint dedup in <code>voip_pbx_event.py</code>", "walk me through what happens if the shop is down for an hour", "quiz me again, harder", "which robot would catch a lost <code>phone_number.status</code>?". The back-and-forth is where the learning compounds.
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
+  anything fuzzy: "show me the savepoint dedup in <code>phone_service_event.py</code>", "walk me through what happens if the shop is down for an hour", or "which flows have a polling fallback and which do not?".
 </div>
 
 <div class="links">
@@ -223,9 +224,9 @@ flowchart LR
 </div>
 
 <div class="nav-foot">
-  <a href="0008-your-floor-tenancy-and-provisioning.html"><span class="lbl">← Previous</span>Lesson 8 · Your floor: tenancy &amp; provisioning</a>
+  <a href="0019-your-floor-tenancy-and-provisioning.html"><span class="lbl">← Previous</span>Lesson 19 · Your floor: tenancy &amp; provisioning</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0010-buying-a-number-end-to-end.html"><span class="lbl">Next →</span>Lesson 10 · Buying a number, end to end<br><span style="color:var(--faint);font-weight:400">coverage → paperwork → pay → the robots finish it.</span></a>
+  <a href="0021-buying-a-number-end-to-end.html"><span class="lbl">Next →</span>Lesson 21 · Buying a number, end to end<br><span style="color:var(--faint);font-weight:400">coverage → paperwork → pay → the robots finish it.</span></a>
 </div>
 
 </div>
@@ -240,7 +241,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -251,7 +252,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -266,7 +267,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -274,7 +275,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -287,18 +288,18 @@ makeSorter('sorter','sorter-score',
   [
     {k:'ed',  label:'Ed25519 + timestamp'},
     {k:'sec', label:'Per-tenant body secret'},
-    {k:'hm',  label:'HMAC, derived key'},
-    {k:'cc',  label:'client_id + client_secret'}
+    {k:'hm',  label:'Scoped signed token'},
+    {k:'cc',  label:'client_uuid + client_secret'}
   ],
   [
     {name:'call.cost → shop', ans:'ed',
      why:'<b>Sender: Telnyx.</b> Carrier events cross the public internet — Ed25519 with the published key, ±300 s.'},
     {name:'call_created → shop', ans:'sec',
      why:'<b>Sender: Wazo webhookd.</b> Intra-infra hop; the per-tenant secret in the body authenticates AND names the tenant.'},
-    {name:'call.initiated → your DB', ans:'hm',
-     why:'<b>Sender: the shop.</b> X-IAP-Phone-Service-Signature — HMAC-SHA256 keyed by HMAC(client_secret, purpose-string).'},
+    {name:'call_created → your DB', ans:'hm',
+     why:'<b>Sender: the shop.</b> The full envelope sits inside a short-lived token signed with the client-specific verifier.'},
     {name:'sync_queue → shop', ans:'cc',
-     why:'<b>Sender: your DB — and it is not a webhook.</b> An ordinary API call, authenticated with client_id + client_secret like every request.'},
+     why:'<b>Sender: your DB — and it is not a webhook.</b> An ordinary API call authenticated with client_uuid + client_secret.'},
     {name:'number_order.purchased → shop', ans:'ed',
      why:'<b>Sender: Telnyx again.</b> Account events use the same Ed25519 door as call events — the sender decides the lock, not the event name.'}
   ]);

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 4 · Outbound: calling the world — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 15 · Outbound: calling the world — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -81,7 +82,7 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 2 — A Call's Life · Lesson 4 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 5 — A Call's Life · Lesson 15 of 28</div>
   <h1>Outbound: calling the world</h1>
   <p class="lede">Out through the trunk door — with your own number stamped on the envelope, by the switchboard, not by you.</p>
   <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: trace an outbound call + explain who stamps caller ID now (and why it moved)</span><span>🧩 Builds on: Lessons 2–3</span></div>
@@ -91,7 +92,7 @@
   <span class="tag">Start simple 🧒</span>
   <p style="margin:.4rem 0 0">You want to call a normal phone out in the world — say a customer's mobile. Think of it like <strong>mailing a letter</strong>:</p>
   <ul style="margin:.5rem 0 0">
-    <li>You drop the letter in your company's <strong>mailroom</strong> (that's <strong>Wazo</strong>, our switchboard — <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s building).</li>
+    <li>You drop the letter in your company's <strong>mailroom</strong> (that's <strong>Wazo</strong>, our switchboard — <a href="./0012-odoo-becomes-a-phone-company.html">Lesson 12</a>'s building).</li>
     <li>The mailroom carries it to the <strong>post office</strong> (<strong>Telnyx</strong>, our carrier — it has the trucks that reach every phone in the world).</li>
     <li>Every envelope needs a <strong>return address</strong>. On a phone call, that's the <strong>caller ID</strong> — the "who's calling" your customer sees on their screen.</li>
     <li>The post office only mails your letter if the return address is <strong>really yours</strong>. Fake one, and it hands the letter back.</li>
@@ -105,27 +106,32 @@
 sequenceDiagram
   actor You as You (browser softphone)
   participant O as Odoo server
-  participant W as Wazo (Kamailio edge → Asterisk)
+  participant E as Kamailio edge
+  participant W as Wazo / Asterisk
   participant T as Telnyx (post office)
   actor P as Customer phone (PSTN)
-  Note over You,W: at login: SIP REGISTER over WSS to the<br/>"Odoo Phone Service" provider (wss://wazo-1…)
+  Note over You,W: at login: SIP REGISTER over WSS through<br/>sip.odoo.com to the user’s home Wazo
   You->>O: log the call — voip.call create_and_format (state=calling)
-  You->>W: INVITE +1-555-0123 (over WSS)
+  You->>E: INVITE +1-555-0123 (over WSS)
+  E->>W: route INVITE to the user’s home PBX
   Note over W: outcall pattern _X. / _+X. matches →<br/>caller ID stamped = YOUR active DID (server config)
-  W->>T: INVITE out the SIP trunk
+  W->>E: INVITE out the SIP trunk
+  E->>T: route carrier leg over TLS
   Note over W,T: Telnyx checks the return address — its rules live here
   T->>P: rings — shows your number
   P-->>T: answers (200 OK)
-  T-->>W: 200 OK
-  W-->>You: 200 OK
-  Note over You,P: voice flows on the MEDIA lane (SRTP browser↔Wazo, RTP out the trunk)
+  T-->>E: 200 OK
+  E-->>W: 200 OK
+  W-->>E: 200 OK
+  E-->>You: 200 OK
+  Note over You,P: voice flows on the MEDIA lane and bypasses the edge
 </pre>
-<figcaption>Same INVITE / 200 OK / ACK dance as <a href="./0003-sip-call-lifecycle.html">Lesson 3</a> — extended out through the trunk to a real phone. Signaling sets it up; the media lane carries the voice.<a class="cite" href="../reference/onboarding.html">(onboarding §10)</a></figcaption>
+<figcaption>Same INVITE / 200 OK / ACK dance as <a href="./0014-sip-call-lifecycle.html">Lesson 14</a> — extended out through the trunk to a real phone. Signaling sets it up; the media lane carries the voice.<a class="cite" href="../reference/onboarding.html">(onboarding §10)</a></figcaption>
 </figure>
 
-<p>The players are exactly <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s. Your browser is registered to <strong>one</strong> place only: the <strong>Wazo switchboard</strong>, via the single "Odoo Phone Service" provider (<code>wss://wazo-1.voip.test.odoo.com/ws</code>). <strong>Kamailio</strong> (the signaling edge) forwards your INVITE to <strong>Asterisk</strong> (the engine), which matches it against the tenant's <strong>outcall patterns</strong> — <code>_X.</code> and <code>_+X.</code>, i.e. "any digits, with or without a leading <code>+</code>" — and sends it out the <strong>trunk</strong>, the permanent thick wire to Telnyx, which bridges onto the worldwide phone network (the <strong>PSTN</strong>).<a class="cite" href="../reference/onboarding.html">(onboarding §7 &amp; §10)</a></p>
+<p>The players are exactly <a href="./0012-odoo-becomes-a-phone-company.html">Lesson 12</a>'s. The single Odoo Phone Service provider points the browser at <code>wss://sip.odoo.com:7443</code>. The <strong>separate Kamailio edge</strong> routes that signaling to the user's home Wazo. <strong>Asterisk</strong> matches the tenant's <strong>outcall patterns</strong> — <code>_X.</code> and <code>_+X.</code>, “any digits, with or without a leading <code>+</code>” — stamps server-owned caller ID, and sends the trunk leg back through the edge to Telnyx and the <strong>PSTN</strong>. Audio bypasses the edge.<a class="cite" href="../reference/onboarding.html">(onboarding §7 &amp; §10)</a></p>
 
-<p>Two side notes, each one sentence. <strong>Colleagues:</strong> if you dial a colleague's <em>public</em> DID, the softphone resolves it to their internal extension <em>before</em> sending the INVITE — otherwise the call would loop out the trunk and back in, losing your identity on the way. <strong>Odoo's call card:</strong> the <code>voip.call</code> row is created by the browser (<code>create_and_format</code>) and later updated by PBX events flowing through the shop — that pipeline is Lessons 5 and 9.</p>
+<p>Two side notes, each one sentence. <strong>Colleagues:</strong> if you dial a colleague's <em>public</em> DID, the softphone resolves it to their internal extension <em>before</em> sending the INVITE — otherwise the call would loop out the trunk and back in, losing your identity on the way. <strong>Odoo's call card:</strong> the <code>voip.call</code> row is created by the browser (<code>create_and_format</code>) and later updated by PBX events flowing through the shop — that pipeline is Lessons 16 and 20.</p>
 
 <h2>The return-address drama (a history lesson that still pays rent)</h2>
 <p>In the first Parrot prototype there was no switchboard in the path: the browser registered <strong>directly to <code>sip.telnyx.com</code></strong>. And outbound calls died instantly. Why? By default the SIP library writes your <strong>login name</strong> into the <code>From</code> header — the return-address slot — because that's all it knows. Telnyx looked at it and refused: error <strong>D35</strong>, "Caller Origination Number is Invalid".</p>
@@ -157,14 +163,20 @@ sequenceDiagram
 <p><strong>Why learn dead history?</strong> Two reasons. The trunk side is <em>still Telnyx</em> — D35 (and its paperwork sibling <strong>D51</strong>, "caller-ID unverified": the number reads fine but hasn't been authorised in the carrier portal's Outbound Voice Profile) are still the errors you'll see if the trunk-side identity is ever wrong. And the hack is <em>why</em> caller ID lives server-side now — the design only makes sense once you've seen what it replaced.</p>
 
 <h2>Today: the switchboard stamps the envelope</h2>
-<p>The return address is now plain <strong>server-side configuration</strong>: every Wazo user has an <code>outgoing_caller_id</code> field, and Asterisk stamps it onto every outbound trunk leg. Who fills that field in? Odoo — but remember <a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>'s three-box rule: <strong>enterprise never talks to Wazo</strong>. It asks the shop.</p>
+<p>The return address is now plain <strong>server-side configuration</strong>: every Wazo user has an <code>outgoing_caller_id</code> field, and Asterisk stamps it onto every outbound trunk leg. Who fills that field in? Odoo — but remember <a href="./0012-odoo-becomes-a-phone-company.html">Lesson 12</a>'s three-box rule: <strong>enterprise never talks to Wazo</strong>. It asks the shop.</p>
 
 <div class="codehook">
   <div class="kicker">🔌 Where this lives in our code</div>
   <p style="margin:.4rem 0 0">Enterprise computes your caller ID — simply your <strong>active DID</strong> — and ships it with the user sync (<code>voip/models/voip_extension.py</code>):</p>
   <pre><code>def _get_outgoing_caller_id(self):
+    destination_ref = (
+        f"res.users,{self.destination_ref.id}"
+        if self._is_user_destination()
+        else f"voip.extension,{self.id}"
+    )
     did = self.env["voip.did.number"].sudo().search([
-        ("extension_id", "=", self.id), ("state", "=", "active"),
+        ("destination_ref", "=", destination_ref),
+        ("state", "=", "active"),
     ], order="id desc", limit=1)
     return did.did_number or None
 # …passed as sync_user_extension(…, outgoing_caller_id=…) through the shop</code></pre>
@@ -174,7 +186,7 @@ sequenceDiagram
   <p style="margin:.4rem 0 0">And when you lose your last number, enterprise resets you to <code>outgoing_caller_id="default"</code> (<code>voip_did_number.py</code>) — a lost number must stop being presented as your identity. Read it back to yourself: <em>"set the caller ID" = "update one field on the Wazo user, through the shop."</em> No SIP headers in sight.</p>
 </div>
 
-<p>One more envelope arrives long after the call: the <strong>cost lines</strong>. Telnyx bills the trunk leg, the shop's <code>call.cost</code> webhooks attach the price to your <code>voip.call</code> — that's <a href="./0013-following-the-money.html">Lesson 13</a>.</p>
+<p>One more envelope arrives long after the call: the <strong>cost lines</strong>. Telnyx bills the trunk leg, the shop's <code>call.cost</code> webhooks attach the price to your <code>voip.call</code> — that's <a href="./0024-following-the-money.html">Lesson 24</a>.</p>
 
 <!-- ===== INTERACTIVE 1: order the outbound hops ===== -->
 <div class="exercise" id="ex-order">
@@ -197,7 +209,7 @@ sequenceDiagram
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask anything fuzzy: "show me the outcall patterns being created in the tenant state machine", "what exactly is the SIP <em>trunk</em> between Wazo and Telnyx?", "walk me through <code>resolveDialNumber</code>", or "what happens if my DID is suspended when I place a call?"
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask anything fuzzy: "show me the outcall patterns being created in the tenant state machine", "what exactly is the SIP <em>trunk</em> between Wazo, the edge and Telnyx?", "walk me through <code>resolveDialNumber</code>", or "what happens if my DID is suspended when I place a call?"
 </div>
 
 <div class="links">
@@ -206,9 +218,9 @@ sequenceDiagram
 </div>
 
 <div class="nav-foot">
-  <a href="./0003-sip-call-lifecycle.html"><span class="lbl">← Previous</span>Lesson 3 · The SIP call lifecycle</a>
+  <a href="./0014-sip-call-lifecycle.html"><span class="lbl">← Previous</span>Lesson 14 · The SIP call lifecycle</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="./0005-inbound-the-world-calls-you.html"><span class="lbl">Next →</span>Lesson 5 · Inbound: the world calls you<br><span style="color:var(--faint);font-weight:400">DID → incall → your browser rings (and Odoo finds out via the shop).</span></a>
+  <a href="./0016-inbound-the-world-calls-you.html"><span class="lbl">Next →</span>Lesson 16 · Inbound: the world calls you<br><span style="color:var(--faint);font-weight:400">DID → incall → your browser rings (and Odoo finds out via the shop).</span></a>
 </div>
 
 </div>
@@ -220,7 +232,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -228,7 +240,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -257,8 +269,8 @@ function makeOrderer(containerId, scoreId, STEPS){
 
 /* ---------- Interactive 1: the outbound hops ---------- */
 makeOrderer('order-cards','order-score',[
-  'Softphone — you click Call: voip.call row logged, INVITE sent to Wazo over WSS',
-  'Kamailio — the signaling edge forwards the INVITE to the engine',
+  'Softphone — you click Call: voip.call row logged, INVITE sent over WSS',
+  'Kamailio edge — routes the INVITE to the user’s home Wazo',
   'Asterisk — outcall pattern _X. / _+X. matches; caller ID stamped from server config',
   'Telnyx — the trunk hands the call to the carrier; return-address rules checked here',
   'PSTN phone — the customer’s phone rings, showing your DID'

@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 8 — Tests: Python, Hoot and tours</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 3 · Contribution loop · Lesson 8 of 28</div><h1>Tests: Python, Hoot &amp; tours</h1><p class="lede">Choose the lowest test that can prove the behavior. A model rule needs no browser; a focus bug probably does.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Leave one focused regression check</span></div></header>
+
+<figure><pre class="mermaid">flowchart TB
+  P[Python model/unit test<br/>fastest, strongest domain signal] --> H[Hoot component/service test<br/>browser code in isolation]
+  H --> T[Tour / HttpCase<br/>integrated user journey]
+  T --> M[Manual live call<br/>real browser + edge + PBX + carrier]
+  Q{What failed?} -->|domain rule| P
+  Q -->|JS state/rendering| H
+  Q -->|cross-screen journey| T
+  Q -->|media/network reality| M</pre><figcaption>Climb only as high as the behavior requires. Keep the lower layers even when a manual check is necessary.</figcaption></figure>
+
+<h2>The four useful levels</h2>
+<table><thead><tr><th>Level</th><th>Good for</th><th>VoIP example</th></tr></thead><tbody>
+  <tr><td>Python</td><td>ORM behavior, access, API contracts, state machines</td><td><code>test_phone_service_event.py</code></td></tr>
+  <tr><td>Hoot</td><td>Owl components, services, registries, browser state</td><td><code>static/tests/web/voip_service.test.js</code></td></tr>
+  <tr><td>Tour</td><td>A real web-client journey across screens</td><td><code>static/tests/tours/keypad_tour.js</code> + <code>test_voip_tours.py</code></td></tr>
+  <tr><td>Manual integration</td><td>Microphone permissions, WSS/SIP, RTP/audio, shared services</td><td>A real inbound/outbound call</td></tr>
+</tbody></table>
+
+<h2>A regression test tells a small story</h2>
+<ol><li>Arrange the smallest state that exposes the bug.</li><li>Perform the public operation a real caller uses.</li><li>Assert the externally meaningful result—not private implementation trivia.</li></ol>
+<p>For an external service, mock at the actual network boundary and assert the request contract. Do not mock the model method under test or recreate the production algorithm inside the assertion.</p>
+
+<div class="codehook"><div class="kicker">Compare two tests</div><p>Read one case in <code>tests/test_buy_number_wizard.py</code> and one in <code>static/tests/softphone/softphone.test.js</code>. Name what each test deliberately does <em>not</em> prove. The missing real-media proof belongs in a manual call, not a giant unit test.</p></div>
+
+<section class="exercise"><h3>Pick the first test</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/backend/testing.html">Python testing</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/frontend/unit_testing.html">frontend unit testing</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/frontend/unit_testing/web_tours.html">web tours</a></p></div>
+<div class="ask"><b>Ask your agent:</b> “Turn this bug report into the smallest failing test. Explain why that test layer is sufficient and what remains a manual integration check.”</div>
+<nav class="nav-foot"><a href="0007-security-and-trust-boundaries.html"><span class="lbl">Previous</span>← Security</a><a class="home" href="../index.html">⌂</a><a href="0009-run-debug-and-profile-odoo.html"><span class="lbl">Next</span>Run, debug &amp; profile →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"A computed call cost is wrong for one state transition. Start with…",choices:[{text:"A Python model test",correct:true},{text:"A full browser tour",correct:false},{text:"A real carrier call only",correct:false}],why:"The domain result is deterministic and can be proven below the browser/network."},
+{stem:"Audio is silent only in a real browser behind NAT. Which proof is unavoidable?",choices:[{text:"A PO translation test",correct:false},{text:"A real integration/media check",correct:true},{text:"An XML view test",correct:false}],why:"Unit tests cannot prove the real device, network and RTP path."}
+]);</script></body></html>

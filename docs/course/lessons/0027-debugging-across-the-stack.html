@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 27 — Debugging across the stack</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="wrap">
+<header class="lh"><div class="kicker">Module 8 · Shipping VoIP work · Lesson 27 of 28</div><h1>Debugging across the stack</h1><p class="lede">A VoIP symptom is not a component. Name the failed connection, follow one stable identifier, and stop at the first broken handoff.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Turn a vague report into one owned boundary</span><span>🧩 Uses the whole course</span></div></header>
+
+<figure><pre class="mermaid">flowchart TD
+  S["Symptom"] --> Q1{"Configuration or<br/>live call?"}
+  Q1 -->|"UI / HTTPS / records"| C["Control plane"]
+  Q1 -->|"registration / ring / audio"| L["Live call"]
+  C --> C1["Browser ↔ Enterprise"]
+  C --> C2["Enterprise → Phone Service"]
+  C --> C3["Phone Service → Enterprise callback"]
+  C --> C4["Phone Service → Wazo / Telnyx / IAP"]
+  L --> L1["SIP signaling:<br/>browser/carrier ↔ edge ↔ Wazo"]
+  L --> L2["Media:<br/>endpoint ↔ PBX/carrier"]</pre><figcaption>The first useful diagnosis is a boundary, not a guess about a class.</figcaption></figure>
+
+<div class="big-idea"><strong>Say this before touching code:</strong> “The failure is between X and Y, on protocol Z, after identifier K was created.” If you cannot fill that sentence, collect evidence first.</div>
+
+<h2>The six-connection checklist</h2>
+<table><tr><th>Boundary</th><th>Typical evidence</th><th>First owner</th></tr>
+  <tr><td>Browser ↔ Enterprise</td><td>JS error, RPC response, Hoot/tour failure, server traceback</td><td><code>enterprise/voip</code> or its integration addon</td></tr>
+  <tr><td>Enterprise → Phone Service</td><td><code>PhoneServiceError.error_key</code>, request/response category, client registration</td><td>Enterprise facade or IAP route contract</td></tr>
+  <tr><td>Phone Service → Enterprise</td><td>public callback URL, scoped token verification, <code>voip.phone.service.event</code></td><td>callback configuration or event intake</td></tr>
+  <tr><td>Phone Service → Wazo</td><td>named PBX op, tenant state, Wazo response</td><td><code>phone_service_pbx_tenant_ops.py</code></td></tr>
+  <tr><td>Phone Service → Telnyx/IAP</td><td>Telnyx order/call id, payment reference and remote line key</td><td>number, webhook or payment model</td></tr>
+  <tr><td>Browser/carrier ↔ edge ↔ Wazo</td><td>SIP status, REGISTER/INVITE path, edge lookup, PBX route</td><td><code>voip-infra</code>, Wazo config, or Enterprise provisioning</td></tr>
+</table>
+
+<h2>Follow one identifier, not every log</h2>
+<div class="card-grid">
+  <article class="card"><h3>Number purchase</h3><p>Start with E.164 number → Enterprise DID → shop number/order → Telnyx order/sub-order → requirement group. State which ledger stopped advancing.</p></article>
+  <article class="card"><h3>Call event</h3><p>Start with event id plus conversation/SIP call ids → shop forward → Enterprise event → call and leg records. Do not merge Telnyx <code>call_control_id</code> with Wazo ids.</p></article>
+  <article class="card"><h3>Charge</h3><p>Start with Telnyx event id → payment <code>(reference_type, reference_id)</code> → remote key → Enterprise cost line.</p></article>
+  <article class="card"><h3>Provisioning</h3><p>Start with <code>client_uuid</code> → tenant → named PBX op → returned Wazo ids → mirrored Enterprise fields.</p></article>
+</div>
+
+<h2>Fast symptom decisions</h2>
+<ul>
+  <li><strong>Number stays pending:</strong> separate order progress from callback delivery. Check shop state before changing the Enterprise widget.</li>
+  <li><strong>Browser will not register:</strong> inspect WSS/SIP status. An edge 503, an unknown SIP user, and bad browser credentials are different failures.</li>
+  <li><strong>Call rings but has no audio:</strong> signaling already worked. Inspect media negotiation, device permission, ICE/NAT and RTP path; the IAP shop is not in the audio lane.</li>
+  <li><strong>Duplicate-looking record:</strong> identify the missing stable key before adding a search or retry. Check the existing unique indexes first.</li>
+  <li><strong>Only CRM/helpdesk behavior is wrong:</strong> begin in the narrow integration addon, not core <code>voip</code>.</li>
+</ul>
+
+<h2>Reproduce at the cheapest layer</h2>
+<p>Use a pure model test for ORM/state logic, Hoot for a frontend unit, a tour only for a real browser journey, and shared staging only when the question requires a real edge, Wazo, Telnyx or inbound webhook. Python and browser tests mock external systems; a successful mock proves your code contract, not carrier health.</p>
+<div class="warnbox"><strong>Shared staging is evidence, not a scratchpad.</strong> Use a disposable database, record the exact client/number/event you created, avoid destructive probes, and never print credentials. Follow <code>parrot-local-testing-guide.md</code> for the current tunnel and endpoint contract.</div>
+
+<div class="codehook"><div class="kicker">A useful read-only agent prompt</div><p>“Reproduce this symptom without editing. Map every boundary, list the stable identifiers visible at each hop, quote the first divergence from expected state, and name the narrowest owning repository/module. Separate confirmed facts from hypotheses.”</p></div>
+
+<section class="exercise"><h3>Pick the first boundary</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="../reference/debugging-playbook.html">Debugging playbook</a>, <a href="../reference/repo-module-map.html">repository map</a>, <code>parrot-local-testing-guide.md</code>, and the test files beside the production code.</p></div>
+<div class="ask"><b>Ask your agent:</b> give it one sanitized symptom and require a read-only evidence table before accepting any proposed fix.</div>
+<nav class="nav-foot"><a href="0026-ai-transcription-and-voices.html"><span class="lbl">Previous</span>← AI transcription and voices</a><a class="home" href="../index.html">⌂</a><a href="0028-your-first-contribution.html"><span class="lbl">Next</span>Your first contribution →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>
+initializeCourseDiagrams();makeQuiz("quiz","quiz-score",[
+{stem:"A call rings, but both parties hear silence. Where do you start?",choices:[{text:"The media and device path",correct:true},{text:"The number-order cron",correct:false},{text:"The IAP callback token",correct:false}],why:"Signaling and routing already reached the ringing state; isolate the separate media lane."},
+{stem:"A bought number remains pending locally. What is the first discriminating check?",choices:[{text:"Compare the shop order state with the Enterprise mirror",correct:true},{text:"Rewrite the wizard polling interval",correct:false}],why:"This separates order progress from a missing callback or poll."},
+{stem:"A CRM call action is wrong but the core softphone works. First code owner?",choices:[{text:"voip_crm",correct:true},{text:"phone_service_payment",correct:false},{text:"voip-infra",correct:false}],why:"Start at the narrow integration boundary and expand only when evidence crosses it."}
+]);</script></body></html>

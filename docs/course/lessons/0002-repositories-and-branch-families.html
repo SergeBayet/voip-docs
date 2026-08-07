@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 2 — Repositories and branch families</title><link rel="stylesheet" href="../assets/course.css">
+</head><body><main class="wrap">
+  <header class="lh"><div class="kicker">Module 1 · Odoo as a platform · Lesson 2 of 28</div><h1>Repositories and branch families</h1>
+    <p class="lede">Think of the checkout as a campus: each repository owns a different kind of change, but compatible branches must walk together.</p>
+    <div class="meta"><span>⏱ 10 min</span><span>🎯 Choose the correct repository and baseline</span></div></header>
+
+  <figure><pre class="mermaid">flowchart TB
+    O[odoo<br/>framework + community addons] --- E[enterprise<br/>paid addons, including voip]
+    E --> U[upgrade<br/>migration scripts]
+    E --> I[iap-apps / phone_service<br/>Odoo-hosted broker]
+    I --> V[voip-infra<br/>public SIP edge config]
+    D[voip-docs<br/>living docs + this course] -. explains .-> E
+    D -. explains .-> I</pre><figcaption>The ownership map—not a runtime call graph. Runtime architecture starts in Lesson 12.</figcaption></figure>
+
+  <h2>The repositories you will touch</h2>
+  <div class="repo-grid">
+    <article class="repo"><h3><code>master/odoo</code></h3><p>Core framework, web client, mail, IAP client and community addons. A generic framework fix belongs here.</p></article>
+    <article class="repo"><h3><code>master/enterprise</code></h3><p>Enterprise addons. The shipped VoIP product and its integrations live here.</p></article>
+<article class="repo"><h3><code>master/iap-apps</code></h3><p>The hosted <code>phone_service</code> broker. Its shared Phone Service foundation and provisioning policy are released independently from the customer database; verify the target branch and deployment separately.</p></article>
+    <article class="repo"><h3><code>upgrade</code></h3><p>Version-to-version data/schema migrations. Renaming a stored field may require work here.</p></article>
+    <article class="repo"><h3><code>voip-infra</code></h3><p>Versioned Kamailio edge configuration and its tests. It forwards signaling; it does not carry audio.</p></article>
+    <article class="repo"><h3><code>voip-docs</code></h3><p>Architecture, operator material and the byte-identical course twin.</p></article>
+  </div>
+
+  <h2>Branch families, in plain words</h2>
+  <p><code>master</code> is the next Odoo version. Stable branches (for example <code>19.0</code>) accept appropriate fixes, not new features. Community and Enterprise must use compatible version branches. A service repository can ship independently, so verify its deployed branch and API contract instead of assuming the same branch name.</p>
+  <div class="warnbox"><strong>Current teaching anchor:</strong> the source walkthrough uses stable Enterprise, Community, IAP Phone Service and <code>voip-infra</code> paths. The shared <code>voip-common</code>, <code>phone-service-common</code>, <code>voip-boi</code> and scheduled-call work are treated as integrated architecture. Re-check the actual branches, commits and deployment target before making a release or merge claim.</div>
+
+  <h2>A lazy placement test</h2>
+  <p>Ask: “Who must own this behavior if every consumer disappeared?” A generic ORM capability stays in <code>odoo</code>; a VoIP customer feature stays in Enterprise; carrier credentials and multi-database brokerage stay in <code>phone_service</code>; version migration logic stays in <code>upgrade</code>.</p>
+
+  <section class="exercise"><h3>Sort the change</h3><div id="sorter"></div><div id="score" class="score"></div></section>
+
+  <div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/contributing/development.html">Odoo development contribution guide</a> · <a href="https://www.odoo.com/documentation/master/contributing/development/git_guidelines.html">Git guidelines</a> · <a href="../reference/repo-module-map.html">local repository/module map</a> · <a href="../reference/source-walkthrough.html">slow source walkthrough</a></p></div>
+  <div class="ask"><b>Ask your agent:</b> “For this ticket, show which repository owns the root cause and which sibling repositories are only consumers. Verify against their current branches.”</div>
+  <nav class="nav-foot"><a href="0001-one-odoo-request.html"><span class="lbl">Previous</span>← One Odoo request</a><a class="home" href="../index.html" aria-label="Course home">⌂</a><a href="0003-anatomy-of-an-addon.html"><span class="lbl">Next</span>Anatomy of an addon →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>
+initializeCourseDiagrams();
+makeSorter("sorter","score",[{key:"odoo",label:"odoo"},{key:"enterprise",label:"enterprise"},{key:"iap",label:"phone_service"},{key:"upgrade",label:"upgrade"}],[
+  {name:"Generic ORM cache bug",answer:"odoo",why:"It affects framework consumers, not only VoIP."},
+  {name:"Call Flow editor node",answer:"enterprise",why:"This is a customer-facing VoIP domain feature."},
+  {name:"Telnyx API credential",answer:"iap",why:"Carrier secrets stay in the Odoo-hosted broker."},
+  {name:"Migrate renamed stored field",answer:"upgrade",why:"Existing databases need a version migration."}
+]);
+</script></body></html>

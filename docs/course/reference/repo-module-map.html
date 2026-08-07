@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Repository and module map — Odoo VoIP onboarding</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="wrap">
+<header class="lh"><div class="kicker">Reference · stable ownership map</div><h1>Repository &amp; module map</h1><p class="lede">Start with the business owner, then the narrowest addon. A repository is a release boundary; an addon is the deployable Odoo feature boundary.</p></header>
+
+<figure><pre class="mermaid">flowchart TD
+  F["Requested behavior"] --> Q{"Open-source framework<br/>or shared business app?"}
+  Q -->|yes| C["Community · odoo"]
+  Q -->|enterprise feature| E["Enterprise"]
+  Q -->|hosted broker/service| I["iap-apps"]
+  Q -->|existing database migration| U["upgrade"]
+  Q -->|public SIP edge config| V["voip-infra"]
+  E --> N{"Core Phone or<br/>business integration?"}
+  N -->|core| VP["voip / voip_ai"]
+  N -->|integration| X["voip_crm, voip_helpdesk,<br/>voip_project, voip_sale…"]</pre><figcaption>Ownership decision tree. Expand outward only when the traced behavior crosses the boundary.</figcaption></figure>
+
+<h2>Repository families</h2>
+<table><tr><th>Checkout</th><th>Owns</th><th>First proof</th></tr>
+  <tr><td><code>master/odoo</code></td><td>Community framework and addons: HTTP, ORM, security, web client, mail, IAP client, shared tests.</td><td>Module Python tests, Hoot, tours, official developer docs.</td></tr>
+  <tr><td><code>master/enterprise</code></td><td>Enterprise business addons. Parrot <code>voip</code> is on <code>master</code>; do not use the historical feature branch as baseline.</td><td>Target addon tests plus inherited Community behavior.</td></tr>
+  <tr><td><code>upgrade</code></td><td>Scripts that move stored data/schema meaning between Odoo versions.</td><td>Migration test and before/after data assertion.</td></tr>
+  <tr><td><code>master/iap-apps</code></td><td>Hosted <code>phone_service</code>, Telnyx/Wazo/IAP integration and shared IAP transaction server.</td><td>Service model/controller tests with external calls mocked.</td></tr>
+  <tr><td><code>voip-infra</code></td><td>Public Kamailio edge routing, lookup integration and config test harness. Signaling only.</td><td><code>mise run test</code>; live signaling/media separately.</td></tr>
+  <tr><td><code>voip-docs</code></td><td>Maintained team documentation and the published twin of this course.</td><td>Link/HTML build and byte comparison with course source.</td></tr>
+</table>
+
+<h2>Enterprise VoIP addons</h2>
+<table><tr><th>Addon</th><th>Responsibility</th></tr>
+  <tr><td><code>voip</code></td><td>Softphone, providers, users/extensions, DIDs, calls/events, routing, groups, queues, IVR, schedules, Call Flows, voicemail, sounds, Phone Service facade.</td></tr>
+  <tr><td><code>voip_ai</code></td><td>Call transcription state/artifacts and AI one-line summary; auto-installs with <code>voip</code> + <code>ai</code>.</td></tr>
+  <tr><td><code>voip_crm</code></td><td>CRM-specific call behavior and records. Begin here when core Phone works but CRM integration does not.</td></tr>
+  <tr><td><code>voip_helpdesk</code>, <code>voip_project</code></td><td>Helpdesk/Project coupling.</td></tr>
+  <tr><td><code>voip_sale</code>, <code>voip_sale_subscription</code></td><td>Sales and subscription coupling.</td></tr>
+  <tr><td><code>voip_hr</code>, <code>voip_hr_recruitment</code></td><td>Employee and applicant coupling.</td></tr>
+  <tr><td><code>voip_sms</code></td><td>Phone/SMS integration.</td></tr>
+  <tr><td><code>voip_cloud_storage_google</code></td><td>Google-backed recording storage integration.</td></tr>
+  <tr><td><code>spreadsheet_dashboard_voip</code></td><td>VoIP analytics dashboard content.</td></tr>
+</table>
+
+<h2>Inside core <code>voip</code></h2>
+<div class="card-grid">
+  <article class="card"><h3>Backend</h3><p><code>models/</code> owns business state and the Phone Service/PBX facades; <code>controllers/</code> owns browser/public HTTP boundaries; <code>security/</code>, <code>data/</code> and <code>views/</code> complete the addon contract.</p></article>
+  <article class="card"><h3>Frontend</h3><p><code>static/src/core/</code> integrates with Odoo web/mail; <code>softphone/</code> owns call UX; <code>flow_editor/</code> owns the Call Flow graph; widgets own reusable fields.</p></article>
+  <article class="card"><h3>Tests</h3><p><code>tests/</code> covers models, events, number lifecycle and PBX facade contracts. Frontend tests live beside static code or in the addon test tree.</p></article>
+  <article class="card"><h3>Migrations</h3><p>Stored-field/model meaning changes may require work in the separate Upgrade repository; a normal view or pure computed behavior change often does not.</p></article>
+</div>
+
+<h2>Branch rule of thumb</h2>
+<p>“Master” and supported stable series are different product promises. Confirm the target with the team and current repository state. The current architecture treats the shared <code>voip-common</code>, <code>phone-service-common</code>, <code>voip-boi</code> and scheduled-call work as integrated foundations, while Enterprise, Community, IAP Phone Service, release automation and the SIP edge remain separate ownership boundaries. Never infer current remote, deployment or merge state from an old lesson.</p>
+
+<div class="source-rec"><div class="kicker">Primary sources</div><p>Every addon's <code>__manifest__.py</code>; repository Git state; <a href="https://www.odoo.com/documentation/master/developer.html">Odoo developer docs</a>; the production files and tests named by the behavior.</p></div>
+<nav class="nav-foot"><a href="../index.html"><span class="lbl">Course</span>← Course home</a><a href="source-walkthrough.html"><span class="lbl">Next reference</span>Source walkthrough →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();</script></body></html>

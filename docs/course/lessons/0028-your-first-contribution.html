@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 28 — Your first contribution</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="wrap">
+<header class="lh"><div class="kicker">Module 8 · Shipping VoIP work · Lesson 28 of 28</div><h1>Your first contribution</h1><p class="lede">Completion is not remembering 28 pages. It is taking one real problem from evidence to a reviewable, tested change without losing the system boundary.</p><div class="meta"><span>⏱ 15 min + your task</span><span>🎯 Produce one contribution packet a reviewer can trust</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  R["Reproduce"] --> O["Name owner<br/>+ invariant"] --> T["Write the smallest<br/>failing check"] --> F["Fix shared<br/>root cause"] --> V["Verify proportionally"] --> H["Explain before/after<br/>+ risks"]</pre><figcaption>Your contribution loop. Each box leaves evidence for the next person.</figcaption></figure>
+
+<div class="big-idea"><strong>Course graduation test:</strong> another engineer can read your packet and answer what broke, where it broke, why the fix belongs there, and what proves it—without trusting your intuition.</div>
+
+<h2>Choose a first task with a short blast radius</h2>
+<p>Good first tasks have a reproducible behavior, an existing owner and a nearby test pattern: a translation, validation, missing UI state, incorrect route payload, or focused integration bug. Avoid beginning with a new retry system, schema redesign, PBX migration or cross-repository protocol change.</p>
+<p>If your task is outside VoIP, use the same lesson: locate the narrow addon, read its manifest and neighbors, trace its ORM/UI boundary, and reuse its test style. The platform skills from Lessons 1–10 travel with you.</p>
+
+<h2>Build the contribution packet</h2>
+<table><tr><th>Artifact</th><th>What to record</th></tr>
+  <tr><td>Reproduction</td><td>Exact branch/SHA, database/module state, action, observed result, expected result.</td></tr>
+  <tr><td>Ownership map</td><td>Repository, addon, model/component, external boundary, and callers of the function you will change.</td></tr>
+  <tr><td>Invariant</td><td>One plain sentence that must stay true—for example, “a redelivered cost event cannot create a second remote charge.”</td></tr>
+  <tr><td>Failing proof</td><td>The narrowest existing test layer that fails before the fix and passes after it.</td></tr>
+  <tr><td>Minimal change</td><td>Fix the shared root cause. Do not add recovery machinery for a failure you did not reproduce.</td></tr>
+  <tr><td>Verification</td><td>Targeted test, relevant module suite, lint/static check, and manual/shared-staging proof only when the behavior requires it.</td></tr>
+  <tr><td>Handoff</td><td>Before/after behavior, commands and results, skipped checks, remaining risk, screenshots only when they prove UI behavior.</td></tr>
+</table>
+
+<h2>Use the right repository proof</h2>
+<div class="card-grid">
+  <article class="card"><h3>Community / Enterprise</h3><p>Python model/controller tests; Hoot for JS units; tours for browser journeys; module install/update proof. Include upgrade work when stored schema or data meaning changes.</p></article>
+  <article class="card"><h3>IAP Phone Service</h3><p>Controller/model tests with every Telnyx, Wazo and IAP call mocked explicitly. Money/security paths need stable-key and ownership assertions.</p></article>
+  <article class="card"><h3>VoIP infrastructure</h3><p>Run the repository's <code>mise run test</code> config harness. Real signaling/audio still needs the documented integration check.</p></article>
+  <article class="card"><h3>Integration addons</h3><p>Prove the integration behavior plus the inherited core behavior you rely on. Do not duplicate core logic in CRM, Helpdesk or Sales.</p></article>
+</div>
+
+<h2>Review yourself before asking others</h2>
+<ol>
+  <li>Read the diff, not just the final files. Remove unrelated formatting and speculative helpers.</li>
+  <li>Check access rights, record rules, <code>sudo()</code>, public routes, tokens and resource ownership.</li>
+  <li>Check retries against side effects: database uniqueness is not remote idempotency.</li>
+  <li>Check translations, batch recordsets, query count, browser cleanup and failure messages.</li>
+  <li>Rerun the targeted test after any rebase or branch switch; report skipped proof honestly.</li>
+</ol>
+
+<div class="callout"><strong>Branch discipline:</strong> confirm the team's current target before editing. Do not publish, push, open a PR or touch shared services merely because the code is ready; those are separate authorized actions.</div>
+
+<section class="exercise"><h3>Your graduation checklist</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+<div class="codehook"><div class="kicker">Capstone prompt</div><p>Give your agent a real small issue and say: “Teach while pairing. First reproduce read-only and make me name the owner and invariant. Then help me add the smallest failing test, implement the root-cause fix, run the proportional checks, and draft a factual handoff. Stop before any remote action.”</p></div>
+<div class="ask"><strong>Your teacher is an agent—interrupt it.</strong> Before you change code, ask it to challenge your ownership map and invariant. If either answer is vague, keep tracing together until you can point to the exact boundary.</div>
+<div class="source-rec"><div class="kicker">Keep these open</div><p><a href="../reference/contribution-checklist.html">Contribution checklist</a> · <a href="../reference/repo-module-map.html">Repository and module map</a> · <a href="../reference/debugging-playbook.html">Debugging playbook</a> · <a href="../reference/glossary.html">VoIP glossary</a>.</p></div>
+
+<div class="big-idea"><strong>You are ready when you can navigate, not when you can recite.</strong> You now know how Odoo addons fit together, where VoIP responsibilities live, how a number is bought and billed, how calls and events travel, and how to prove a change at the narrowest layer. Use the maps; re-open the lessons when reality changes.</div>
+<nav class="nav-foot"><a href="0027-debugging-across-the-stack.html"><span class="lbl">Previous</span>← Debugging across the stack</a><a class="home" href="../index.html">⌂</a><a href="0029-user-offline-forwarding.html"><span class="lbl">Field lesson</span>When the user is offline →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>
+initializeCourseDiagrams();
+makeQuiz("quiz","quiz-score",[
+{stem:"What should come before implementation?",choices:[{text:"A reproduced behavior, owner, invariant and failing check",correct:true},{text:"A reusable abstraction for future related work",correct:false}],why:"The evidence tells you where the smallest correct fix belongs."},
+{stem:"A transient webhook failure was not reproduced. Should the first fix add a local retry queue?",choices:[{text:"No; prove the gap and reuse sender redelivery first",correct:true},{text:"Yes; every network path needs its own queue",correct:false}],why:"Retries add state and failure modes. Add them only when the existing contract demonstrably cannot recover."},
+{stem:"Tests pass, but a relevant manual carrier check was skipped. How do you report it?",choices:[{text:"State exactly what passed and what remains unverified",correct:true},{text:"Call the feature complete because unit tests are green",correct:false}],why:"A trustworthy handoff separates automated contract proof from live integration proof."}
+]);</script></body></html>

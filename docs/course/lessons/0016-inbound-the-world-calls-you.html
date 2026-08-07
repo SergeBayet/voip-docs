@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 5 · Inbound: the world calls you — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 16 · Inbound: the world calls you — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -94,7 +95,7 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 2 — A Call's Life · Lesson 5 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 5 — A Call's Life · Lesson 16 of 28</div>
   <h1>Inbound: the world calls you</h1>
   <p class="lede">How a call from any phone on Earth finds <em>your</em> browser and makes it ring — while the call card runs a relay race through the shop to appear in your Odoo.</p>
   <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: trace an inbound call end-to-end, shop hop included</span><span>🧩 Builds on: Lessons 2–4</span></div>
@@ -117,31 +118,35 @@
 sequenceDiagram
   actor C as 📞 Caller
   participant T as 🌍 Telnyx
+  participant E as 🚪 Kamailio edge
   participant W as 🏢 Wazo (your tenant)
   participant B as 🖥️ Your browser
   participant S as 🏪 Shop (IAP)
   participant O as 🏠 Your Odoo DB
   C->>T: dials +32 2 555 1234 (your DID)
-  T->>W: SIP INVITE over the trunk
+  T->>E: SIP INVITE over TLS
+  E->>W: DID lookup → route to home Wazo
   Note over W: incall — this DID → user / group / queue
   par ring the handset
-    W->>B: SIP INVITE over WSS — browser rings 🔔
+    W->>E: SIP INVITE toward registered browser
+    E->>B: SIP INVITE over WSS — browser rings 🔔
   and tell Odoo (via the shop)
     W->>S: webhookd posts call_created (tenant secret)
-    S->>S: rename → call.initiated, filter legs, sign
-    S->>O: POST /voip/api/phone_service/event (HMAC-signed)
+    S->>S: normalize, filter legs, sign token
+    S->>O: POST /voip/api/phone_service/event
     O->>O: dedupe → call card (state=calling) + bus 🔔
   end
-  B->>W: you click Answer (200 OK)
-  W->>T: bridge the audio
+  B->>E: you click Answer (200 OK)
+  E->>W: forward signaling response
+  W->>T: bridge the audio (not through edge)
   Note over C,B: voice flows PSTN ↔ trunk ↔ browser (MEDIA lane)
   W-->>S: call_answered … call_ended (+ disposition)
-  S-->>O: call.answered … call.hangup → ongoing → terminated
+  S-->>O: call_answered … call_ended → ongoing → terminated
 </pre>
-<figcaption><a href="./0003-sip-call-lifecycle.html">Lesson 3</a>'s INVITE/200 dance run backwards — from the world toward you — plus the call card's detour through the shop. Adapted from onboarding §9.</figcaption>
+<figcaption><a href="./0014-sip-call-lifecycle.html">Lesson 14</a>'s INVITE/200 dance run backwards — from the world toward you — plus the call card's detour through the shop. Adapted from onboarding §9.</figcaption>
 </figure>
 
-<div class="callout"><strong>Zoom in on the PBX (<a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a> reminder).</strong> "Wazo" is still two programs: <strong>Kamailio</strong> (the edge) receives the inbound INVITE off the trunk, and <strong>Asterisk</strong> (the engine) does the incall lookup and rings you. Same split as outbound — just the other door.</div>
+<div class="callout"><strong>Zoom in on signaling (<a href="./0013-two-planes-signaling-vs-media.html">Lesson 13</a> reminder).</strong> The <strong>separate Odoo Kamailio edge</strong> receives carrier TLS and browser WSS, then routes both sides to the right Wazo. Wazo/Asterisk owns the incall lookup and call behavior. Audio never crosses the edge.</div>
 
 <h2>New idea #1: the incall (DID → destination)</h2>
 <p>The whole trick of inbound is one routing rule that answers <em>"a call arrived for this public number — what should ring?"</em></p>
@@ -151,16 +156,17 @@ flowchart LR
   DID["+32 2 555 1234<br/>(your public DID)"] --> INCALL{"incall<br/>routing rule"}
   INCALL --> USER["a user<br/>(one desk rings 🔔)"]
   INCALL --> GRP["a call group<br/>(the whole team rings)"]
-  INCALL --> Q["a queue<br/>(waiting room — agents ring<br/>by strategy, in order)"]
+  INCALL --> Q["a queue<br/>(waiting room)"]
+  INCALL --> F["a Call Flow / IVR /<br/>voicemail / sound"]
 </pre>
-<figcaption>Three possible destinations: a user, a call group, or a queue. A user is a <strong>real Wazo user</strong> — the old per-user "personal queue" is gone.</figcaption>
+<figcaption>The common destinations. A Call Flow can compose schedules, menus, queues, groups, extensions, voicemail, sounds and outbound branches.</figcaption>
 </figure>
-<p><strong>Nobody answers?</strong> Wazo walks the user's <em>fallbacks</em>: another extension, a forward to some outside number, or a <strong>voicemail box</strong> that plays a custom greeting and takes a message (that whole pipeline is <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>).</p>
+<p><strong>Nobody answers?</strong> Wazo walks the user's <em>fallbacks</em>: another extension, a forward to some outside number, or a <strong>voicemail box</strong> that plays a custom greeting and takes a message (that whole pipeline is <a href="./0023-leaving-a-message-voicemail.html">Lesson 23</a>).</p>
 
 <h2>Inbound is the mirror of outbound</h2>
-<p>You learned outbound in <a href="./0004-outbound-calling-the-world.html">Lesson 4</a>. Inbound is the same picture flipped — which makes it easy to remember:</p>
+<p>You learned outbound in <a href="./0015-outbound-calling-the-world.html">Lesson 15</a>. Inbound is the same picture flipped — which makes it easy to remember:</p>
 <table>
-  <thead><tr><th></th><th>Outbound (L4) — you call out</th><th>Inbound (L5) — they call in</th></tr></thead>
+  <thead><tr><th></th><th>Outbound (L15) — you call out</th><th>Inbound (L16) — they call in</th></tr></thead>
   <tbody>
     <tr><td><strong>Carrier paperwork</strong> at Telnyx</td><td>DID allowed as your caller-ID</td><td>DID pointed back at us (inbound routing)</td></tr>
     <tr><td><strong>The key question</strong></td><td>"Who am I?" → caller-ID stamped on the call</td><td>"What rings?" → <strong>incall</strong> → user / group / queue</td></tr>
@@ -174,20 +180,20 @@ flowchart LR
 <pre class="mermaid">
 flowchart LR
   W["Wazo webhookd<br/>call_created, call_ended…"] -->|"per-tenant secret"| S["Shop<br/>/webhooks/wazo/call_events"]
-  S -->|"rename + leg filters<br/>+ HMAC signature"| O["Your DB's ONE doorbell<br/>/voip/api/phone_service/event"]
+  S -->|"normalize + leg filters<br/>+ scoped signed token"| O["Your DB's ONE doorbell<br/>/voip/api/phone_service/event"]
   O --> E["voip.phone.service.event<br/>dedupe on event_id"] --> CALL["voip.call<br/>+ bus notify 🔔"]
 </pre>
 <figcaption>Every PBX event transits the shop. Your DB has exactly one doorbell for all of them.</figcaption>
 </figure>
 <ul>
-  <li><strong>Rename</strong>: Wazo speaks its own dialect (<code>call_created</code>, <code>call_ended</code>); the shop translates to the stable names your DB knows (<code>call.initiated</code>, <code>call.hangup</code>). <code>call_ended</code> gains a computed <strong>disposition</strong>: <code>answered / busy / rejected / missed</code>.</li>
+  <li><strong>Normalize</strong>: the shop allowlists fields, derives the event timestamp from the PBX clock and forwards the stable Wazo names (<code>call_created</code>, <code>call_answered</code>, <code>call_updated</code>, <code>call_ended</code>). Enterprise derives its call state/disposition from the payload.</li>
   <li><strong>Leg filters</strong>: a call has several "legs" (one per participant). The shop forwards only the legs you care about — your softphone-recipient leg, or the inbound external leg — so your DB isn't spammed with the rest.</li>
-  <li><strong>Dedupe</strong>: <code>event_id = "&lt;call_id&gt;:&lt;event_name&gt;"</code> is UNIQUE in <code>voip.phone.service.event</code> — a redelivered event is a harmless no-op.</li>
+  <li><strong>Dedupe</strong>: the stable event ID is normally <code>&lt;call_id&gt;:&lt;event_name&gt;</code>; recurring <code>call_updated</code> events include a content digest. It is UNIQUE in <code>voip.phone.service.event</code>, so a redelivery is a harmless no-op.</li>
   <li><strong>Redelivery, not retry tables</strong>: if your DB doesn't ack, the shop answers <strong>503</strong> to webhookd — and <em>Wazo</em> redelivers later. The retry queue lives upstream; nobody builds a new one.</li>
   <li><strong>Two-clock discipline</strong>: <code>occurred_at</code> always carries the <strong>PBX clock</strong>, never <code>now()</code> — the event tells you when it happened, not when it finally arrived.</li>
 </ul>
 
-<div class="warnbox"><strong>Sleeping browsers: <code>call.push</code> / <code>call.push_cancel</code>.</strong> A browser tab that's asleep has no SIP connection to ring. Wazo emits <em>push</em> events that travel the same relay and wake the browser via a <strong>service-worker push notification</strong> — an interim mechanism ("waiting for Kamailio"). Declining from that notification hangs the call up <strong>server-side through the shop</strong>, because there is no browser SIP session to send the reject.</div>
+<div class="warnbox"><strong>Unregistered browsers: push wakeup.</strong> When no SIP registration is available, Wazo's enriched <code>odoo_call_push_notification</code> / cancel events travel through the same relay and can wake the browser via a service-worker notification. Declining from that notification hangs up that member's ring leg <strong>server-side through the shop</strong>, because there is no live browser SIP session to send the reject.</div>
 
 <h2>The payoff: one inbound call lights up all three planes</h2>
 <div class="planes3">
@@ -197,16 +203,16 @@ flowchart LR
 </div>
 <p>The ring and the call card are <em>different lanes</em>. Your browser can ring even if your DB is briefly slow — and the call card, which now crosses one extra building, can appear slightly after the ring. That's by design, not a bug.</p>
 
-<div class="callout"><strong>Why you must be "registered" (<a href="./0003-sip-call-lifecycle.html">Lesson 3</a> callback).</strong> The incall points at your extension — but Asterisk rings it <em>wherever it last saw a REGISTER from you</em>. No registration (browser closed, not logged in) → there's nowhere to send the INVITE → the call goes straight to your fallbacks or voicemail. Registration is what makes your desk reachable.</div>
+<div class="callout"><strong>Why you must be "registered" (<a href="./0014-sip-call-lifecycle.html">Lesson 14</a> callback).</strong> The incall points at your extension — but Asterisk rings it <em>wherever it last saw a REGISTER from you</em>. No registration (browser closed, not logged in) → there's nowhere to send the INVITE → the call goes straight to your fallbacks or voicemail. Registration is what makes your desk reachable.</div>
 
 <p><strong>Browser niceties</strong> (polish, not core): with several tabs open only one plays the ringtone (the "ringleader"), a background tab can ring via a service-worker notification, and <em>Do Not Disturb</em> silences everything.</p>
 
 <div class="codehook">
   <span class="kicker">🔌 Where this lives in our code</span>
   <ul style="margin:.4rem 0 0">
-    <li><strong>The incall route</strong> — <code>voip.did.number._sync_pbx_incall()</code> asks the shop (<code>sync_incall</code>) to route the DID to the extension's destination — user, group, or queue; the PBX ids come back as <code>pbx_incall_id</code> / <code>pbx_incall_extension_id</code>.</li>
+    <li><strong>The incall route</strong> — <code>voip.did.number._sync_pbx_incall()</code> asks the shop (<code>sync_incall</code>) to route the DID to its typed destination; PBX ids come back as <code>pbx_incall_id</code> / <code>pbx_incall_extension_id</code>.</li>
     <li><strong>Shop-side relay</strong> — IAP <code>phone_service</code>: <code>on_wazo_call_event</code> in <code>controllers/pbx_controller.py</code> + renames/leg-filters in <code>utils/wazo_events.py</code>.</li>
-    <li><strong>The doorbell</strong> — <code>/voip/api/phone_service/event</code> (<code>voip/controllers/phone_service_api_controller.py</code>) verifies the HMAC, then <code>voip.phone.service.event._ack_then_process()</code> (<code>voip/models/phone_service_event.py</code>) records the event once (dedupe on <code>event_id</code>), replies <strong>200</strong>, and only then processes it — creating/updating <code>voip.call</code> and bus-notifying your devices.</li>
+    <li><strong>The doorbell</strong> — <code>/voip/api/phone_service/event</code> (<code>voip/controllers/phone_service_api_controller.py</code>) verifies the short-lived scoped token, then <code>voip.phone.service.event._ack_then_process()</code> (<code>voip/models/phone_service_event.py</code>) records the event once (dedupe on <code>event_id</code>), replies <strong>200</strong>, and only then processes it — creating/updating <code>voip.call</code> and bus-notifying your devices.</li>
   </ul>
   <span class="cite">(onboarding §8 provisioning &amp; §9 inbound)</span>
 </div>
@@ -232,20 +238,20 @@ flowchart LR
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask anything fuzzy: "what exactly is inside a <code>call_created</code> payload?", "show me the leg filters in <code>wazo_events.py</code>", "walk me through <code>_handle_call_push</code>", or "what happens when two tabs are open and a call comes in?". The back-and-forth is where the learning compounds.
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask anything fuzzy: "what exactly is inside a <code>call_created</code> payload?", "show me the leg filters in <code>wazo_events.py</code>", "walk me through <code>_handle_odoo_call_push_notification</code>", or "what happens when two tabs are open and a call comes in?". The back-and-forth is where the learning compounds.
 </div>
 
 <div class="links">
   <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
   <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
-  <a href="./0004-outbound-calling-the-world.html">↩ Lesson 4 · Outbound</a>
-  <a href="./0002-two-planes-signaling-vs-media.html">↩ Lesson 2 · Two planes</a>
+  <a href="./0015-outbound-calling-the-world.html">↩ Lesson 15 · Outbound</a>
+  <a href="./0013-two-planes-signaling-vs-media.html">↩ Lesson 13 · Two planes</a>
 </div>
 
 <div class="nav-foot">
-  <a href="0004-outbound-calling-the-world.html"><span class="lbl">← Previous</span>Lesson 4 · Outbound: calling the world</a>
+  <a href="0015-outbound-calling-the-world.html"><span class="lbl">← Previous</span>Lesson 15 · Outbound: calling the world</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0006-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">Next →</span>Lesson 6 · From Telnyx-direct to our own switchboard<br><span style="color:var(--faint);font-weight:400">why Parrot exists — the migration and what it bought us.</span></a>
+  <a href="0017-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">Next →</span>Lesson 17 · From Telnyx-direct to our own switchboard<br><span style="color:var(--faint);font-weight:400">why Parrot exists — the migration and what it bought us.</span></a>
 </div>
 
 </div>
@@ -258,7 +264,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -269,7 +275,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -282,7 +288,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -290,7 +296,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -332,18 +338,18 @@ makeOrderer('order-steps','order-score',[
 makeQuiz('quiz','quiz-score',[
   {stem:'What does the incall rule decide?',
    choices:[
-     {t:'Which destination the dialled DID rings: a user, a call group, or a queue', ok:true},
+     {t:'Which typed destination the dialled DID reaches', ok:true},
      {t:'Which audio codec the two ends of the call will negotiate before talking', ok:false},
      {t:'Which caller-ID Telnyx stamps onto the call before it leaves the country', ok:false},
      {t:'Which credit ledger the shop should bill the incoming call minutes against', ok:false}],
-   why:'incall = "this public number rings that destination". The outbound mirror is your caller-ID.'},
+   why:'incall = “this public number reaches that destination.” The destination can be a user, group, queue, Call Flow, menu, voicemail and more.'},
   {stem:'How does the call card reach your DB?',
    choices:[
-     {t:'Wazo webhookd → shop (rename, filter, sign) → your one doorbell /voip/api/phone_service/event', ok:true},
+     {t:'Wazo webhookd → shop (normalize, filter, sign token) → your one doorbell', ok:true},
      {t:'Wazo POSTs straight to your DB at /voip/pbx/call_event using a per-tenant token', ok:false},
      {t:'Your browser tells Odoo it is ringing, and Odoo then creates the call record', ok:false},
      {t:'Telnyx forwards the event directly to your DB, since it saw the call arrive', ok:false}],
-   why:'Wazo never calls your DB. The old direct endpoint is gone — every PBX event transits the shop and arrives HMAC-signed at /voip/api/phone_service/event.'},
+   why:'Wazo never calls your DB. Every PBX event transits Phone Service and arrives inside a client-scoped, expiring signed token at /voip/api/phone_service/event.'},
   {stem:'Your DB was down for a minute and never acked a call event. What happens?',
    choices:[
      {t:'The shop answers 503 to webhookd, so Wazo redelivers; dedupe absorbs the replays', ok:true},

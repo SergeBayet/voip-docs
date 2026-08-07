@@ -38,7 +38,8 @@ exclude_docs: |
   superpowers/
   kamailio/_test/
   course/*.md
-  course/reference/build_onboarding.py
+  course/reference/*.py
+  course/reference/__pycache__/
 
 nav:
   - Home: index.md

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 6 · From Telnyx-direct to our own switchboard — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 17 · From Telnyx-direct to our own switchboard — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,7 +91,7 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 2 — A Call's Life · Lesson 6 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 5 — A Call's Life · Lesson 17 of 28</div>
   <h1>From Telnyx-direct to our own switchboard</h1>
   <p class="lede">The old softphone rented everything from the carrier. Parrot bought the building. This is the why.</p>
   <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Goal: argue the migration's trade-offs in a design discussion</span><span>🧩 Builds on: Lessons 1, 2, 4, 5</span></div>
@@ -120,12 +121,15 @@ flowchart LR
 <figure>
 <div class="mermaid">
 flowchart LR
-  B2["🖥️ Browser softphone"] -- "SIP over WSS<br/>(the one direct link)" --> W2["🏢 our Wazo<br/>Kamailio edge · one tenant<br/>per customer"]
+  B2["🖥️ Browser softphone"] -- "SIP over WSS" --> E2["🚪 our Kamailio edge<br/>public signaling router"]
+  E2 -- "SIP" --> W2["🏢 our Wazo<br/>one tenant per customer"]
   D2["🏠 Odoo DB"] -- "/pbx/&lt;op&gt;" --> S2["🏪 IAP shop"]
   S2 -- "master token,<br/>tenant-scoped" --> W2
   W2 -. "webhookd events" .-> S2
   S2 -. "signed webhook" .-> D2
-  W2 == "SIP trunk" ==> T2["🌍 Telnyx<br/>the wire + the numbers"]
+  W2 <-->|"SIP"| E2
+  E2 <-->|"SIP trunk"| T2["🌍 Telnyx<br/>the wire + the numbers"]
+  W2 <-.->|"RTP/SRTP media"| T2
   style W2 fill:#eef3ec,stroke:#d4e3d6
 </div>
 <figcaption>NEW WORLD (Parrot) — we run the edge; Telnyx is demoted to the wire and the numbers. Caller-ID is server-side config; events are native.<a class="cite" href="../reference/onboarding.html" title="Onboarding §2 — cast of characters & golden rules">onboarding&nbsp;§2</a></figcaption>
@@ -134,8 +138,8 @@ flowchart LR
 <p>Same browser, same carrier, same phone numbers. What moved is <strong>who stands at the door</strong>.
 In the old world the browser registered its SIP identity straight against
 <code>sip.telnyx.com</code> — the admin pointed the whole database at one WebSocket server and each
-user typed a username and secret by hand. In Parrot, the browser registers against
-<strong>our</strong> Wazo — the Kamailio edge from <a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a> — and everything else about the phone
+user typed a username and secret by hand. In Parrot, the browser registers <strong>through our separate
+Kamailio edge</strong> to its home Wazo — the split from <a href="./0013-two-planes-signaling-vs-media.html">Lesson 13</a> — and everything else about the phone
 system became <em>configuration we own</em>.</p>
 
 <h2>The three wins, each anchored to an old-world failure</h2>
@@ -148,24 +152,22 @@ system became <em>configuration we own</em>.</p>
       <td>Caller-ID is now <strong>config on the Wazo user</strong>, written server-side through the shop. The client never composes its own identity, so there is nothing to forge.<a class="cite" href="../reference/onboarding.html" title="update_user_caller_id op; outgoing_caller_id set in _op_sync_user_extension">onboarding&nbsp;§8</a></td></tr>
     <tr><td><span class="pill p-cfg">isolation</span></td>
       <td>Every customer lived in one shared carrier account. Walls between customers were policy and hope.</td>
-      <td>One Wazo <strong>tenant per customer</strong>, derived as <code>UUID(hex=client_id)</code> from the authenticated caller. The customer never names its tenant; cross-tenant access is impossible <em>by construction</em>, not by ACL diligence.<a class="cite" href="../reference/onboarding.html" title="Golden rules: structural tenancy; pbx_request demands tenant_uuid XOR master_scoped">onboarding&nbsp;§2</a></td></tr>
+      <td>One Wazo <strong>tenant per customer</strong>, whose UUID is the authenticated <code>client_uuid</code>. The customer never supplies a separate tenant selector; cross-tenant access is impossible <em>by construction</em>, not by ACL diligence.<a class="cite" href="../reference/onboarding.html" title="Golden rules: structural tenancy">onboarding&nbsp;§2</a></td></tr>
     <tr><td><span class="pill p-med">ownership</span></td>
       <td>Features ended where the carrier's API ended; call history was whatever the carrier's webhooks chose to report.</td>
       <td>Dialplan, queues, voicemail, call groups are ours to build. Native call events flow from Wazo's <strong>webhookd</strong> → shop → your DB, signed, deduped, in near real time.<a class="cite" href="../reference/onboarding.html" title="Wazo webhookd → IAP /webhooks/wazo/call_events → signed /voip/api/phone_service/event">onboarding&nbsp;§9</a></td></tr>
   </tbody>
 </table>
 
-<h2>What it cost — and what's still pending</h2>
+<h2>What it cost — operating what we own</h2>
 
-<div class="callout"><strong>Owning a building means maintaining a building.</strong> We now operate a PBX fleet:
-each Wazo box is Asterisk + Kamailio + rtpengine plus microservices (<a href="./0002-two-planes-signaling-vs-media.html">Lesson 2</a>'s trio, now our
-pager duty). And one corner is explicitly unfinished: the push path that <em>wakes</em> a closed
-browser so it can ring is an interim mechanism — the commit that introduced it literally says
-<em>"webhooks (debut: waiting for Kamailio)"</em>, i.e. it stands in until the Kamailio-side
-infrastructure lands.<a class="cite" href="https://github.com/odoo/enterprise/pull/107700" title="enterprise commit c0faf70bde1 — [REF] voip: webhooks (debut: waiting for Kamailio)">c0faf70bde1</a></div>
+<div class="callout"><strong>Owning a building means maintaining a building.</strong> We now operate a PBX fleet,
+the Odoo-hosted broker and a separate public Kamailio edge. The edge has its own versioned repository and
+functional harness for registration, inbound, outbound, IAP lookup and security. That harness proves signaling;
+real browser/PBX/carrier media still needs a live call check.</div>
 
 <p>And Telnyx did not disappear — it was <em>demoted</em>, not fired. It still owns the phone numbers
-(the DIDs from <a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a>), still runs the SIP trunk that connects our building to the worldwide
+(the DIDs from <a href="./0016-inbound-the-world-calls-you.html">Lesson 16</a>), still runs the SIP trunk that connects our building to the worldwide
 phone network, and still bills per minute. We bought the building; the street outside is still
 theirs.</p>
 
@@ -189,8 +191,9 @@ or the neighbours.</div>
   <div class="kicker">⌨️ Where this lives in our code</div>
   <ul style="margin:.5rem 0 0 1rem">
     <li><code>voip/models/pbx_service.py</code> — the entire enterprise↔PBX surface: every method is one line, <code>self._api().pbx_call("&lt;op&gt;", **kwargs)</code> → <code>POST /api/phone_service/1/pbx/&lt;op&gt;</code>.</li>
-    <li><code>voip/data/voip_provider_data.xml</code> — the "Odoo Phone Service" provider: <code>ws_server = wss://wazo-1.voip.test.odoo.com/ws</code>. This is the one address the browser dials directly — compare with the old <code>voip.wsServer</code> pointing at the carrier.</li>
+    <li><code>voip/data/voip_data.xml</code> — the "Odoo Phone Service" provider: <code>ws_server = wss://sip.odoo.com:7443</code>. This is the public edge address, not a Wazo host.</li>
     <li><code>iap_services/phone_service/models/phone_service_pbx_tenant_ops.py</code> — the shop side: the <code>_op_*</code> methods holding the full Wazo choreography, tenant-scoped, lookup-before-create.</li>
+    <li><code>voip-infra/conf/kamailio/</code> — public SIP routing; <code>voip-infra/tests/</code> — its signaling harness.</li>
   </ul>
 </div>
 
@@ -215,7 +218,7 @@ or the neighbours.</div>
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me the commit that deleted the enterprise Wazo client", "what exactly can a
   stolen client_secret do?", "walk me through one /pbx/&lt;op&gt; call end to end", or "quiz me again,
   harder". The back-and-forth is where the learning compounds.
@@ -227,9 +230,9 @@ or the neighbours.</div>
 </div>
 
 <div class="nav-foot">
-  <a href="0005-inbound-the-world-calls-you.html"><span class="lbl">← Previous</span>Lesson 5 · Inbound: the world calls you</a>
+  <a href="0016-inbound-the-world-calls-you.html"><span class="lbl">← Previous</span>Lesson 16 · Inbound: the world calls you</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0007-the-shop-the-broker-in-the-middle.html"><span class="lbl">Next →</span>Lesson 7 · The shop: the broker in the middle<br><span style="color:var(--faint);font-weight:400">one keyholder, a capability API, and error keys as the contract.</span></a>
+  <a href="0018-the-shop-the-broker-in-the-middle.html"><span class="lbl">Next →</span>Lesson 18 · The shop: the broker in the middle<br><span style="color:var(--faint);font-weight:400">one keyholder, a capability API, and error keys as the contract.</span></a>
 </div>
 
 </div>
@@ -244,7 +247,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -255,7 +258,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -270,7 +273,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -278,7 +281,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -314,13 +317,13 @@ makeSorter('sorter','sort-score',
     {name:'The browser decides what caller-ID to send', ans:'old',
      why:'<b>Old world.</b> Identity rode in headers the browser JS composed (P-Asserted-Identity) — any tab could claim any number.'},
     {name:'Cross-tenant access is impossible by construction', ans:'new',
-     why:'<b>Parrot.</b> The tenant is derived from the authenticated client (UUID(hex=client_id)); the shop pins every Wazo call to it. Not policy — structure.'},
+     why:'<b>Parrot.</b> The Wazo tenant UUID is the authenticated client_uuid; the shop pins every PBX operation to it. There is no caller-supplied tenant selector.'},
     {name:'Call events arrive only from the carrier', ans:'old',
      why:'<b>Old world.</b> Your call history was whatever the carrier’s webhooks reported. Parrot gets native events from Wazo webhookd.'},
     {name:'All customers share one carrier SIP space', ans:'old',
      why:'<b>Old world.</b> One shared account, walls made of policy. Parrot gives each customer a structurally isolated Wazo tenant.'},
-    {name:'SIP REGISTER lands on a Kamailio we run', ans:'new',
-     why:'<b>Parrot.</b> The browser registers to our Wazo edge (ws_server = wss://wazo-1…). Before, the carrier was the edge.'},
+    {name:'SIP REGISTER lands on a Kamailio edge we run', ans:'new',
+     why:'<b>Parrot.</b> The browser registers through <code>sip.odoo.com</code> to its home Wazo. Before, the carrier was the edge.'},
     {name:'Dialplan, queues and voicemail are ours to change', ans:'new',
      why:'<b>Parrot.</b> We own the switchboard’s brain now — features end where our roadmap ends, not where the carrier’s API does.'}
   ]);
@@ -335,14 +338,14 @@ makeQuiz('quiz','quiz-score',[
      {t:'Telnyx now cross-checks the caller-ID against the DID list before every dialout', ok:false}
    ],
    why:'The fix is structural, not detective: identity is configuration the client cannot touch, so there is nothing left to inspect or forge.'},
-  {stem:'After the migration, what is the ONE remaining direct customer↔Wazo channel — and why is it allowed?',
+  {stem:'After the migration, how does live browser phone traffic differ from configuration traffic?',
    choices:[
-     {t:'The browser’s SIP-over-WSS registration and audio — media cannot transit a JSON API', ok:true},
+     {t:'SIP goes through the public edge and media bypasses the edge/shop; DB config uses the shop', ok:true},
      {t:'The hourly status poll the DB runs against confd — config drift needs a direct read', ok:false},
      {t:'The webhookd event stream straight into the customer DB — events outpace any proxy', ok:false},
      {t:'The wakeup push to the mail service worker — push must reach Wazo without a broker', ok:false}
    ],
-   why:'Real-time voice (Lesson 2’s media plane) can’t hop through a paperwork counter. Everything else — config, events, status — transits the shop.'},
+   why:'Live signaling and media have dedicated paths. Database config, events and status use the broker contract.'},
   {stem:'Parrot bought the building — so what does Telnyx still do in the new world?',
    choices:[
      {t:'It stays the carrier: owns the numbers and the SIP trunk that reaches the PSTN', ok:true},

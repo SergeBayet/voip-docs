@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 23 — Leaving a message</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main class="wrap">
+<header class="lh">
+  <div class="kicker">Module 7 · The product · Lesson 23 of 28</div>
+  <h1>Leaving a message</h1>
+  <p class="lede">Wazo stores the audio. Odoo stores the business record. Phone Service carries metadata one way and fetches the recording the other way.</p>
+  <div class="meta"><span>⏱ 10 min</span><span>🎯 Trace a voicemail from fallback to play button</span><span>🧩 Builds on Lessons 20 and 22</span></div>
+</header>
+
+<figure><pre class="mermaid">sequenceDiagram
+  participant C as Caller
+  participant W as Wazo PBX
+  participant S as Phone Service
+  participant O as Enterprise Odoo
+  C->>W: no answer → mailbox → recording
+  W->>S: global/user_voicemail_message_created
+  S->>O: scoped signed token with event envelope
+  O-->>S: 200 after event is persisted
+  O->>O: process event after response
+  O->>S: get_voicemail_message_recording
+  S->>W: fetch recording
+  W-->>S: audio
+  S-->>O: base64 content + mimetype
+  O->>O: attach audio and queue email once</pre>
+<figcaption>Small metadata is pushed; the binary recording is pulled through the broker.</figcaption></figure>
+
+<div class="big-idea"><strong>Two copies, two jobs.</strong> Wazo is the telephony source for the mailbox and audio. Odoo's <code>voip.voicemail</code> and <code>voip.voicemail.message</code> make them searchable, playable, emailable, secured business records.</div>
+
+<h2>Personal and shared mailboxes</h2>
+<p>Every provisioned Phone user gets one personal mailbox automatically. It becomes the default no-answer destination and cannot be deleted independently. A database may also have one shared mailbox for a team. Mailbox numbers default to <code>90&lt;record id&gt;</code>; <code>*98</code> reaches the current user's mailbox.</p>
+<p>A mailbox may use a <code>voip.sound</code> as its unavailable greeting. Sync creates or updates the Wazo mailbox and then uploads or removes that greeting. Lesson 26 follows text-to-speech sound generation.</p>
+
+<h2>The event keeps its real name</h2>
+<p>Wazo <code>webhookd</code> sends either <code>global_voicemail_message_created</code> or <code>user_voicemail_message_created</code> to Phone Service. The shop preserves that event name; Enterprise handles both with the same message consumer. The shop-to-database request is not an HMAC header: the complete envelope is inside a short-lived, scoped token signed with that client's secret hash.</p>
+<p>Enterprise first inserts one <code>voip.phone.service.event</code> row under a unique <code>event_id</code>, returns 200, and processes after the HTTP response closes. This keeps Wazo's webhook request short. Database concurrency errors get a small bounded retry; other failures are logged and surfaced to the affected user.</p>
+
+<h2>Exactly once at two levels</h2>
+<table><tr><th>Key</th><th>Hole it closes</th></tr>
+  <tr><td><code>voip.phone.service.event(event_id)</code></td><td>The same broker event arriving repeatedly.</td></tr>
+  <tr><td><code>voip.voicemail.message(event_id)</code></td><td>The same message event being consumed twice.</td></tr>
+  <tr><td><code>(voicemail_id, pbx_message_id)</code></td><td>The same PBX recording arriving under another event name or id.</td></tr>
+</table>
+<p>The consumer searches first for the common duplicate, then relies on unique indexes for races. A unique collision becomes <code>ConcurrencyError</code>, which the outer event processor retries with a fresh transaction.</p>
+
+<h2>Push metadata, pull audio</h2>
+<p>The event contains caller, duration, folder, mailbox and message ids—not the binary. For a non-empty message, Enterprise calls <code>get_voicemail_message_recording</code> through Phone Service and stores the returned bytes as an attachment. The list view streams that attachment through <code>/voip/voicemail/message/&lt;id&gt;</code>; a configured mailbox email receives it once.</p>
+<div class="warnbox"><strong>Debugging boundary:</strong> a recording-download failure logs a warning and leaves the message row without audio. The current code has no recording-fetch cron or retry button. A later distinct event for the same PBX message can try again, but ordinary replay of an already-acknowledged top-level event is deduplicated. Do not promise automatic healing that is not implemented.</div>
+
+<div class="codehook"><div class="kicker">Trace it in code</div><ul>
+  <li><code>voip/models/voip_voicemail.py</code> — personal/shared lifecycle and greeting sync.</li>
+  <li><code>voip/models/phone_service_event.py</code> — persist, acknowledge, dispatch both event names.</li>
+  <li><code>voip/models/voip_voicemail_message.py</code> — two-key dedupe, recording pull and email.</li>
+  <li><code>phone_service/utils/wazo_events.py</code> + <code>utils/webhook.py</code> — Wazo forwarding and signed envelope.</li>
+</ul></div>
+
+<section class="exercise"><h3>Put the voicemail path in order</h3><div id="orderer"></div><div id="orderer-score" class="score"></div></section>
+<section class="exercise"><h3>Check the failure model</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+
+<div class="source-rec"><div class="kicker">Primary sources</div><p>Read the four files above and the official <a href="https://wazo-platform.org/documentation/">Wazo documentation</a>. Use the <a href="../reference/onboarding.html">local onboarding guide</a> for the complete cross-repository sequence.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Trace one voicemail event id through Wazo, Phone Service, <code>voip.phone.service.event</code>, the message indexes, recording fetch, attachment, and email.”</div>
+<nav class="nav-foot"><a href="0022-desks-teams-and-waiting-rooms.html"><span class="lbl">Previous</span>← Desks and queues</a><a class="home" href="../index.html">⌂</a><a href="0024-following-the-money.html"><span class="lbl">Next</span>Following the money →</a></nav>
+</main>
+<script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script>
+<script>
+initializeCourseDiagrams();
+makeOrderer("orderer", "orderer-score", [
+  "Wazo records a message and emits a voicemail event",
+  "Phone Service preserves the event name and sends a scoped signed token",
+  "Enterprise persists the event once, returns 200, then dispatches it",
+  "The message consumer inserts metadata under two uniqueness rules",
+  "Enterprise pulls the recording through Phone Service and stores an attachment"
+]);
+makeQuiz("quiz", "quiz-score", [
+  {stem: "Which voicemail event types does Enterprise handle?", choices: [{text: "Both global and user message-created events", correct: true}, {text: "Only global message-created events", correct: false}], why: "Both dispatch to the same message consumer."},
+  {stem: "The recording fetch fails after metadata was stored. What is confirmed?", choices: [{text: "The row remains without audio and a warning is logged", correct: true}, {text: "A recording cron retries until it succeeds", correct: false}], why: "There is currently no recording-fetch cron or retry button."},
+  {stem: "Why have both event_id and mailbox/message uniqueness?", choices: [{text: "They block two different duplicate identities", correct: true}, {text: "They make the list view sort faster", correct: false}], why: "One event can repeat, and one PBX message can arrive through more than one event identity."}
+]);
+</script></body></html>

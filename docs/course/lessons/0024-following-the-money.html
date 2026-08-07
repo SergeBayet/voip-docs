@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 24 — Following the money</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main class="wrap">
+<header class="lh">
+  <div class="kicker">Module 7 · The product · Lesson 24 of 28</div>
+  <h1>Following the money</h1>
+  <p class="lede">Number purchase, monthly rent and call minutes use two different IAP shapes. Knowing which one you are in prevents expensive assumptions.</p>
+  <div class="meta"><span>⏱ 12 min</span><span>🎯 Explain every exactly-once boundary in a call charge</span><span>🧩 Builds on Lessons 18 and 21</span></div>
+</header>
+
+<figure><pre class="mermaid">sequenceDiagram
+  participant T as Telnyx
+  participant S as Phone Service
+  participant I as IAP
+  participant O as Enterprise Odoo
+  T->>S: call lifecycle (has parties + call_control_id)
+  S->>S: remember call_control_id → client/from/to/direction
+  T->>S: call.cost (anonymous except call_control_id)
+  S->>S: enrich, filter SIP-trunking parts, add markup
+  S->>O: call_cost in client-scoped signed token
+  S->>S: reserve payment under UNIQUE(type, reference)
+  S->>I: authorize_capture([{key, credit, description}])
+  I->>I: skip any key already settled
+  O->>O: cost line UNIQUE(event_id) → best matching call</pre>
+<figcaption>A carrier receipt crosses two identifier gaps and three independent dedupe boundaries.</figcaption></figure>
+
+<h2>First separate the three bills</h2>
+<table><tr><th>Bill</th><th>When</th><th>IAP mechanism</th></tr>
+  <tr><td>Initial prorated number price</td><td>During the asynchronous order saga</td><td>Classic authorize token, then capture that same token after Telnyx accepts the order</td></tr>
+  <tr><td>Monthly number fee</td><td>Daily billing cron, once per number/month</td><td><code>phone_service.payment</code> ledger → keyed <code>authorize_capture</code></td></tr>
+  <tr><td>Call cost</td><td>After Telnyx emits <code>call.cost</code></td><td>The same payment ledger → keyed <code>authorize_capture</code></td></tr>
+</table>
+<div class="warnbox"><strong>Do not merge these mental models.</strong> The new per-line IAP idempotency protects call-cost and monthly-fee ledger retries. Number purchase still uses a persisted classic authorization token. Its source explicitly records a known response-loss wedge after a successful capture.</div>
+
+<h2>How a nameless receipt finds its customer</h2>
+<p>Telnyx lifecycle events such as <code>call.initiated</code> carry the parties, direction and <code>call_control_id</code>. Phone Service stores a 12-hour correlation row. Later, <code>call.cost</code> carries that Telnyx id but no customer-facing parties, so the shop joins it to the row. If no client is resolvable yet, it returns 503 and lets Telnyx redeliver.</p>
+<p>Only <code>sip-trunking</code> cost parts are billable. The shop applies the configured markup, rounds to four decimal places, drops a zero total, and renames the customer event to <code>call_cost</code>. The Enterprise callback uses the same client-scoped signed-token contract as the other Phone Service events—not an HMAC header.</p>
+
+<h2>Exactly once locally and remotely</h2>
+<div class="path"><div><strong>1 · Event</strong><br><code>UNIQUE(event_id)</code></div><div><strong>2 · Ledger</strong><br><code>UNIQUE(reference_type, reference_id)</code></div><div><strong>3 · IAP server</strong><br><code>UNIQUE(account, line key)</code></div></div>
+<p>The ledger's remote line key is:</p>
+<pre><code>{client_uuid}:{reference_type}:{reference_id}</code></pre>
+<p><code>/iap/1/authorize_capture</code> checks that key against both current and archived IAP transactions. A retry after “IAP charged, HTTP response was lost” therefore sees the settled key and skips it. This remote guard is the piece a database-only unique constraint cannot provide.</p>
+<p>Call costs are post-paid: the shop passes <code>allow_negative_balance=True</code>. Those minutes already happened, so the charge must be recorded even if it takes the account below zero. The result marks the payment <code>overdrawn</code>; state reconciliation sets <code>client.disabled</code>, and the Kamailio edge consults that flag before admitting more trunk calls.</p>
+
+<h2>Delivery and charging can retry independently</h2>
+<p>The shop attempts the Enterprise forward, then stores and charges a fresh event. If Enterprise did not acknowledge, the shop returns 503 to Telnyx. A redelivery forwards again but hits the shop's existing event/payment keys, so it cannot charge twice. Failed IAP calls stay in the payment ledger; the 10-minute recovery cron retries with exponential backoff using the same remote key.</p>
+
+<h2>Enterprise bridges the second id gap</h2>
+<p>Telnyx's <code>call_control_id</code> never reaches the Wazo/Odoo call record. Enterprise therefore matches a cost line by direction, the other party's normalized number and a time window. If several calls match, it chooses the nearest call end and logs a warning. Unmatched lines remain valid accounting records; a cron rechecks recent orphans for two hours because the cost can arrive before the call row.</p>
+
+<div class="codehook"><div class="kicker">Trace it in code</div><ul>
+  <li><code>phone_service/utils/telnyx_events.py</code> + <code>models/phone_service_telnyx_call.py</code> — correlation and 503.</li>
+  <li><code>phone_service/models/phone_service_webhook_event.py</code> — markup, forward, event dedupe and reserve.</li>
+  <li><code>phone_service/models/phone_service_payment.py</code> — remote line key, charge and recovery.</li>
+  <li><code>iap_odoo/controllers/main.py</code> — <code>/iap/1/authorize_capture</code> and settled-key lookup.</li>
+  <li><code>voip/models/voip_call_cost_line.py</code> — cost-line dedupe and heuristic matching.</li>
+</ul></div>
+
+<section class="exercise"><h3>Put a call charge in order</h3><div id="orderer"></div><div id="orderer-score" class="score"></div></section>
+<section class="exercise"><h3>Money checks</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+
+<div class="source-rec"><div class="kicker">Primary sources</div><p>Read the five code paths above, then revisit <a href="0021-buying-a-number-end-to-end.html">Lesson 21</a> to contrast the purchase token saga. The <a href="../reference/onboarding.html">onboarding guide</a> joins the carrier, broker and Enterprise views.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Simulate response loss at each money boundary. Tell me the stable key, persisted milestone, retry owner, and whether a second charge is possible.”</div>
+<nav class="nav-foot"><a href="0023-leaving-a-message-voicemail.html"><span class="lbl">Previous</span>← Leaving a message</a><a class="home" href="../index.html">⌂</a><a href="0025-the-call-flow-editor.html"><span class="lbl">Next</span>The Call Flow editor →</a></nav>
+</main>
+<script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script>
+<script>
+initializeCourseDiagrams();
+makeOrderer("orderer", "orderer-score", [
+  "Lifecycle event records call_control_id and the owning client",
+  "Anonymous call.cost is enriched from that correlation row",
+  "Phone Service filters parts, applies markup and forwards call_cost",
+  "A fresh event reserves one payment ledger row",
+  "IAP settles the stable line key once",
+  "Enterprise stores one cost line and links the closest matching call"
+]);
+makeQuiz("quiz", "quiz-score", [
+  {stem: "Why is the IAP line key needed if the shop already has a unique payment row?", choices: [{text: "It covers response loss after the remote charge committed", correct: true}, {text: "It makes the local payment query faster", correct: false}], why: "A local constraint cannot know whether a remote request committed before its response disappeared."},
+  {stem: "Does keyed authorize_capture also protect the initial number-purchase capture?", choices: [{text: "No, purchase uses the classic authorization token flow", correct: true}, {text: "Yes, every Phone Service bill uses the ledger", correct: false}], why: "The purchase saga and recurring/post-paid ledger are deliberately separate."},
+  {stem: "Why allow a call charge to make balance negative?", choices: [{text: "The consumed minutes must still be recorded", correct: true}, {text: "Telnyx refuses positive-balance captures", correct: false}], why: "Disabling future calls cannot undo an already consumed carrier service."}
+]);
+</script></body></html>

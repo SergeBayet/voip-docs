@@ -66,7 +66,8 @@
     <span><span class="tag t-ctrl">config</span> management / REST, not a live call</span>
   </div>
   <nav class="toc">
-    <a href="#players">The five players</a>
+    <a href="#odoo-platform">Odoo platform</a>
+    <a href="#players">The six players</a>
     <a href="#planes">The two planes</a>
     <a href="#sip">SIP signaling</a>
     <a href="#media">Media &amp; WebRTC</a>
@@ -76,8 +77,36 @@
   </nav>
 </header>
 
+<section id="odoo-platform">
+  <h2>Odoo platform <span class="em">how ordinary product code fits together</span></h2>
+  <dl>
+    <dt>Repository</dt>
+    <dd>A separately versioned source tree. Community framework and addons live in <code>odoo</code>; licensed addons live in <code>enterprise</code>; data migrations live in <code>upgrade</code>. Phone Service, SIP-edge infrastructure and team documentation have their own repositories.</dd>
+    <dt>Addon / module</dt>
+    <dd>An installable Odoo feature directory. Its <code>__manifest__.py</code> names dependencies, data files and browser assets; <code>__init__.py</code> imports Python packages.</dd>
+    <dt>Model</dt>
+    <dd>A Python class backed by Odoo's ORM. <code>_name</code> creates a model; <code>_inherit</code> extends or composes existing behavior.</dd>
+    <dt>Recordset and environment</dt>
+    <dd>A recordset is an ordered collection of rows of one model, possibly empty. <code>self.env</code> carries the database cursor, current user, context and access to other models.</dd>
+    <dt>External ID</dt>
+    <dd>A stable <code>module.name</code> identifier for data such as views, actions, groups and cron records. Use it instead of assuming a database integer ID.</dd>
+    <dt>View and action</dt>
+    <dd>A view is XML describing how records render. An action tells the web client what to open. Menus usually point to actions rather than directly to models.</dd>
+    <dt>Owl component</dt>
+    <dd>A reactive JavaScript component in Odoo's web client. It receives props, owns small local state and renders an XML template.</dd>
+    <dt>Service and registry</dt>
+    <dd>A service owns long-lived client behavior such as notifications or the softphone. A registry is the extension point used to add services, fields, actions and other pluggable web behavior.</dd>
+    <dt>ACL, record rule and <code>sudo()</code></dt>
+    <dd>An ACL grants model-level operations; a record rule limits which rows are visible or writable. <code>sudo()</code> bypasses both, so authenticate the external claim and resolve ownership before using it.</dd>
+    <dt>Hoot and tour</dt>
+    <dd>Hoot runs focused browser-side unit tests. A web tour drives a user journey through the real client. Python transaction/HTTP tests cover server behavior.</dd>
+    <dt>Upgrade script</dt>
+    <dd>A migration that preserves existing databases when fields, data or semantics change. It belongs in the <code>upgrade</code> repository, not in a fresh-install-only shortcut.</dd>
+  </dl>
+</section>
+
 <section id="players">
-  <h2>The five players <span class="em">who is in the room</span></h2>
+  <h2>The six players <span class="em">who is in the room</span></h2>
   <dl>
     <dt>Softphone <span class="tag t-both">both</span></dt>
     <dd>The dialer running as JS (SIP.js + WebRTC) inside the Odoo browser tab. Speaks <strong>SIP over WSS</strong> for signaling and <strong>WebRTC/SRTP</strong> for audio. Your handset.</dd>
@@ -85,8 +114,10 @@
     <dd>The customer's Odoo DB: numbers, extensions, groups, queues, voicemail, call log, the buy-number wizard. Holds <em>zero</em> Telnyx or Wazo credentials — it asks the shop for outcomes (<code>/api/phone_service/1/pbx/&lt;op&gt;</code>). Your office.</dd>
     <dt>IAP <code>phone_service</code> <span class="tag t-ctrl">config</span></dt>
     <dd>Odoo-hosted broker ("the shop"). The <em>only</em> holder of Telnyx + Wazo master keys. Buys DIDs, bills in IAP credits, provisions tenants.</dd>
+    <dt>Public Kamailio edge <span class="tag t-sig">signaling</span></dt>
+    <dd>The hardened SIP front door at <code>sip.odoo.com</code>. Browser registrations and carrier signaling traverse it; it consults Phone Service for client/user/trunk identity and does not carry the audio.</dd>
     <dt>Wazo PBX <span class="tag t-both">both</span></dt>
-    <dd>Self-hosted IPBX = <strong>Asterisk + Kamailio + rtpengine</strong> + Python microservices. One server, one isolated <em>tenant</em> per customer. The switchboard.</dd>
+    <dd>Self-hosted PBX built around <strong>Asterisk</strong> plus Wazo configuration, call-control, agent and webhook services. One deployment hosts one isolated <em>tenant</em> per customer. The hardened public Kamailio edge is a separate service in front of it.</dd>
     <dt>Telnyx <span class="tag t-both">both</span></dt>
     <dd>The carrier (CPaaS). Owns the real phone numbers and the wire to the worldwide phone network (PSTN). The phone company.</dd>
   </dl>
@@ -162,7 +193,7 @@
     <dt>PJSIP <span class="tag t-sig">signaling</span></dt>
     <dd>The modern SIP stack inside Asterisk (replaces the old <code>chan_sip</code>).</dd>
     <dt>wazo-confd <span class="tag t-ctrl">config</span></dt>
-    <dd>Configuration DB + REST API: source of truth for users, lines, extensions, dial rules, queues. <strong>Odoo configures Wazo through this.</strong></dd>
+    <dd>Configuration DB + REST API: source of truth for users, lines, extensions, dial rules and queues. Phone Service—not the customer database—drives it.</dd>
     <dt>wazo-calld <span class="tag t-ctrl">config</span></dt>
     <dd>Runtime call control (originate, transfer, hangup) via ARI.</dd>
     <dt>wazo-auth <span class="tag t-ctrl">config</span></dt>
@@ -170,11 +201,11 @@
     <dt>wazo-agentd <span class="tag t-ctrl">config</span></dt>
     <dd>The queue-agent runtime API: login/logoff/pause an agent, read logged/paused status. Distinct from confd's agent <em>configuration</em>.</dd>
     <dt>wazo-webhookd <span class="tag t-ctrl">config</span></dt>
-    <dd>Pushes event webhooks (call created/answered/ended, voicemail message created) — <strong>to the shop</strong>, authenticated by a per-tenant secret; the shop filters, renames and re-signs them for the customer DB. Wazo never calls the customer DB directly.</dd>
+    <dd>Pushes event webhooks (call created/answered/updated/ended and both voicemail-message variants) — <strong>to the shop</strong>, authenticated by a per-tenant secret; the shop filters and forwards the native event names in a client-scoped signed token. Wazo never calls the customer DB directly.</dd>
     <dt>ARI / AMI / AGI <span class="tag t-ctrl">config</span></dt>
     <dd>Three ways to control Asterisk from outside. <strong>Stasis</strong> = the handoff from the dialplan to an external app (e.g. Odoo) over ARI — our v2 "live CRM data at call time" escape hatch.</dd>
     <dt>Tenant <span class="tag t-ctrl">config</span></dt>
-    <dd>One isolated customer space inside the one shared Wazo (own contexts, trunk, users). Isolation is logical, by <code>tenant_uuid</code> — not separate servers.</dd>
+    <dd>One isolated customer space inside shared Wazo infrastructure (own contexts, trunk and users). Phone Service enforces <code>wazo_tenant_uuid == client_uuid</code>; it is logical isolation, not one server per customer.</dd>
     <dt>Dialplan <span class="tag t-sig">signaling</span></dt>
     <dd>The rules for what happens when a call arrives (time conditions, routing, queues, voicemail). In Wazo it lives in wazo-confd's DB. Decision: Odoo 20 Callflow <strong>compiles</strong> to confd config (not live interpretation) for v1.</dd>
     <dt>CDR / CEL <span class="tag t-ctrl">config</span></dt>
@@ -204,11 +235,11 @@
   <h2>Odoo · IAP <span class="em">our application layer</span></h2>
   <dl>
     <dt>Extension <span class="tag t-ctrl">config</span></dt>
-    <dd>Your internal desk number (3–5 digits, from 1000). <code>voip.extension</code>; routes to a user, a call group <em>or a queue</em> via <code>destination_ref</code>. The DID's <em>only writable</em> link — <code>did.user_id</code> is computed from it.</dd>
+    <dd>Your internal desk number (3–5 digits, from 1000). <code>voip.extension</code> routes to a user, a call group or a queue through its own <code>destination_ref</code>. A DID separately writes a typed <code>destination_ref</code>; its <code>user_id</code> is computed only when that route points directly to a user.</dd>
     <dt>Call group <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.call.group</code> — a set of extensions that ring together (Wazo group, ring strategy "all").</dd>
     <dt>Queue <span class="tag t-ctrl">config</span></dt>
-    <dd><code>voip.queue</code> — a waiting room: callers hold, the PBX rings <em>agents</em> by strategy (ringall/linear/rrmemory/…) with priorities. Two layers: <code>voip.queue.agent.source</code> = declared intent (ordered users/groups); <code>voip.queue.agent</code> = materialized roster with live status. ⚠️ Unrelated to <code>voip.activity.mixin</code> (formerly <code>voip.queue.mixin</code>, renamed the moment real queues arrived), the softphone Next-Activities list.</dd>
+    <dd><code>voip.queue</code> — a waiting room: callers hold, the PBX rings <em>agents</em> by strategy (ringall/linear/rrmemory/…) with priorities. Still two layers, but the intent layer is <em>fields on the queue</em>, not its own model: <code>allowed_user_ids</code> + <code>allowed_call_group_ids</code> (declared intent) resolve into <code>agent_ids</code> → <code>voip.queue.agent</code>, the materialized roster carrying live status (<code>is_logged</code>, <code>is_paused</code>, <code>pause_reason</code>), plus a computed <code>resolved_agent_user_ids</code>. <em>(Corrected 2026-08-17: an earlier <code>voip.queue.agent.source</code> model does not exist on <code>master</code>.)</em> ⚠️ Unrelated to <code>voip.activity.mixin</code> (formerly <code>voip.queue.mixin</code>, renamed the moment real queues arrived), the softphone Next-Activities list.</dd>
     <dt>Agent <span class="tag t-ctrl">config</span></dt>
     <dd>A Wazo <em>agentd</em> object — the "worker badge" queues ring, distinct from the Wazo user (the phone identity). One per Odoo user (<code>res.users.voip_pbx_agent_id</code>), agent number = extension number, shared across queues.</dd>
     <dt>Voicemail box / message <span class="tag t-ctrl">config</span></dt>
@@ -218,19 +249,21 @@
     <dt>Music on hold <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.music.on.hold</code> (+ <code>.track</code>) — an ordered playlist of <code>voip.sound</code> WAVs with a sort mode (in-order / random / random-start), synced to the PBX as a numbered file set (<code>_sync_moh</code>).</dd>
     <dt>Call Flow <span class="tag t-ctrl">config</span></dt>
-    <dd><code>voip.call.flow</code> — a visual <strong>routing graph</strong> for an inbound number, stored as one JSON canvas (<code>graph_data</code>). Nodes are <em>start, IVR menu, queue, call group, extension, user, voicemail, audio message, outcall, hangup</em>; wires connect their outputs (a business-hours <em>Schedule</em> is an attachment on a node, not a node). A flow <em>is</em> a PBX destination (inherits <code>voip.pbx.destination.mixin</code>), so a DID can point straight at one. Groups/Queues/IVRs built inside a flow are <strong>flow-owned</strong> — they can't be edited or deleted outside it. It <strong>compiles</strong> to PBX config; it is not interpreted live.</dd>
+    <dd><code>voip.call.flow</code> — a visual <strong>routing graph</strong> stored as one JSON canvas (<code>graph_data</code>). Its 11 node types are <em>start, IVR menu, queue, call group, extension, user, contact, voicemail, audio message, outcall</em> and <em>hangup</em>; wires connect their outputs. A business-hours <em>Schedule</em> is an attachment on a node, not a node. A flow is itself a PBX destination, so a DID can point straight at one. Flow-owned Groups, Queues and IVRs cannot be edited or deleted independently. It <strong>compiles</strong> to PBX config; it is not interpreted live.</dd>
     <dt>IVR (Menu) <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.ivr</code> / <code>voip.ivr.option</code> — a phone <strong>Menu</strong> ("press 1 for sales…"): greeting/invalid/timeout/abort sounds, a retry policy, and digit choices routing onward to users, extensions, groups, queues, other Menus, sounds or Mailboxes.</dd>
     <dt>Schedule <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.schedule</code> (+ open / exceptional period models) — business hours <em>attached to a Call Flow node</em>, so "open" vs "Closed" routing is expressed by which wire the schedule takes. An attachment, not a node itself.</dd>
     <dt id="ai-transcription">AI transcription <span class="tag t-ctrl">config</span></dt>
-    <dd>The auto-installed <code>voip_ai</code> module transcribes recorded calls with <strong>OpenAI Whisper</strong> (stored on <code>mail.call.artifact</code> rows, flagged <code>is_stt</code>) and writes a one-line AI <code>summary</code>. Dormant until an admin sets the provider's <code>transcription_policy</code>. No TTS here — that's <code>voip.sound</code>.</dd>
+    <dd>The auto-installed <code>voip_ai</code> module requests transcription for recorded calls through the shared call-artifact/AI machinery and writes a one-line <code>summary</code>. It has no scheduled cron backstop. No TTS lives here — that is base <code>voip.sound</code> through Phone Service and Telnyx.</dd>
     <dt>phone.service.event <span class="tag t-ctrl">config</span></dt>
-    <dd><code>voip.phone.service.event</code> (formerly <code>voip.pbx.event</code>) — the enterprise <strong>doorbell log</strong>: every event the shop forwards is recorded once (<code>UNIQUE(event_id)</code>) at <code>/voip/api/phone_service/event</code>, then processed after the HTTP&nbsp;200. The idempotency guard that stops a redelivered event ringing twice.</dd>
+    <dd><code>voip.phone.service.event</code> (formerly <code>voip.pbx.event</code>) — the Enterprise <strong>doorbell log</strong>: the public route first verifies a 5-minute, <code>phone_service_webhook</code>-scoped token containing the complete envelope; a handled event is then recorded once (<code>UNIQUE(event_id)</code>), acknowledged and processed after the HTTP&nbsp;200.</dd>
     <dt>error_key <span class="tag t-ctrl">config</span></dt>
     <dd>The stable machine-readable key on every shop error (<code>PhoneServiceError.error_key</code>, e.g. <code>not_found</code>, <code>insufficient_credits</code>). Code branches on the key and renders translated text — never show or parse a raw server message.</dd>
     <dt>IAP credits <span class="tag t-ctrl">config</span></dt>
     <dd>Odoo In-App-Purchase balance. Numbers cost credits/month; calls cost credits/minute. The shop's currency.</dd>
+    <dt>Idempotency key <span class="tag t-ctrl">config</span></dt>
+    <dd>A stable identifier for one external side effect. Call costs and monthly fees use <code>{client_uuid}:{reference_type}:{reference_id}</code>; shared IAP checks current and archived transactions before charging. This is stronger than a local unique row because it also covers “remote commit succeeded, response was lost.”</dd>
     <dt>Requirement / Requirement group <span class="tag t-ctrl">config</span></dt>
     <dd>KYC paperwork some countries demand: <code>textual</code>, <code>document</code>, <code>address</code>, or <code>action</code> (live identity verification). Grouped per <code>(country, number type)</code> in <code>voip.requirement.group</code>. <strong>action</strong> requirements belong to one specific DID (<code>did_number_id</code>); the others are shared by the group.</dd>
     <dt>Incall / Outcall <span class="tag t-sig">signaling</span></dt>
@@ -239,7 +272,7 @@
 </section>
 
 <footer>
-  🦜 Parrot VoIP teaching workspace · reference/glossary.html · v3 (2026-08-07 — + Call Flow editor, real queues, voip_ai/Whisper transcription, voip.sound + Telnyx TTS)<br>
+  🦜 Odoo VoIP team onboarding · glossary refreshed 2026-08-30 against Community <code>master</code>, Enterprise <code>origin/master</code>, the Phone Service feature branch and edge configuration<br>
   Grounded in: Parrot Onboarding §2–§3, Wazo Architecture Session §9, RFC 3261, RFC 7118, Wazo Platform docs.
   See <a href="../RESOURCES.md">RESOURCES.md</a> for sources. This is a living document — tell your teacher when a term drifts.
 </footer>

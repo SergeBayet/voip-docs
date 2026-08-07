@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 22 — Desks, teams and waiting rooms</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main class="wrap">
+<header class="lh">
+  <div class="kicker">Module 7 · The product · Lesson 22 of 28</div>
+  <h1>Desks, teams &amp; waiting rooms</h1>
+  <p class="lede">An external number gets a destination; an internal extension gets a short code; a queue turns eligible users into live PBX agents.</p>
+  <div class="meta"><span>⏱ 11 min</span><span>🎯 Change a route without writing to derived state</span><span>🧩 Builds on Lessons 19 and 21</span></div>
+</header>
+
+<figure><pre class="mermaid">flowchart LR
+  DID["voip.did.number<br/>external +32…"] -->|"destination_ref"| DEST{"Any PBX destination"}
+  DEST --> USER["res.users"]
+  DEST --> EXT["voip.extension<br/>internal 1001"]
+  DEST --> GROUP["voip.call.group"]
+  DEST --> QUEUE["voip.queue"]
+  DEST --> FLOW["voip.call.flow / IVR /<br/>sound / voicemail / contact"]
+  EXT -->|"destination_ref"| USER
+  EXT --> GROUP
+  EXT --> QUEUE
+  QUEUE -->|"allowed users + groups"| RESOLVED["resolved users"]
+  RESOLVED -.->|"materialized"| AGENTS["voip.queue.agent"]</pre>
+<figcaption>Solid arrows are authored routing. The queue's resolved users and agent rows are derived.</figcaption></figure>
+
+<div class="big-idea"><strong>The useful distinction:</strong> a DID is the public street address; an extension is a room number inside the building. Both route to typed Odoo records, but neither is the other.</div>
+
+<h2>DIDs route directly</h2>
+<p><code>voip.did.number.destination_ref</code> is the writable routing link. It is an Odoo <code>Reference</code> field whose allow-list comes from <code>PBX_DESTINATION_MODELS</code>: user, extension, group, queue, IVR, Call Flow, sound, contact, or mailbox. The PBX service converts the selected record to Wazo routing data.</p>
+<p><code>did.user_id</code> is not the general route. It is a stored convenience field computed only when the destination is directly a <code>res.users</code> record. That is why the “one DID per user” constraint applies to direct user assignment, while a main number can still route to a group or flow.</p>
+
+<h2>Extensions are internal short codes</h2>
+<p><code>voip.extension</code> accepts 3–5 digits, cannot start with zero, and is globally unique. Its <code>destination_ref</code> can point to a user, group, or queue. User extensions also own the user's PBX identity: Wazo user, line, SIP credentials, and personal mailbox are provisioned through that path.</p>
+<div class="callout"><strong>Deletion crosses a transaction boundary.</strong> Deleting a user extension clears local SIP credentials immediately, then schedules the PBX extension deletion and user deprovisioning only after the database transaction commits. A rollback therefore does not delete a live PBX identity for a change Odoo discarded.</div>
+
+<h2>Provisioning heals toward a level</h2>
+<p>The 30-minute heal cron does not blindly repeat every step. <code>_filter_under_provisioned()</code> selects live, directly user-assigned DIDs that are missing concrete pieces: SIP credentials, Wazo user/line ids, a routing extension, or—once active—the inbound route ids. A transient failure also requests a run about a minute later.</p>
+<p>This is a reusable reliability pattern: define “complete,” inspect the current level, and re-drive only incomplete records.</p>
+
+<h2>Queues: author eligibility, derive runtime rows</h2>
+<div class="planes">
+  <article class="plane sig"><h4>What an admin writes</h4><ul><li><code>allowed_user_ids</code></li><li><code>allowed_call_group_ids</code></li><li>strategy, timeouts, capacity, music, fallbacks</li></ul></article>
+  <article class="plane med"><h4>What sync derives</h4><ul><li><code>resolved_agent_user_ids</code></li><li>one <code>voip.queue.agent</code> per resolved user</li><li>Wazo agent ids, membership, status and sequence</li></ul></article>
+</div>
+<p><code>_get_resolved_agent_users()</code> unions the direct users with the users of allowed groups and removes portal/share users. Sync creates any missing user extensions, creates or adopts one Wazo agent per user, materializes the queue-agent rows, and reconciles Wazo membership. The sequence follows the resolved extension order; the two source Many2many fields are not a user-authored priority list.</p>
+<p>Agents can join and leave their assigned queues now. The queue form and softphone call <code>action_join_queue</code>/<code>action_leave_queue</code> or <code>set_current_user_queue_membership</code>. Status is pulled from Wazo after membership changes and on explicit refresh; it is not a scheduled status cron.</p>
+
+<div class="codehook"><div class="kicker">Trace it in code</div><ul>
+  <li><code>voip/models/pbx_service.py</code> — <code>PBX_DESTINATION_MODELS</code> and destination compilation.</li>
+  <li><code>voip/models/voip_did_number.py</code> — direct routing, computed <code>user_id</code>, incall sync and healing.</li>
+  <li><code>voip/models/voip_extension.py</code> — internal routes and user provisioning/deprovisioning.</li>
+  <li><code>voip/models/voip_queue.py</code> + <code>voip_queue_agent.py</code> — eligibility, roster, status, join/leave.</li>
+</ul></div>
+
+<section class="exercise"><h3>Author or derive?</h3><div id="sorter"></div><div id="sorter-score" class="score"></div></section>
+<section class="exercise"><h3>Three routing checks</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+
+<div class="source-rec"><div class="kicker">Primary sources</div><p>Read the four model files above, then compare the concepts with <a href="https://wazo-platform.org/documentation/">Wazo's official documentation</a>. The local <a href="../reference/onboarding.html">VoIP onboarding guide</a> supplies the cross-system story.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Given this routing symptom, show me the authored Odoo field, the derived record, the Phone Service operation, and the Wazo object. Do not change anything.”</div>
+<nav class="nav-foot"><a href="0021-buying-a-number-end-to-end.html"><span class="lbl">Previous</span>← Buying a number</a><a class="home" href="../index.html">⌂</a><a href="0023-leaving-a-message-voicemail.html"><span class="lbl">Next</span>Leaving a message →</a></nav>
+</main>
+<script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script>
+<script>
+initializeCourseDiagrams();
+makeSorter("sorter", "sorter-score", [
+  {key: "author", label: "Admin authors"}, {key: "derive", label: "Sync derives"}
+], [
+  {name: "did.destination_ref", answer: "author", why: "This is the writable public-number route."},
+  {name: "queue.allowed_user_ids", answer: "author", why: "This declares who may staff the queue."},
+  {name: "queue.agent_ids", answer: "derive", why: "Sync materializes these runtime rows from allowed users and groups."},
+  {name: "did.user_id", answer: "derive", why: "It is computed only for a direct user destination."}
+]);
+makeQuiz("quiz", "quiz-score", [
+  {stem: "A main number must ring a support queue. Which field owns that route?", choices: [{text: "did.destination_ref", correct: true}, {text: "did.user_id", correct: false}, {text: "queue.agent_ids", correct: false}], why: "The DID routes directly to any allowed PBX destination."},
+  {stem: "A support agent should be added. Which records should you edit?", choices: [{text: "Allowed users or groups", correct: true}, {text: "Materialized queue agents", correct: false}], why: "The next sync rebuilds materialized agents from the eligibility fields."},
+  {stem: "Why defer PBX deletion until after commit?", choices: [{text: "A rollback must not delete live PBX state", correct: true}, {text: "Wazo accepts deletions only at night", correct: false}], why: "External state should follow committed database truth."}
+]);
+</script></body></html>

@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 4 — ORM, recordsets and inheritance</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 2 · Writing Odoo code · Lesson 4 of 28</div><h1>ORM, recordsets &amp; inheritance</h1><p class="lede">A recordset is a smart batch of rows. Treating it as “one Python object” is the fastest route to slow or subtly wrong Odoo code.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Read and extend model code safely</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  RS[Recordset: 0..n records] --> PF[Prefetch cache]
+  RS --> Q[search / mapped / filtered]
+  RS --> B[create / write / unlink]
+  D["@api.depends"] --> C[Computed field]
+  V["@api.constrains"] --> B
+  SQL[models.Constraint / UniqueIndex] --> DB[(Database)]</pre><figcaption>Recordsets make batching natural; constraints protect state at the closest reliable boundary.</figcaption></figure>
+
+<h2>The habits that matter</h2>
+<ul>
+  <li>Assume <code>self</code> can contain many records unless <code>ensure_one()</code> is justified.</li>
+  <li>Batch reads and writes. A query inside a record loop is an N+1 query until proven otherwise.</li>
+  <li>Use relational fields and recordsets instead of passing raw IDs through domain code.</li>
+  <li>Declare every dependency a computed value reads with <code>@api.depends</code>.</li>
+  <li>Use a database constraint for race-safe uniqueness; use a Python constraint for richer cross-field rules.</li>
+</ul>
+
+<h2>Three kinds of extension</h2>
+<table><thead><tr><th>Declaration</th><th>Meaning</th><th>Use</th></tr></thead><tbody>
+  <tr><td><code>_name = "x.new"</code></td><td>New model/table identity</td><td>A new domain concept</td></tr>
+  <tr><td><code>_inherit = "res.users"</code> without <code>_name</code></td><td>Extend an existing model in place</td><td>Add VoIP behavior to users</td></tr>
+  <tr><td><code>_name</code> + <code>_inherit</code></td><td>New model inheriting fields/behavior</td><td>Reusable model specialization</td></tr>
+</tbody></table>
+
+<div class="codehook"><div class="kicker">Trace it in VoIP</div><p>Read <code>voip_extension.py</code>: <code>models.Constraint("unique(number)", …)</code> protects concurrent extension creation, while Python constraints explain invalid destinations. Then read <code>res_users.py</code> to see in-place model extension.</p></div>
+
+<div class="callout"><strong>Learning edge:</strong> a pre-check such as “search, then create” is friendly but not race-safe. Two transactions can both see nothing. The database uniqueness guard is the final referee.</div>
+
+<section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary source</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/backend/orm.html">Odoo ORM API reference</a>. Keep it open while reading unfamiliar decorators and field options.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Audit this model method for singleton assumptions and N+1 queries. Show the query-producing line before suggesting a change.”</div>
+<nav class="nav-foot"><a href="0003-anatomy-of-an-addon.html"><span class="lbl">Previous</span>← Anatomy of an addon</a><a class="home" href="../index.html">⌂</a><a href="0005-data-views-actions-and-translations.html"><span class="lbl">Next</span>Data, views &amp; actions →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"A method reads one related record for every row in a loop. What do you suspect first?",choices:[{text:"An N+1 query",correct:true},{text:"A JavaScript registry issue",correct:false},{text:"A translation error",correct:false}],why:"Repeated per-record access can turn one operation into many queries; inspect prefetch and batch options."},
+{stem:"Which guard makes unique extension numbers race-safe?",choices:[{text:"A view warning",correct:false},{text:"A database unique constraint",correct:true},{text:"A search before create only",correct:false}],why:"Only the database arbitrates concurrent inserts atomically."}
+]);</script></body></html>
