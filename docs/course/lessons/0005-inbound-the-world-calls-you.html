@@ -129,7 +129,7 @@ sequenceDiagram
   and tell Odoo (via the shop)
     W->>S: webhookd posts call_created (tenant secret)
     S->>S: rename → call.initiated, filter legs, sign
-    S->>O: POST /voip/api/event (HMAC-signed)
+    S->>O: POST /voip/api/phone_service/event (HMAC-signed)
     O->>O: dedupe → call card (state=calling) + bus 🔔
   end
   B->>W: you click Answer (200 OK)
@@ -174,15 +174,15 @@ flowchart LR
 <pre class="mermaid">
 flowchart LR
   W["Wazo webhookd<br/>call_created, call_ended…"] -->|"per-tenant secret"| S["Shop<br/>/webhooks/wazo/call_events"]
-  S -->|"rename + leg filters<br/>+ HMAC signature"| O["Your DB's ONE doorbell<br/>/voip/api/event"]
-  O --> E["voip.pbx.event<br/>dedupe on event_id"] --> CALL["voip.call<br/>+ bus notify 🔔"]
+  S -->|"rename + leg filters<br/>+ HMAC signature"| O["Your DB's ONE doorbell<br/>/voip/api/phone_service/event"]
+  O --> E["voip.phone.service.event<br/>dedupe on event_id"] --> CALL["voip.call<br/>+ bus notify 🔔"]
 </pre>
 <figcaption>Every PBX event transits the shop. Your DB has exactly one doorbell for all of them.</figcaption>
 </figure>
 <ul>
   <li><strong>Rename</strong>: Wazo speaks its own dialect (<code>call_created</code>, <code>call_ended</code>); the shop translates to the stable names your DB knows (<code>call.initiated</code>, <code>call.hangup</code>). <code>call_ended</code> gains a computed <strong>disposition</strong>: <code>answered / busy / rejected / missed</code>.</li>
   <li><strong>Leg filters</strong>: a call has several "legs" (one per participant). The shop forwards only the legs you care about — your softphone-recipient leg, or the inbound external leg — so your DB isn't spammed with the rest.</li>
-  <li><strong>Dedupe</strong>: <code>event_id = "&lt;call_id&gt;:&lt;event_name&gt;"</code> is UNIQUE in <code>voip.pbx.event</code> — a redelivered event is a harmless no-op.</li>
+  <li><strong>Dedupe</strong>: <code>event_id = "&lt;call_id&gt;:&lt;event_name&gt;"</code> is UNIQUE in <code>voip.phone.service.event</code> — a redelivered event is a harmless no-op.</li>
   <li><strong>Redelivery, not retry tables</strong>: if your DB doesn't ack, the shop answers <strong>503</strong> to webhookd — and <em>Wazo</em> redelivers later. The retry queue lives upstream; nobody builds a new one.</li>
   <li><strong>Two-clock discipline</strong>: <code>occurred_at</code> always carries the <strong>PBX clock</strong>, never <code>now()</code> — the event tells you when it happened, not when it finally arrived.</li>
 </ul>
@@ -206,7 +206,7 @@ flowchart LR
   <ul style="margin:.4rem 0 0">
     <li><strong>The incall route</strong> — <code>voip.did.number._sync_pbx_incall()</code> asks the shop (<code>sync_incall</code>) to route the DID to the extension's destination — user, group, or queue; the PBX ids come back as <code>pbx_incall_id</code> / <code>pbx_incall_extension_id</code>.</li>
     <li><strong>Shop-side relay</strong> — IAP <code>phone_service</code>: <code>on_wazo_call_event</code> in <code>controllers/pbx_controller.py</code> + renames/leg-filters in <code>utils/wazo_events.py</code>.</li>
-    <li><strong>The doorbell</strong> — <code>/voip/api/event</code> (<code>voip/controllers/phone_service_api_controller.py</code>) verifies the HMAC, then <code>voip.pbx.event._handle_call_event()</code> (<code>voip/models/voip_pbx_event.py</code>) dedupes and creates/updates <code>voip.call</code> + bus-notifies your devices.</li>
+    <li><strong>The doorbell</strong> — <code>/voip/api/phone_service/event</code> (<code>voip/controllers/phone_service_api_controller.py</code>) verifies the HMAC, then <code>voip.phone.service.event._ack_then_process()</code> (<code>voip/models/phone_service_event.py</code>) records the event once (dedupe on <code>event_id</code>), replies <strong>200</strong>, and only then processes it — creating/updating <code>voip.call</code> and bus-notifying your devices.</li>
   </ul>
   <span class="cite">(onboarding §8 provisioning &amp; §9 inbound)</span>
 </div>
@@ -324,8 +324,8 @@ makeOrderer('order-steps','order-score',[
   'The incall matches the DID → user / group / queue',
   'SIP INVITE over WSS — your browser rings 🔔',
   'Wazo webhookd posts the raw event to the shop',
-  'The shop renames + filters + signs → /voip/api/event',
-  'voip.pbx.event dedupes → a call card appears',
+  'The shop renames + filters + signs → /voip/api/phone_service/event',
+  'voip.phone.service.event dedupes → a call card appears',
   'You answer — 200 OK, audio bridges PSTN ↔ browser'
 ]);
 
@@ -339,11 +339,11 @@ makeQuiz('quiz','quiz-score',[
    why:'incall = "this public number rings that destination". The outbound mirror is your caller-ID.'},
   {stem:'How does the call card reach your DB?',
    choices:[
-     {t:'Wazo webhookd → shop (rename, filter, sign) → your one doorbell /voip/api/event', ok:true},
+     {t:'Wazo webhookd → shop (rename, filter, sign) → your one doorbell /voip/api/phone_service/event', ok:true},
      {t:'Wazo POSTs straight to your DB at /voip/pbx/call_event using a per-tenant token', ok:false},
      {t:'Your browser tells Odoo it is ringing, and Odoo then creates the call record', ok:false},
      {t:'Telnyx forwards the event directly to your DB, since it saw the call arrive', ok:false}],
-   why:'Wazo never calls your DB. The old direct endpoint is gone — every PBX event transits the shop and arrives HMAC-signed at /voip/api/event.'},
+   why:'Wazo never calls your DB. The old direct endpoint is gone — every PBX event transits the shop and arrives HMAC-signed at /voip/api/phone_service/event.'},
   {stem:'Your DB was down for a minute and never acked a call event. What happens?',
    choices:[
      {t:'The shop answers 503 to webhookd, so Wazo redelivers; dedupe absorbs the replays', ok:true},

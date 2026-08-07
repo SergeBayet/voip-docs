@@ -103,10 +103,11 @@
 <pre class="mermaid">
 flowchart LR
   V["voip.voicemail<br/>the machine — box 9012"] -- holds --> M["voip.voicemail.message<br/>one message on the machine"]
-  A["voip.audio.message<br/>a reusable greeting tape"] -- plays as greeting on --> V
-  T["voip.voice<br/>a TTS voice actor"] -- can record --> A
+  S["voip.sound<br/>a reusable audio asset"] -- plays as greeting on --> V
+  MOH["voip.music.on.hold<br/>hold-music playlist"] -- made of --> S
+  T["🏪 shop → Telnyx<br/>text-to-speech"] -. synthesises .-> S
 </pre>
-<figcaption>The whole subsystem is four models: a box, its messages, a reusable audio asset, and a voice that can generate one.</figcaption>
+<figcaption>Four models — a box, its messages, a reusable <code>voip.sound</code>, and a hold-music playlist — plus the shop, which can synthesise a sound from text.</figcaption>
 </figure>
 
 <h2>The four models</h2>
@@ -114,8 +115,8 @@ flowchart LR
 <tr><th>Model</th><th>Kid version</th><th>Grown-up version</th></tr>
 <tr><td><code>voip.voicemail</code></td><td>An answering machine with a number taped on it</td><td>A box: name, dialable number (default <code>"90"+id</code>, admin-editable, digits-only + unique), notification <code>email</code>, optional greeting; mirrors a Wazo confd voicemail via <code>pbx_voicemail_id</code></td></tr>
 <tr><td><code>voip.voicemail.message</code></td><td>One message somebody left on a machine</td><td>Caller id, duration, folder, lazily fetched <code>recording</code>, raw payload. Exactly-once via <b>two</b> unique indexes: <code>(event_id)</code> and <code>(voicemail_id, pbx_message_id)</code></td></tr>
-<tr><td><code>voip.audio.message</code></td><td>A tape you record once and reuse anywhere</td><td>Reusable audio asset: uploaded file <b>or</b> local TTS (<code>tts_text</code> + voice); <code>data_version</code> cache-buster so the browser never plays a stale file</td></tr>
-<tr><td><code>voip.voice</code></td><td>A voice actor who can read tapes for you</td><td>A Piper TTS voice: ONNX model downloaded on demand from a <b>hard-allowlisted</b> Hugging Face repo (<code>rhasspy/piper-voices</code> only), md5-checked, 256&nbsp;MB cap</td></tr>
+<tr><td><code>voip.sound</code></td><td>A tape you record once and reuse anywhere</td><td>Reusable audio asset (renamed from <code>voip.audio.message</code>): uploaded WAV <b>or</b> text-to-speech (<code>tts_text</code> + <code>tts_voice</code>); <code>data_version</code> cache-buster so the browser never plays a stale file</td></tr>
+<tr><td><code>voip.music.on.hold</code></td><td>A playlist for callers left on hold</td><td>An ordered set of <code>voip.sound</code> WAVs (its <code>.track</code>s) with a sort mode (in-order / random / random-start), synced to the PBX as a numbered file set (<code>_sync_moh</code>)</td></tr>
 </table>
 <p>All four are VoIP-admin gated, and the box follows the two-brains pattern you know from users and queues (<a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>): Odoo holds the intent, syncs create-or-update keyed on the stored PBX id, and <code>voip_skip_pbx_sync</code> breaks write-recursion.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
 
@@ -130,7 +131,7 @@ sequenceDiagram
   participant B as Your browser
   C->>W: rings box 9012, records after the beep
   W->>S: webhookd POST (per-tenant secret)
-  S->>O: /voip/api/event, HMAC-signed<br/>global_voicemail.message_created
+  S->>O: /voip/api/phone_service/event, HMAC-signed<br/>global_voicemail.message_created
   Note over S,O: not acked? shop tells Wazo 503 →<br/>webhookd redelivers (shop stores nothing)
   O->>O: idempotent row: search-first, savepoint,<br/>UniqueViolation → re-search
   O->>S: get_voicemail_message_recording
@@ -142,7 +143,7 @@ sequenceDiagram
 <figcaption>The metadata rides the webhook pipe you met in <a href="./0009-doorbells-and-robots.html">Lesson 9</a>; the audio makes a separate round-trip back through the shop.</figcaption>
 </figure>
 
-<p>Walk it once in words. Wazo stores the message and its <b>webhookd</b> subscription (created at tenant provisioning) POSTs to the shop, authenticated by a per-tenant secret. The shop renames the event to <code>global_voicemail.message_created</code> and forwards it to <code>/voip/api/event</code>, HMAC-signed. Odoo verifies the signature and creates the message row <em>idempotently</em>: search first, create inside a savepoint, and if a concurrent delivery already won the race, catch <code>UniqueViolation</code> and re-search. If the message is non-empty, Odoo immediately <b>pulls</b> the recording back through the shop — base64-over-JSON, because there is <b>no multipart anywhere</b> in this pipe — and stores it as an attachment. The Messages page then shows an inline ▶ that streams <code>/voip/voicemail/message/&lt;id&gt;</code>.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
+<p>Walk it once in words. Wazo stores the message and its <b>webhookd</b> subscription (created at tenant provisioning) POSTs to the shop, authenticated by a per-tenant secret. The shop renames the event to <code>global_voicemail.message_created</code> and forwards it to <code>/voip/api/phone_service/event</code>, HMAC-signed. Odoo verifies the signature and creates the message row <em>idempotently</em>: search first, create inside a savepoint, and if a concurrent delivery already won the race, catch <code>UniqueViolation</code> and re-search. If the message is non-empty, Odoo immediately <b>pulls</b> the recording back through the shop — base64-over-JSON, because there is <b>no multipart anywhere</b> in this pipe — and stores it as an attachment. The Messages page then shows an inline ▶ that streams <code>/voip/voicemail/message/&lt;id&gt;</code>.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
 
 <div class="big-idea">
 <strong>THE BIG IDEA — push the metadata, pull the audio.</strong> Webhooks must stay small and safely retryable: the retry mechanism is literally "return 503 and let Wazo redeliver" — the shop stores nothing, so the payload has to be cheap to resend. Audio is big, and fetch-on-demand is naturally idempotent: if the pull fails, Odoo logs a warning, the row <em>survives without audio</em>, and the next redelivery (or a manual replay) heals it. No retry queue, no quarantine table — the design makes failure boring.
@@ -159,8 +160,8 @@ sequenceDiagram
 <h2>Getting callers in — and dialing in yourself</h2>
 <p>How does a caller ever <em>reach</em> box 9012? Through a user's fallbacks (<a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>): if your no-answer or busy destination is a string that matches a synced box number (or <code>*97</code> + that number), Odoo turns it into a <em>typed</em> voicemail destination for Wazo — <code>{type: voicemail, voicemail_id, greeting: unavailable, skip_instructions}</code>. <code>skip_instructions</code> suppresses Wazo's canned "please leave a message" prompt when a custom greeting exists, so callers hear only your tape. Dial-in codes: <code>*98</code> is <em>your own</em> box (that is what the softphone's voicemail button dials), <code>*97&lt;n&gt;</code> reaches box <em>n</em>.<a class="cite" href="../reference/onboarding.html">(res_users_settings.py:179-210)</a></p>
 
-<h2>TTS that never leaves the building</h2>
-<p>Instead of uploading a file, an audio message can be <em>generated</em>: Piper TTS runs <b>on the Odoo server itself</b> — no text or audio leaves the database for generation. Voices are ONNX models downloaded on demand, only from the allowlisted Hugging Face repo, md5-verified and size-capped; every failure mode (piper not installed, voice not downloaded, empty output) is a clean <code>UserError</code>, never a stack trace. One honest status note: every audio asset also mirrors best-effort to the Wazo confd sound category <code>"odoo"</code> — this is <b>forward-compat only</b>, nothing on the PBX consumes those sounds yet, and deleting the asset leaves the Wazo copy behind as an orphan.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
+<h2>TTS: type the words, the shop speaks them</h2>
+<p>Instead of uploading a file, a <code>voip.sound</code> can be <em>generated</em> from text. <code>_generate_tts_audio()</code> hands your <code>tts_text</code> and chosen <code>tts_voice</code> to the shop (<code>PhoneServiceAPI.generate_speech</code>), and the Odoo Phone Service returns ready-made audio synthesised by <b>Telnyx</b>. This replaced an earlier on-prem <b>Piper/ONNX</b> engine and its <code>voip.voice</code> model — text-to-speech is a <em>shop capability</em> now, not a local one, so the audio does briefly leave the building (as text) to be spoken. Voices are Telnyx voice ids (<code>Telnyx.NaturalHD.*</code>), fetched once and <b>filtered by language</b> — matched to <code>res.lang</code>, defaulting to your language then English — so the Voice picker isn't one flat global list of every voice on earth. Uploaded audio stays WAV-only and is transcoded in pure Python to 8&nbsp;kHz mono 16-bit before being pushed to the Wazo <code>"odoo"</code> sound category, where it is now genuinely consumed — as voicemail greetings and as the tracks of a <b>hold-music playlist</b>.<a class="cite" href="../reference/onboarding.html">(onboarding §11)</a></p>
 
 <div class="warnbox">
 <b>Gotchas to keep in your pocket.</b> (1)&nbsp;Box numbers are only checked unique against <em>other voicemails</em> — not against user extensions in the same context; a colliding admin edit is possible. (2)&nbsp;<code>user_voicemail.*</code> events are forwarded by the shop but <em>deliberately unhandled</em> in Odoo — Odoo boxes are standalone, not attached to Wazo users, so their messages arrive via the global event only. (3)&nbsp;The recording download is issued under the <b>confd</b> URL prefix where upstream Wazo documents <b>calld</b> — tests and demo mode mock it, so if listen-to-message misbehaves on a live box, this is your first suspect.
@@ -287,7 +288,7 @@ function makeOrderer(containerId, scoreId, STEPS){
 makeOrderer('orderer','orderer-score',[
   'Caller hits box 9012 and records a message after the beep',
   'Wazo webhookd rings the shop, authenticated by the per-tenant secret',
-  'The shop renames the event and forwards it, HMAC-signed, to /voip/api/event',
+  'The shop renames the event and forwards it, HMAC-signed, to /voip/api/phone_service/event',
   'Odoo dedupes against both unique keys and stores the message row',
   'Odoo pulls the recording back through the shop as base64-over-JSON',
   'The inline play button streams /voip/voicemail/message/<id> to your browser'

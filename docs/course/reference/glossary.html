@@ -208,13 +208,25 @@
     <dt>Call group <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.call.group</code> — a set of extensions that ring together (Wazo group, ring strategy "all").</dd>
     <dt>Queue <span class="tag t-ctrl">config</span></dt>
-    <dd><code>voip.queue</code> — a waiting room: callers hold, the PBX rings <em>agents</em> by strategy (ringall/linear/rrmemory/…) with priorities. Two layers: <code>voip.queue.agent.source</code> = declared intent (ordered users/groups); <code>voip.queue.agent</code> = materialized roster with live status. ⚠️ Unrelated to <code>voip.queue.mixin</code>, the softphone Next-Activities list.</dd>
+    <dd><code>voip.queue</code> — a waiting room: callers hold, the PBX rings <em>agents</em> by strategy (ringall/linear/rrmemory/…) with priorities. Two layers: <code>voip.queue.agent.source</code> = declared intent (ordered users/groups); <code>voip.queue.agent</code> = materialized roster with live status. ⚠️ Unrelated to <code>voip.activity.mixin</code> (formerly <code>voip.queue.mixin</code>, renamed the moment real queues arrived), the softphone Next-Activities list.</dd>
     <dt>Agent <span class="tag t-ctrl">config</span></dt>
     <dd>A Wazo <em>agentd</em> object — the "worker badge" queues ring, distinct from the Wazo user (the phone identity). One per Odoo user (<code>res.users.voip_pbx_agent_id</code>), agent number = extension number, shared across queues.</dd>
     <dt>Voicemail box / message <span class="tag t-ctrl">config</span></dt>
     <dd><code>voip.voicemail</code> — a numbered answering machine on the PBX (default number <code>"90"+id</code>; dial <code>*98</code> for your own, <code>*97&lt;n&gt;</code> for box <em>n</em>). <code>voip.voicemail.message</code> — one received recording; metadata is pushed via webhook, the audio is <em>pulled</em> back through the shop.</dd>
-    <dt>Audio message / Voice <span class="tag t-ctrl">config</span></dt>
-    <dd><code>voip.audio.message</code> — a reusable audio asset (upload or on-prem Piper TTS) used as a greeting; transcoded in pure Python to telephony format (8 kHz mono 16-bit WAV). <code>voip.voice</code> — a Piper voice model, downloaded on demand from an allowlisted repo.</dd>
+    <dt>Sound <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.sound</code> (formerly <code>voip.audio.message</code>) — a reusable audio asset: an uploaded WAV <em>or</em> text-to-speech. TTS is now a <strong>shop capability</strong> (<code>PhoneServiceAPI.generate_speech</code> → Telnyx voices); the old on-prem Piper/ONNX path and the <code>voip.voice</code> model are <strong>gone</strong>. Uploads are transcoded in pure Python to telephony format (8 kHz mono 16-bit WAV). Voices are Telnyx voice ids (<code>Telnyx.NaturalHD.*</code>), fetched once and <strong>filtered by language</strong>.</dd>
+    <dt>Music on hold <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.music.on.hold</code> (+ <code>.track</code>) — an ordered playlist of <code>voip.sound</code> WAVs with a sort mode (in-order / random / random-start), synced to the PBX as a numbered file set (<code>_sync_moh</code>).</dd>
+    <dt>Call Flow <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.call.flow</code> — a visual <strong>routing graph</strong> for an inbound number, stored as one JSON canvas (<code>graph_data</code>). Nodes are <em>start, IVR menu, queue, call group, extension, user, voicemail, audio message, outcall, hangup</em>; wires connect their outputs (a business-hours <em>Schedule</em> is an attachment on a node, not a node). A flow <em>is</em> a PBX destination (inherits <code>voip.pbx.destination.mixin</code>), so a DID can point straight at one. Groups/Queues/IVRs built inside a flow are <strong>flow-owned</strong> — they can't be edited or deleted outside it. It <strong>compiles</strong> to PBX config; it is not interpreted live.</dd>
+    <dt>IVR (Menu) <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.ivr</code> / <code>voip.ivr.option</code> — a phone <strong>Menu</strong> ("press 1 for sales…"): greeting/invalid/timeout/abort sounds, a retry policy, and digit choices routing onward to users, extensions, groups, queues, other Menus, sounds or Mailboxes.</dd>
+    <dt>Schedule <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.schedule</code> (+ open / exceptional period models) — business hours <em>attached to a Call Flow node</em>, so "open" vs "Closed" routing is expressed by which wire the schedule takes. An attachment, not a node itself.</dd>
+    <dt id="ai-transcription">AI transcription <span class="tag t-ctrl">config</span></dt>
+    <dd>The auto-installed <code>voip_ai</code> module transcribes recorded calls with <strong>OpenAI Whisper</strong> (stored on <code>mail.call.artifact</code> rows, flagged <code>is_stt</code>) and writes a one-line AI <code>summary</code>. Dormant until an admin sets the provider's <code>transcription_policy</code>. No TTS here — that's <code>voip.sound</code>.</dd>
+    <dt>phone.service.event <span class="tag t-ctrl">config</span></dt>
+    <dd><code>voip.phone.service.event</code> (formerly <code>voip.pbx.event</code>) — the enterprise <strong>doorbell log</strong>: every event the shop forwards is recorded once (<code>UNIQUE(event_id)</code>) at <code>/voip/api/phone_service/event</code>, then processed after the HTTP&nbsp;200. The idempotency guard that stops a redelivered event ringing twice.</dd>
     <dt>error_key <span class="tag t-ctrl">config</span></dt>
     <dd>The stable machine-readable key on every shop error (<code>PhoneServiceError.error_key</code>, e.g. <code>not_found</code>, <code>insufficient_credits</code>). Code branches on the key and renders translated text — never show or parse a raw server message.</dd>
     <dt>IAP credits <span class="tag t-ctrl">config</span></dt>
@@ -222,12 +234,12 @@
     <dt>Requirement / Requirement group <span class="tag t-ctrl">config</span></dt>
     <dd>KYC paperwork some countries demand: <code>textual</code>, <code>document</code>, <code>address</code>, or <code>action</code> (live identity verification). Grouped per <code>(country, number type)</code> in <code>voip.requirement.group</code>. <strong>action</strong> requirements belong to one specific DID (<code>did_number_id</code>); the others are shared by the group.</dd>
     <dt>Incall / Outcall <span class="tag t-sig">signaling</span></dt>
-    <dd>Wazo contexts: <em>incall</em> maps DID → destination — a user, a group or a queue (inbound); <em>outcall</em> maps <code>_X.</code> / <code>_+X.</code> dialing → trunk (outbound).</dd>
+    <dd>Wazo contexts: <em>incall</em> maps DID → destination — a user, group, queue, Menu, voicemail or a whole <strong>Call Flow</strong> (inbound); <em>outcall</em> maps <code>_X.</code> / <code>_+X.</code> dialing → trunk (outbound).</dd>
   </dl>
 </section>
 
 <footer>
-  🦜 Parrot VoIP teaching workspace · reference/glossary.html · v2 (2026-07-06 — post DB→IAP→WAZO refactor)<br>
+  🦜 Parrot VoIP teaching workspace · reference/glossary.html · v3 (2026-08-07 — + Call Flow editor, real queues, voip_ai/Whisper transcription, voip.sound + Telnyx TTS)<br>
   Grounded in: Parrot Onboarding §2–§3, Wazo Architecture Session §9, RFC 3261, RFC 7118, Wazo Platform docs.
   See <a href="../RESOURCES.md">RESOURCES.md</a> for sources. This is a living document — tell your teacher when a term drifts.
 </footer>

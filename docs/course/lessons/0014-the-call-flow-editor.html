@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 14 · The Call Flow editor — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 14 of 15</div>
+  <h1>The Call Flow editor</h1>
+  <p class="lede">How an incoming number stops being a straight line to one desk and becomes a decision tree you draw on a canvas.</p>
+  <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: read &amp; reason about a call-flow graph</span><span>🧩 Builds on: <a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a></span></div>
+</header>
+
+<p>Until now, an incoming number went somewhere <em>simple</em>: a desk, a team, a waiting room
+(<a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a>). But real businesses want more:
+"during office hours, offer a menu — press 1 for sales, 2 for support; sales rings the sales
+queue; after hours, everything goes to voicemail." That is not one destination — it is a little
+<strong>map of decisions</strong>. The <strong>Call Flow editor</strong> is where you draw that map.</p>
+
+<div class="big-idea">
+  <strong>The one-liner.</strong> A <strong>Call Flow</strong> is a flowchart for a phone call. You
+  drag boxes (a menu, a queue, a team, a voicemail) onto a canvas and connect them with wires. A
+  number can point straight at the whole flow — because in Parrot, a Call Flow <em>is itself a
+  destination</em>, just like a desk is.
+</div>
+
+<h3>The everyday picture</h3>
+<p>Think of the front desk of a big office with a <em>flowchart taped to the wall</em>: "Phone rings →
+is it open? → if yes, ask what they want → send them to the right team → if nobody picks up, take a
+message." The receptionist just follows the chart. A Call Flow is that chart, drawn in Odoo, and the
+switchboard is the receptionist who follows it — perfectly, every time.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart TD
+  START([📞 Call to +32 2 555 12 34]) --> SCH{Office hours?<br/>schedule on the start node}
+  SCH -- open --> IVR[/IVR menu:<br/>press 1 Sales · 2 Support/]
+  SCH -- Closed --> VM[(Voicemail<br/>box 9012)]
+  IVR -- 1 --> Q[Queue:<br/>Sales agents]
+  IVR -- 2 --> G[Call group:<br/>Support desks]
+  IVR -- timeout --> VM
+  Q -- no answer --> VM
+</pre>
+<figcaption>One Call Flow. Boxes are <em>nodes</em>; arrows are <em>wires</em> between their ports. The "Office hours?" gate is a <strong>schedule attached to the start node</strong> — not a node of its own.</figcaption>
+</figure>
+
+<h2>It's one graph, stored as JSON</h2>
+<p>The whole diagram — every box, every wire, and where each box sits on the canvas — lives in a
+single JSON field, <code>graph_data</code>, on the <code>voip.call.flow</code> record. There is no
+table of "nodes" and "edges"; the canvas <em>is</em> the data.<a class="cite" href="../reference/onboarding.html">(voip_call_flow.py)</a></p>
+
+<p>The important structural fact: <code>voip.call.flow</code> inherits
+<code>voip.pbx.destination.mixin</code>. That mixin is what makes something "a place a call can be
+sent." A desk (<code>voip.extension</code>) has it; a queue has it; and so does a whole Call Flow.
+So a <a href="./0005-inbound-the-world-calls-you.html">DID number</a> can set its destination to a
+Call Flow directly — the number rings, and the flowchart takes over.</p>
+
+<div class="big-idea">
+  <strong>Why this matters.</strong> "A Call Flow is a destination" is the hinge of the whole feature.
+  It means everything you already learned about pointing a number at a destination
+  (<a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a>) still applies — the destination is
+  just now a graph instead of a single desk.
+</div>
+
+<h2>The nodes — and the one thing that isn't a node</h2>
+<p>A node has a <strong>type</strong>. The editor's palette offers <strong>eleven</strong> of them.
+Eight are "record-backed" — the box is a handle to a real Odoo record — plus three structural ones:</p>
+
+<table>
+<tr><th>Record-backed nodes</th><th>Structural nodes</th></tr>
+<tr>
+  <td><code>ivr</code> (a menu) · <code>queue</code> · <code>call_group</code> · <code>extension</code> · <code>user</code> · <code>voicemail</code> · <code>audio_message</code> · <code>contact</code></td>
+  <td><code>start</code> (where the call enters) · <code>outcall</code> (dial out to a number) · <code>hangup</code> (end the call)</td>
+</tr>
+</table>
+
+<div class="warnbox">
+  <strong>⚠️ The classic trap: a Schedule is NOT a node.</strong> Business hours ("open / Closed")
+  are an <em>attachment</em> on a <code>start</code>, <code>queue</code>, or <code>call_group</code>
+  node — not a box you drop on the canvas. "Open vs Closed" simply decides <em>which wire</em> the
+  call leaves that node on. Expect this on the quiz: given a list, the odd one out is
+  <code>schedule</code>.<a class="cite" href="../reference/onboarding.html">(voip_call_flow.py — node attachments)</a>
+</div>
+
+<h2>Flow-owned: the parts belong to the whole</h2>
+<p>When you drop a <em>new</em> Queue, Call Group or IVR inside a flow, that record is stamped with a
+<code>callflow_id</code> — it is <strong>flow-owned</strong>. You cannot edit or delete it from the
+normal Queues/Groups/Menus lists; it lives and dies with its flow. (The picker that lets you reuse a
+<em>standalone</em> one filters on <code>callflow_id = false</code>, so you never accidentally grab a
+flow's private part.)</p>
+
+<p>The symmetry: a flow won't let itself be deleted while something still routes to it — a user's
+call-forward, another PBX destination. <strong>With one sharp exception</strong>: a <em>DID</em>
+pointing at the flow does <em>not</em> block deletion — the number is quietly detached instead. That
+asymmetry is a favourite interview question.</p>
+
+<h2>It compiles — it doesn't run live</h2>
+<p>Here is the aha that separates people who "get" Call Flows from people who don't. Odoo does
+<strong>not</strong> sit in the middle of every call walking your graph. Instead, when the flow
+changes, <code>voip.pbx.service._get_pbx_destination()</code> acts as a <strong>compiler</strong>: it
+walks the graph once and emits the equivalent Wazo/PBX routing config. Asterisk then runs that config
+at call time, at full speed, with Odoo nowhere in the loop.<a class="cite" href="../reference/onboarding.html">(pbx_service.py:_get_pbx_destination)</a></p>
+
+<p>Two consequences fall straight out of "compiler, not interpreter":</p>
+<ul>
+  <li><strong>Cycles.</strong> A wire that loops <em>inside</em> one graph is fine (the compiler
+  handles it). But a Call Flow node that points at <em>another</em> Call Flow which points back is a
+  compile-time error — <code>visited_call_flow_ids</code> breaks the recursion so the compiler can't
+  spin forever.</li>
+  <li><strong>Moving boxes is free.</strong> Dragging a box to tidy the canvas (its
+  <code>position</code>/<code>size</code>) changes <em>layout</em>, not <em>routing</em> — a signature
+  check skips the PBX sync entirely for layout-only edits. (Validation, though, still runs on every
+  save — a broken graph is caught even if you only nudged a box.)</li>
+</ul>
+
+<div class="codehook">
+  <div class="kicker">⌨️ Where this lives in our code</div>
+  <p style="margin:.3rem 0 0"><code>voip/models/voip_call_flow.py</code> — the model, the
+  <code>graph_data</code> JSON, the node-type allow-list, and the ownership rules.<br>
+  <code>voip/models/pbx_service.py</code> — <code>_get_pbx_destination()</code>, the compiler that
+  turns a graph into PBX config (and recurses only into Call Flows).<br>
+  <code>voip/static/src/core/flow_editor/</code> — the visual editor: <code>flow_editor.js</code>,
+  <code>flow_node.js</code>, <code>flow_port.js</code>, plus the <code>geometry/</code> helpers for
+  drawing nodes and wires; the palette is <code>flow_editor/flow_node_palette.js</code>.</p>
+</div>
+
+<h3>What you actually do in the editor</h3>
+<p>Drag a node type from the <strong>palette</strong> onto the canvas; click a node's output
+<strong>port</strong> and drag a wire to another node's input; pan and zoom to see the whole map.
+A menu node shows one output per keypad choice plus a "timeout" wire; a queue or group shows a
+"no answer" wire. Wire them into the shape you sketched on paper.</p>
+
+<div class="exercise">
+  <h3>Check 1 — node, or not a node?</h3>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:0">Tap what each item is in the Call Flow world.</p>
+  <div id="sorter"></div>
+  <div class="score" id="sorter-score"></div>
+</div>
+
+<div class="exercise">
+  <h3>Check 2 — the mental model</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0">The <a href="../reference/onboarding.html">Onboarding Guide</a> — §8
+  (destinations &amp; routing) and the model itself, <code>voip/models/voip_call_flow.py</code>. Open
+  the file and find the node-type allow-list; seeing the eleven names in one <code>frozenset</code>
+  makes the "schedule isn't there" point unforgettable.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  anything fuzzy: "show me the node-type allow-list", "walk me through what
+  <code>_get_pbx_destination</code> emits for a menu node", "quiz me on flow-owned vs standalone".
+  The back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="./0013-following-the-money.html"><span class="lbl">← Previous</span>Lesson 13 · Following the money</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="./0015-ai-transcription-and-voices.html"><span class="lbl">Next →</span>Lesson 15 · AI: transcription &amp; voices<br><span style="color:var(--faint);font-weight:400">calls become text; the shop speaks your greetings</span></a>
+</div>
+
+</div>
+
+<script>
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+
+makeSorter('sorter','sorter-score',
+  [{k:'node',label:'A node'},{k:'not',label:'Not a node'}],
+  [
+    {name:'IVR menu', ans:'node', why:'<b>A node.</b> <code>ivr</code> is one of the eight record-backed node types.'},
+    {name:'Schedule (office hours)', ans:'not', why:'<b>Not a node.</b> It is an attachment on a start/queue/group node that picks which wire the call takes.'},
+    {name:'Queue', ans:'node', why:'<b>A node.</b> <code>queue</code> is record-backed; dropped inside a flow it becomes flow-owned.'},
+    {name:'Hangup', ans:'node', why:'<b>A node.</b> <code>hangup</code> is one of the three structural nodes (with start and outcall).'},
+    {name:'Position on the canvas', ans:'not', why:'<b>Not a node.</b> It is layout data — changing it skips the PBX sync entirely.'},
+    {name:'Voicemail box', ans:'node', why:'<b>A node.</b> <code>voicemail</code> is record-backed — a caller can be dropped straight into a box.'},
+  ]
+);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'Why can a DID number point straight at a whole Call Flow?',
+   choices:[
+     {t:'Because a Call Flow inherits the PBX destination mixin', ok:true},
+     {t:'Because a Call Flow is stored as one JSON graph blob', ok:false},
+     {t:'Because a Call Flow always begins with a start node', ok:false},
+     {t:'Because a Call Flow compiles into Wazo config once', ok:false},
+   ],
+   why:'A Call Flow inherits <code>voip.pbx.destination.mixin</code>, so it is a valid destination — exactly like a desk or a queue.'},
+  {stem:'Odoo processes each live call by walking your graph in real time.',
+   choices:[
+     {t:'False — it compiles the graph to PBX config ahead', ok:true},
+     {t:'True — Odoo interprets every hop as the call flows', ok:false},
+     {t:'True — but only for calls outside of office hours', ok:false},
+     {t:'False — Asterisk forwards each hop back to Odoo', ok:false},
+   ],
+   why:'<code>_get_pbx_destination</code> is a <b>compiler</b>: it emits Wazo config once; Asterisk runs it with Odoo out of the loop.'},
+  {stem:'You delete a Call Flow that a DID and a user-forward both point at. What happens?',
+   choices:[
+     {t:'The forward blocks it; the DID is just detached', ok:true},
+     {t:'Both references block the delete until you clear them', ok:false},
+     {t:'Neither blocks it; both references detach quietly', ok:false},
+     {t:'The DID blocks it; the forward is just detached', ok:false},
+   ],
+   why:'A referencing user-forward (and other PBX destinations) blocks deletion; a DID does <b>not</b> — it is silently detached.'},
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

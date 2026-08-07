@@ -112,10 +112,10 @@ flowchart LR
     N["rename · filter legs · markup<br/>event_id = call_id:event_name"]
   end
   subgraph ENT["🏠 your DB (enterprise)"]
-    D["/voip/api/event<br/>the ONE doorbell"]
+    D["/voip/api/phone_service/event<br/>the ONE doorbell"]
     E1["phone_number.status → voip.did.number"]
     E2["requirement_group.status → voip.requirement.group"]
-    E3["call.* → voip.pbx.event"]
+    E3["call.* → voip.phone.service.event"]
     E4["global_voicemail.message_created → voip.voicemail.message"]
     E5["call.cost → voip.call.cost.line"]
   end
@@ -133,7 +133,7 @@ flowchart LR
 <figcaption>Two doorbells into the shop, one doorbell into your DB, and a dispatch table behind it. Every arrow carries a different seal.<a class="cite" href="../reference/onboarding.html">§9</a></figcaption>
 </figure>
 
-<p>Read the picture left to right. The carrier and the PBX both push news to the <strong>shop</strong> (number bought, call started, call ended, cost known). The shop cleans it up — renames Wazo events to a stable vocabulary, drops call legs you don't care about, applies the billing markup — and forwards it to <strong>one single URL</strong> on your database: <code>/voip/api/event</code>. Behind that one door, a plain dispatch on <code>event_type</code> hands each letter to the model that owns it. One door means one place to check seals, one place to log, one place to debug.</p>
+<p>Read the picture left to right. The carrier and the PBX both push news to the <strong>shop</strong> (number bought, call started, call ended, cost known). The shop cleans it up — renames Wazo events to a stable vocabulary, drops call legs you don't care about, applies the billing markup — and forwards it to <strong>one single URL</strong> on your database: <code>/voip/api/phone_service/event</code>. Behind that one door, a plain dispatch on <code>event_type</code> hands each letter to the model that owns it. One door means one place to check seals, one place to log, one place to debug.</p>
 
 <h2>Three doors, three locks — and why each</h2>
 <p>Each hop uses a different signature scheme. That's not inconsistency — each lock fits its door:<a class="cite" href="../reference/onboarding.html">§14</a></p>
@@ -154,7 +154,7 @@ flowchart LR
 <p>Refusing to sign means the sender rings again — so <em>every</em> event can arrive twice, and your handler must treat a replay as a no-op. Parrot's answer is mechanical and identical at every hop:</p>
 <ul>
   <li><strong>Deterministic ids.</strong> The shop names Wazo events <code>event_id = call_id:event_name</code> — a <em>fact</em> has one name, so its redelivery collides with its first delivery. A random UUID per delivery would make every replay look new.</li>
-  <li><strong>A UNIQUE constraint at every table that stores events</strong>: the shop's webhook-event log, enterprise <code>voip.pbx.event</code>, <code>voip.call.cost.line</code>, and <code>voip.voicemail.message</code> (that one twice — by <code>event_id</code> <em>and</em> by PBX message id). Payments too: <code>UNIQUE(reference_type, reference_id)</code> means a replayed cost event can never charge twice.</li>
+  <li><strong>A UNIQUE constraint at every table that stores events</strong>: the shop's webhook-event log, enterprise <code>voip.phone.service.event</code>, <code>voip.call.cost.line</code>, and <code>voip.voicemail.message</code> (that one twice — by <code>event_id</code> <em>and</em> by PBX message id). Payments too: <code>UNIQUE(reference_type, reference_id)</code> means a replayed cost event can never charge twice.</li>
   <li><strong>Race-safe insert.</strong> A cheap <code>search_count</code> pre-check, then <code>create</code> inside a savepoint, catching <code>UniqueViolation</code> as "already seen" (<code>voip_pbx_event._register_event</code>). Two workers processing the same replay concurrently both survive; exactly one wins.</li>
 </ul>
 <div class="big-idea"><strong>Every dedup is a constraint, not an <code>if</code>.</strong> An <code>if seen: return</code> check has a race window between the check and the write. A database UNIQUE index has none — the database itself is the referee. If you catch yourself writing a "have I processed this?" flag, reach for a constraint instead.<a class="cite" href="../reference/onboarding.html">§15</a></div>

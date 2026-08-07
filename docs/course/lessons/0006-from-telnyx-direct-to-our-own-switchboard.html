@@ -151,7 +151,7 @@ system became <em>configuration we own</em>.</p>
       <td>One Wazo <strong>tenant per customer</strong>, derived as <code>UUID(hex=client_id)</code> from the authenticated caller. The customer never names its tenant; cross-tenant access is impossible <em>by construction</em>, not by ACL diligence.<a class="cite" href="../reference/onboarding.html" title="Golden rules: structural tenancy; pbx_request demands tenant_uuid XOR master_scoped">onboarding&nbsp;§2</a></td></tr>
     <tr><td><span class="pill p-med">ownership</span></td>
       <td>Features ended where the carrier's API ended; call history was whatever the carrier's webhooks chose to report.</td>
-      <td>Dialplan, queues, voicemail, call groups are ours to build. Native call events flow from Wazo's <strong>webhookd</strong> → shop → your DB, signed, deduped, in near real time.<a class="cite" href="../reference/onboarding.html" title="Wazo webhookd → IAP /webhooks/wazo/call_events → signed /voip/api/event">onboarding&nbsp;§9</a></td></tr>
+      <td>Dialplan, queues, voicemail, call groups are ours to build. Native call events flow from Wazo's <strong>webhookd</strong> → shop → your DB, signed, deduped, in near real time.<a class="cite" href="../reference/onboarding.html" title="Wazo webhookd → IAP /webhooks/wazo/call_events → signed /voip/api/phone_service/event">onboarding&nbsp;§9</a></td></tr>
   </tbody>
 </table>
 

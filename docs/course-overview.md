@@ -1,7 +1,7 @@
 # Parrot VoIP Onboarding Course
 
 A self-contained onboarding curriculum for engineers joining Odoo's VoIP team:
-**13 short lessons in 4 modules** that take you from "what's a SIP?" to tracing a
+**15 short lessons in 4 modules** that take you from "what's a SIP?" to tracing a
 purchase, a call, a voicemail and a charge across the whole Parrot stack —
 enterprise `voip` → IAP `phone_service` → Wazo (Asterisk + Kamailio + rtpengine) → Telnyx.
 
@@ -31,7 +31,7 @@ flowchart LR
 | **1 · The Map** | 1–3 | name the four machines, the golden rules, the two planes, and every SIP message in a call |
 | **2 · A Call's Life** | 4–6 | trace outbound and inbound calls hop-by-hop, and argue why the Telnyx-direct world was replaced |
 | **3 · The Machine Rooms** | 7–9 | explain the broker, structural tenancy, the 11-step floor build, and the webhook/robot reliability playbook |
-| **4 · The Product** | 10–13 | walk a number purchase, routing (users/groups/queues), voicemail, and billing end-to-end |
+| **4 · The Product** | 10–15 | walk a number purchase, routing (users/groups/queues), voicemail, billing, the visual Call Flow editor, and AI transcription end-to-end |
 
 ## The lessons
 
@@ -63,6 +63,8 @@ The features customers touch — buying, routing, voicemail, and the money under
 - **[Lesson 11 — Desks, teams & waiting rooms](course/lessons/0011-desks-teams-and-waiting-rooms.html)** — users become Wazo users; queues get agents with priorities.
 - **[Lesson 12 — Leaving a message](course/lessons/0012-leaving-a-message-voicemail.html)** — voicemail boxes, telephone-grade greetings, and push-the-metadata-pull-the-audio.
 - **[Lesson 13 — Following the money](course/lessons/0013-following-the-money.html)** — an anonymous cost event becomes a charge; twice-bridged, once-charged, never doubled.
+- **[Lesson 14 — The Call Flow editor](course/lessons/0014-the-call-flow-editor.html)** — route callers on a drag-and-drop canvas of menus, queues, groups and schedules; a graph that *compiles* to the PBX.
+- **[Lesson 15 — AI: transcription & voices](course/lessons/0015-ai-transcription-and-voices.html)** — Whisper turns calls into text and a summary; the shop speaks your greetings with Telnyx voices.
 
 ## Reference shelf
 
@@ -72,7 +74,7 @@ The features customers touch — buying, routing, voicemail, and the money under
 ## Keeping it current
 
 The course is generated against a specific state of the PRs — see the sync date in the course
-home header (currently **2026-07-06**, enterprise `d416ce5b278` / iap-apps `0e0600ba`). When the
+home header (currently **2026-08-07**, enterprise `b8ab6403a14` / iap-apps `333b603a` / community `beed9ed0448a`). When the
 branches move substantially, the maintenance protocol lives in `docs/course/NOTES.md`; the short
 version is to re-verify the course against the current branches, regenerate the onboarding guide,
 and touch only the lessons the change invalidates.

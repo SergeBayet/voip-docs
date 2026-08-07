@@ -178,7 +178,9 @@ flowchart LR
 
 <div class="callout"><strong>Honest status note.</strong> The full agentd surface — login, logoff, pause, per-queue login — is exposed on <code>voip.pbx.service</code> but has <strong>zero business callers</strong> today. It is plumbing for a future agent-presence UI. Whether a never-logged-in agent still receives queue calls is Wazo-side behaviour to verify when that lands — don't assume either way.</div>
 
-<div class="warnbox"><strong>⚠️ Naming trap.</strong> <code>voip.queue.mixin</code> has <em>nothing</em> to do with PBX queues. It backs the softphone's "Next Activities" to-call list (today's phonecall activities). Worst name collision in the module — the mixin even carries a comment saying so (<code>voip_queue_mixin.py:12-13</code>).</div>
+<div class="warnbox"><strong>⚠️ Naming trap (now fixed).</strong> What used to be <code>voip.queue.mixin</code> has <em>nothing</em> to do with PBX queues — it backs the softphone's "Next Activities" to-call list (today's phonecall activities). The collision was bad enough that the moment real PBX queues (this lesson) arrived, it was <strong>renamed to <code>voip.activity.mixin</code></strong> (<code>voip_activity_mixin.py</code>). If you find an old reference to <code>voip.queue.mixin</code>, that's the one it means.</div>
+
+<div class="callout"><strong>Coming up.</strong> Groups and queues aren't only dial destinations on their own — in <a href="./0014-the-call-flow-editor.html">Lesson 14</a> you'll drop them as <em>nodes</em> onto a visual <strong>Call Flow</strong> canvas and wire them together (schedule → menu → queue → voicemail).</div>
 
 <div class="codehook">
   <strong>🔌 Where this lives in our code.</strong>

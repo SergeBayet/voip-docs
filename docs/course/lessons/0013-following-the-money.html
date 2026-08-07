@@ -152,7 +152,7 @@ the last line is the enterprise bridging the second.<a class="cite" href="../ref
   <li><strong>The capture always lands.</strong> Call costs are <strong>post-paid</strong>: the IAP capture
     passes <code>allow_negative_balance=True</code>, so it succeeds even into a negative balance, flagging
     the payment <code>overdrawn</code>. The minutes were already consumed — refusing wouldn't undo the call.</li>
-  <li><strong>The enterprise's copy.</strong> The forwarded event hits <code>/voip/api/event</code>
+  <li><strong>The enterprise's copy.</strong> The forwarded event hits <code>/voip/api/phone_service/event</code>
     (HMAC-verified), which dedupes by <code>event_id</code> and creates a <code>voip.call.cost.line</code>
     storing the <strong>marked-up</strong> credits — the customer's price, never Telnyx's.</li>
 </ol>
@@ -254,7 +254,7 @@ absorb the replays. The retry machinery you don't build is the retry machinery y
 <div class="nav-foot">
   <a href="0012-leaving-a-message-voicemail.html"><span class="lbl">← Previous</span>Lesson 12 · Leaving a message</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="../index.html"><span class="lbl">Finish →</span>Course complete → back to the map 🦜</a>
+  <a href="./0014-the-call-flow-editor.html"><span class="lbl">Next →</span>Lesson 14 · The Call Flow editor<br><span style="color:var(--faint);font-weight:400">route callers on a drag-and-drop canvas</span></a>
 </div>
 
 </div>
