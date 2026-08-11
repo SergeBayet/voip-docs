@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 · The world calls you (inbound)</title>
+<style>
+  :root{
+    --ink:#1c1a17;--muted:#6b655c;--faint:#9a948a;--rule:#e4ded3;--paper:#fbf9f4;
+    --parrot:#1a7a4c;--parrot-deep:#0f5a37;--accent-bg:#eef3ec;
+    --sig:#1f6f8b;--sig-bg:#e8f1f4;--med:#b5532a;--med-bg:#f6ebe3;--both:#5a4b86;--both-bg:#eee9f5;
+    --cfg:#0f5a37;--cfg-bg:#eef3ec;--good:#1a7a4c;--bad:#b23b2e;--warn:#9a6a00;--warn-bg:#f7efdc;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.1rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h2{font-size:1.4rem;margin:2.4rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.5rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .kidbox{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .kidbox .tag{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--parrot-deep)}
+  .mermaid{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1rem;margin:1.2rem 0;text-align:center;overflow-x:auto}
+  figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin:.3rem 0 0;text-align:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .planes3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin:1.1rem 0;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem}
+  .planes3 div{border-radius:6px;padding:.6rem .7rem}
+  .planes3 .s{background:var(--sig-bg);border:1px solid #cfe0e6} .planes3 .m{background:var(--med-bg);border:1px solid #ecd6c6} .planes3 .c{background:var(--cfg-bg);border:1px solid #d4e3d6}
+  .planes3 b{display:block;margin-bottom:.2rem}
+  .codehook{border-left:3px solid var(--both);background:var(--both-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.95rem}
+  .warnbox{border-left:3px solid var(--warn);background:var(--warn-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.95rem}
+  .callout{border-left:3px solid var(--sig);background:var(--sig-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.5rem 0}
+  .exercise h3{margin-top:0}
+  .cards{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+  .card{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;border:1px solid var(--rule);background:var(--paper);padding:.45rem .7rem;border-radius:8px;cursor:pointer;transition:.12s;position:relative}
+  .card:hover{border-color:var(--parrot)}
+  .card .sub{display:block;font-size:.7rem;color:var(--faint)}
+  .card.done{background:var(--accent-bg);border-color:var(--good);color:var(--good);cursor:default}
+  .card.done .num{position:absolute;top:-9px;left:-9px;background:var(--good);color:#fff;border-radius:99px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700}
+  .card.bad{animation:shake .3s;border-color:var(--bad);background:#f6e7e4}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .fbline{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);min-height:1.2rem;margin-top:.5rem}
+  .fbline b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)} .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .qfb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);margin:.2rem 0 0;display:none}
+  .qfb.show{display:block}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:12rem}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  @media (max-width:560px){.planes3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;background:#fff7e6;border:1px solid #e6d8b8;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.4rem">📦 <b>Archived lesson</b> — kept from the pre-course personal arc; some facts predate the DB→IAP→WAZO refactor. The up-to-date version is <a href="../0005-inbound-the-world-calls-you.html">Lesson 5 · Inbound: the world calls you</a> · <a href="../../index.html">🦜 course home</a>.</div>
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP · Lesson 4 of the arc</div>
+  <h1>The world calls you</h1>
+  <p class="lede">How a call from any phone on Earth finds <em>your</em> browser and makes it ring — and quietly drops a call card in your Odoo at the same time.</p>
+  <div class="meta"><span>⏱ ~10 minutes</span><span>🎯 Trace an inbound call + explain DID routing</span><span>↩ the mirror image of Lesson 3</span></div>
+</header>
+
+<div class="kidbox">
+  <span class="tag">Start simple 🧒</span>
+  <p style="margin:.4rem 0 0">A big hotel has <strong>one</strong> public phone number on its sign, but <strong>hundreds of rooms</strong> inside. When you call that number:</p>
+  <ol style="margin:.5rem 0 0">
+    <li>The phone company delivers your call to the hotel's <strong>front desk</strong>.</li>
+    <li>The front desk has a little list: <em>"calls to our main number → ring room 12."</em> It rings room 12.</li>
+    <li>And it jots in the <strong>guest log</strong>: "a call came in for room 12 at 3pm."</li>
+  </ol>
+  <p style="margin:.5rem 0 0">That little list — <strong>"public number → which room rings"</strong> — is the one new idea in this lesson. In phone-system words it's called the <strong>incall</strong>.</p>
+</div>
+
+<h2>The journey, as a picture</h2>
+<figure>
+<pre class="mermaid">
+sequenceDiagram
+  actor C as Caller (any phone)
+  participant T as Telnyx (carrier)
+  participant W as Wazo PBX (your tenant)
+  participant B as Your browser softphone
+  participant O as Odoo (your DB)
+  C->>T: dials +32 2 555 1234 (your DID)
+  T->>W: SIP INVITE in over the trunk
+  Note over W: incall - this DID maps to extension 1001 (you)
+  par ring your desk
+    W->>B: INVITE over WSS - browser rings
+  and tell Odoo
+    W->>O: webhook - a call is coming in
+    O->>O: create a call card (state = calling)
+  end
+  B->>W: you click Answer (200 OK)
+  W->>T: bridge the audio
+  Note over C,B: voice now flows PSTN - trunk - browser (MEDIA lane)
+</pre>
+<figcaption>It's Lesson 2's INVITE/200/answer dance, run backwards — from the world toward you. Adapted from onboarding §9.</figcaption>
+</figure>
+
+<div class="callout"><strong>Zoom in on the PBX (Lesson 1 reminder).</strong> "Wazo PBX" is still two programs: <strong>Kamailio</strong> (the edge) receives that inbound INVITE off the trunk, and <strong>Asterisk</strong> (the engine) does the incall lookup and rings you. Same split as outbound — just the door it comes in.</div>
+
+<h2>The one new idea: the incall (DID → destination)</h2>
+<p>The whole trick of inbound is a routing rule that answers <em>"a call arrived for this public number — whose desk should ring?"</em></p>
+<figure>
+<pre class="mermaid">
+flowchart LR
+  DID["+32 2 555 1234<br/>(your public DID)"] --> INCALL{"incall<br/>routing rule"}
+  INCALL --> EXT["extension 1001"] --> USER["Sara's browser 🔔"]
+  INCALL -.could point to.-> GRP["a call group<br/>(ring the whole team)"]
+</pre>
+<figcaption>The incall maps a DID to a <strong>destination</strong> — one extension (one person), or a call group (many desks ring at once).</figcaption>
+</figure>
+
+<h2>Inbound is the mirror of outbound</h2>
+<p>You already learned outbound in Lesson 3. Inbound is the same picture flipped — which makes it easy to remember:</p>
+<table>
+  <thead><tr><th></th><th>Outbound (L3) — you call out</th><th>Inbound (L4) — they call in</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Carrier paperwork</strong> at Telnyx</td><td>DID in the <strong>OVP</strong> (allowed to be your caller-ID)</td><td>DID pointed back at us via the <strong>CCA</strong> (inbound routing)</td></tr>
+    <tr><td><strong>The key question</strong></td><td>"Who am I?" → caller-ID (<strong>PAID</strong>)</td><td>"Where does this number ring?" → <strong>incall</strong> → destination</td></tr>
+    <tr><td><strong>If the paperwork's missing</strong></td><td>Telnyx rejects (D35 / D51)</td><td>the call never reaches us — caller hears nothing</td></tr>
+  </tbody>
+</table>
+
+<h2>The payoff: one inbound call lights up all three planes</h2>
+<p>Remember the planes from Lesson 1? A single incoming call uses all three at once — this is the moment they click together:</p>
+<div class="planes3">
+  <div class="s"><b>◆ Signaling</b>The INVITEs and 200 OK that ring your browser and set the call up.</div>
+  <div class="m"><b>● Media</b>The actual voice — RTP/SRTP bridged PSTN ↔ trunk ↔ your browser.</div>
+  <div class="c"><b>⬢ Config</b>The webhook to Odoo that makes a <strong>call card</strong> appear in your history.</div>
+</div>
+<p>The ring and the call-card are <em>different lanes</em>: your browser ringing is signaling; the call appearing in Odoo is a config-plane webhook fired in parallel. That's why your phone can ring even if Odoo is briefly slow — and why a call can show in history slightly after it rings.</p>
+
+<div class="callout"><strong>Why you must be "registered" (Lesson 2 callback).</strong> The incall points at extension 1001 — but Asterisk rings 1001 <em>wherever it last saw a REGISTER from you</em>. No registration (browser closed, not logged in) → there's nowhere to send the INVITE → it falls through to voicemail or a fallback. Registration is what makes your desk reachable.</p></div>
+
+<div class="codehook">
+  <strong>🔌 Where this lives in our code.</strong> Two separate wires, both set up by the enterprise side:
+  <ul style="margin:.4rem 0 0">
+    <li><strong>The incall route</strong> — when a DID is assigned to a user, <code>voip.did.number._sync_pbx_incall()</code> creates the "DID → extension/queue" route on the PBX, remembered as <code>pbx_incall_id</code> / <code>pbx_incall_extension_id</code>. That's the front desk's little list, written by Odoo.</li>
+    <li><strong>The call card</strong> — the inbound webhook lands at <code>POST /voip/pbx/call_event</code>, and <code>voip.call</code> get-or-creates the record (<code>state = calling</code>) so it shows in your log.</li>
+  </ul>
+  <span class="cite">(onboarding §8 provisioning &amp; §9 inbound)</span>
+</div>
+
+<p style="margin-top:1rem"><strong>Extra niceties on the browser side</strong> (real polish, not core): if you have several tabs open only one plays the ringtone (the "ringleader"), a background tab can ring via a service-worker notification, and <em>Do Not Disturb</em> silences everything. Worth knowing they exist; we'll not go deep here.</p>
+
+<!-- ===== INTERACTIVE 1 ===== -->
+<div class="exercise" id="ex-order">
+  <h3>① Trace the inbound call — click the steps in order</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">From a stranger dialing your number to your browser ringing. Wrong click shakes and hints.</p>
+  <div class="cards" id="order-cards"></div>
+  <div class="fbline" id="order-fb"></div>
+</div>
+
+<!-- ===== INTERACTIVE 2 ===== -->
+<div class="exercise" id="ex-quiz">
+  <h3>② Three quick checks</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source</div>
+  <p style="margin:.3rem 0 0">Your own <strong>onboarding §9 "Someone calls you (inbound)"</strong> has the authoritative sequence diagram (linked below, rendered). Pair it with <strong>03-inbound-sequence.excalidraw</strong> in <code>master-parrot/voip-wazo-onboarding/</code>. For how a PBX handles incoming DIDs generally, the <a href="https://wazo-platform.org/documentation/">Wazo Platform docs</a> are the reference.</p>
+</div>
+
+<div class="ask">
+  <b>I'm your teacher — interrupt me.</b> Try: "what exactly is in the <code>call_event</code> webhook?", "how does a call group ring several desks — and who wins?", "what happens if two tabs are open?", or "show me what <code>_sync_pbx_incall</code> actually sends to the PBX." Ask and I'll draw it.
+</div>
+
+<div class="links">
+  <a href="../../reference/glossary.html">📑 Glossary</a>
+  <a href="../../reference/onboarding.html">📘 Onboarding §9 (rendered, with diagram)</a>
+  <a href="./0003-outbound-calling-the-world.html">↩ Lesson 3 · Outbound</a>
+  <a href="./0001-two-planes-signaling-vs-media.html">↩ Lesson 1 · Two planes</a>
+</div>
+
+<div class="nav-foot">
+  <a href="./0003-outbound-calling-the-world.html"><span class="lbl">← Previous</span>Lesson 3 · Calling the outside world</a>
+  <a href="#" onclick="return false" title="Coming next session"><span class="lbl">Next →</span>Lesson 5 · Today vs Tomorrow<br><span style="color:var(--faint);font-weight:400">why we're moving off Telnyx-direct onto our own Wazo — and what it fixes.</span></a>
+</div>
+
+</div>
+
+<script src="../../vendor/mermaid.min.js"></script>
+<script>
+  if(window.mermaid){ mermaid.initialize({startOnLoad:true, theme:"neutral", securityLevel:"loose", sequence:{mirrorActors:false}}); }
+</script>
+<script>
+/* ---------- Interactive 1: order the inbound hops ---------- */
+const STEPS=[
+  {order:1, label:'Caller dials your DID', sub:'a stranger calls +32 2 555 1234'},
+  {order:2, label:'Telnyx', sub:'carrier pushes it down the trunk'},
+  {order:3, label:'Kamailio', sub:'edge takes the inbound INVITE'},
+  {order:4, label:'Asterisk + incall', sub:'maps the DID to extension 1001'},
+  {order:5, label:'Your browser rings', sub:'INVITE over WSS — 🔔'},
+  {order:6, label:'You answer', sub:'200 OK → audio bridges'}
+];
+const order=[...STEPS].sort((a,b)=> ((a.label.length*7+a.order*13)%6) - ((b.label.length*7+b.order*13)%6));
+const cardsEl=document.getElementById('order-cards');
+const ofb=document.getElementById('order-fb');
+let expected=1;
+order.forEach(s=>{
+  const c=document.createElement('button'); c.className='card';
+  c.innerHTML='<span>'+s.label+'</span><span class="sub">'+s.sub+'</span>';
+  c.onclick=()=>{
+    if(c.classList.contains('done')) return;
+    if(s.order===expected){
+      c.classList.add('done');
+      const n=document.createElement('span'); n.className='num'; n.textContent=expected; c.appendChild(n);
+      expected++;
+      if(expected>STEPS.length){ ofb.innerHTML='<b>✓ That is an inbound call.</b> The incall (step 4) is the new idea — it answers "whose desk rings?". 🦜'; }
+      else { ofb.innerHTML='Good. Next: <b>'+STEPS[expected-1].sub+'</b>'; }
+    } else {
+      c.classList.add('bad'); setTimeout(()=>c.classList.remove('bad'),320);
+      ofb.innerHTML='Not yet — next we need: <b>'+STEPS[expected-1].label+'</b> ('+STEPS[expected-1].sub+')';
+    }
+  };
+  cardsEl.appendChild(c);
+});
+
+/* ---------- Interactive 2: quiz ---------- */
+const QUIZ=[
+  {stem:'What does the "incall" do?',
+   choices:[
+     {t:'Maps an inbound DID to its destination — an extension or a call group', ok:true},
+     {t:'Picks which audio codec the inbound call will use before it connects', ok:false},
+     {t:'Stamps the caller ID onto the call so the callee knows who is calling', ok:false},
+     {t:'Bills the inbound minutes to the right client once the call has ended', ok:false}
+   ],
+   why:'incall = "this public number rings that desk". The outbound mirror is caller-ID/PAID.'},
+  {stem:'A caller dials your DID but the call never even reaches your PBX. Most likely?',
+   choices:[
+     {t:'At Telnyx, the DID is not pointed back at us (inbound routing / CCA missing)', ok:true},
+     {t:'The browser softphone has not sent a REGISTER, so nothing can ring', ok:false},
+     {t:'The incall rule maps the DID to an extension that does not exist', ok:false},
+     {t:'The audio codecs did not match, so the media leg failed to set up', ok:false}
+   ],
+   why:'If it never reaches the PBX, the problem is upstream at the carrier — the inbound mirror of D51.'},
+  {stem:'The call reaches the PBX and the incall is correct, but your browser never rings. Likely?',
+   choices:[
+     {t:'Your softphone is not registered, so Asterisk has nowhere to send it', ok:true},
+     {t:'Telnyx rejected the caller ID with a D35 error before connecting it', ok:false},
+     {t:'The outcall pattern _+X. failed to match the dialled phone number', ok:false},
+     {t:'The IAP shop ran out of credits and blocked the inbound call leg', ok:false}
+   ],
+   why:'The incall points at ext 1001, but Asterisk rings wherever 1001 last REGISTERed. No REGISTER → nowhere to ring.'}
+];
+const quizEl=document.getElementById('quiz'); let qDone=0,qRight=0;
+QUIZ.forEach((q,i)=>{
+  const wrap=document.createElement('div'); wrap.className='q';
+  const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+  const fb=document.createElement('div'); fb.className='qfb'; fb.id='qfb'+i;
+  q.choices.forEach(c=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+    b.onclick=()=>{
+      if(wrap.dataset.done) return; wrap.dataset.done='1'; qDone++;
+      if(c.ok){b.classList.add('correct'); qRight++;}
+      else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+      [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent='Score: '+qRight+'/'+QUIZ.length+'. '+(qRight===QUIZ.length?'You can trace a call both directions now. 🦜':'Re-read the mirror table for the one you missed.');
+    };
+    wrap.appendChild(b);
+  });
+  wrap.appendChild(fb); quizEl.appendChild(wrap);
+});
+</script>
+</body>
+</html>

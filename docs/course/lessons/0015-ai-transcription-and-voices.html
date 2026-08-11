@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 15 · AI: transcription &amp; voices — Parrot VoIP Course</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  pre{background:#f0ece3;border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;overflow-x:auto;font-size:.8rem;line-height:1.5}
+  pre code{background:none;padding:0}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  .mermaid{display:flex;justify-content:center}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .warnbox{border-left:3px solid var(--bad);background:#f6e7e4;padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .codehook{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--sig);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.95rem}
+  .codehook .kicker{color:var(--sig)}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem;flex:1}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .nav-foot .home{min-width:auto;flex:0;text-align:center;align-self:stretch;display:flex;align-items:center}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 15 of 15</div>
+  <h1>AI: transcription &amp; voices</h1>
+  <p class="lede">Every call can write its own minutes, and every greeting can be spoken without a microphone — two AI-flavoured features that hang off the call log.</p>
+  <div class="meta"><span>⏱ ~9 minutes</span><span>🎯 Goal: know what gets transcribed, where it lands, and what triggers it</span><span>🧩 Builds on: <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a></span></div>
+</header>
+
+<p>Two very different features share this last lesson because both wear an "AI" badge — but they live
+in different places and it is worth knowing which is which. One <strong>listens</strong> to calls and
+writes them down (<code>voip_ai</code>). The other <strong>speaks</strong> your greetings out loud
+(<code>voip.sound</code>, from <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>). Keep
+them apart and you will never mis-answer the interview question "where does transcription live?"</p>
+
+<h2>Part 1 — Calls that write their own minutes</h2>
+
+<div class="big-idea">
+  <strong>The one-liner.</strong> The auto-installed <code>voip_ai</code> module is a
+  <em>stenographer</em> for your phone: it records each call, sends the audio to OpenAI Whisper to turn
+  speech into text, and — when the whole call is transcribed — asks an AI agent for a one-line summary,
+  then pings you "done".
+</div>
+
+<h3>The everyday picture</h3>
+<p>Imagine a court stenographer sitting quietly in every call, typing everything said. At the end they
+hand you a transcript <em>and</em> a sticky note with the gist ("Customer wants a refund on order
+1042"). You did nothing; it just appears. That is <code>voip_ai</code>.</p>
+
+<figure>
+<pre class="mermaid">
+flowchart LR
+  C[📞 Call recording] --> ART[mail.call.artifact<br/>is_stt = true]
+  ART --> W[OpenAI Whisper<br/>speech → text]
+  W --> T[transcript on<br/>the artifact]
+  T --> Q{all artifacts<br/>transcribed?}
+  Q -- yes --> SUM[AI summary agent<br/>one-line summary]
+  SUM --> N[🔔 notify user:<br/>Transcription Completed]
+</pre>
+<figcaption>The pipeline. Note the transcript is stored on a <code>mail.call.artifact</code> row — the same model that stores a recording — not on <code>voip.call</code> directly.</figcaption>
+</figure>
+
+<h3>Where everything lands</h3>
+<p><code>voip_ai</code> ("Phone - AI", <code>depends: ["voip", "ai"]</code>, <code>auto_install</code>)
+extends <code>voip.call</code> with the <code>call.transcription.mixin</code> from the community
+<code>ai</code> module. The audio of a call is captured as a <strong><code>mail.call.artifact</code></strong>
+row; the transcript text is written back onto that same artifact.<a class="cite" href="../reference/onboarding.html">(voip_ai/models/voip_call.py)</a></p>
+
+<div class="warnbox">
+  <strong>⚠️ The aha: recording and transcript share one model.</strong> A recording and a transcript
+  are <em>both</em> <code>mail.call.artifact</code> rows. The flag <code>is_stt</code> tells them apart
+  — and a speech-to-text artifact deliberately does <em>not</em> light the "has a recording" icon in
+  the call log. Same table, one boolean, two meanings.
+</div>
+
+<p>On <code>voip.call</code> itself you will only find <em>derived</em> fields: a computed
+<code>has_transcript</code>, a <code>transcription_state</code> (<code>pending</code> →
+<code>done</code>/<code>error</code>), and the one-line <code>summary</code>. There is no raw
+transcript column on the call — always look on the artifact. When every artifact is done, an AI agent
+(<code>voip_ai.voip_call_summary_agent</code>) writes the summary and a bus notification tells the user
+"Transcription Completed".</p>
+
+<h3>It ships switched off</h3>
+<p>Nothing transcribes by default. An admin must set the provider's <code>transcription_policy</code> to
+<strong>"Force for all users"</strong> — which immediately checks that an OpenAI token exists (no token,
+clear error). That policy is handed to the browser softphone through
+<code>res.users._get_voip_config → transcriptionPolicy</code>, so the recorder only wakes up where it
+should.<a class="cite" href="../reference/onboarding.html">(voip_ai/models/voip_provider.py)</a></p>
+
+<div class="warnbox">
+  <strong>⚠️ Pocket gotcha: no cron backstop.</strong> Transcription is trigger-driven with <em>no</em>
+  retry cron behind it. If the trigger is dropped, that artifact sits in <code>pending</code> forever —
+  nothing sweeps it up later. If a call is stuck "Awaiting transcription", this is your first suspect.
+</div>
+
+<h2>Part 2 — Greetings that speak themselves</h2>
+<p>The <em>other</em> AI feature you already met in <a href="./0012-leaving-a-message-voicemail.html">Lesson 12</a>,
+and it is important to place it correctly: <strong>text-to-speech lives in the base <code>voip</code>
+module on <code>voip.sound</code> — NOT in <code>voip_ai</code></strong>. When you type a greeting,
+<code>voip.sound._generate_tts_audio()</code> hands the text to the shop
+(<code>PhoneServiceAPI.generate_speech</code>), which returns audio synthesised by <strong>Telnyx</strong>.
+The voices are Telnyx voice ids, fetched once and <strong>filtered by language</strong> (matched to
+your <code>res.lang</code>) so the picker isn't one endless global list.<a class="cite" href="../reference/onboarding.html">(voip/models/voip_sound.py)</a></p>
+
+<div class="callout">
+  <strong>Two AIs, two homes.</strong> <em>Listening</em> (speech → text) is <code>voip_ai</code> +
+  OpenAI Whisper. <em>Speaking</em> (text → speech) is <code>voip.sound</code> + Telnyx, through the
+  shop. If someone says "the AI module does our voices", gently correct them.
+</div>
+
+<div class="codehook">
+  <div class="kicker">⌨️ Where this lives in our code</div>
+  <p style="margin:.3rem 0 0"><code>voip_ai/models/voip_call.py</code> — the transcription mixin,
+  <code>has_transcript</code>/<code>transcription_state</code>/<code>summary</code>, and the summary
+  agent call.<br>
+  <code>voip_ai/models/voip_provider.py</code> — <code>transcription_policy</code> and its OpenAI-token
+  check.<br>
+  <code>voip/models/voip_sound.py</code> — <code>_generate_tts_audio()</code> and the Telnyx voice
+  catalogue, filtered by language. (TTS is base <code>voip</code>, not <code>voip_ai</code>.)</p>
+</div>
+
+<div class="exercise">
+  <h3>Check 1 — which home does it live in?</h3>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:0">Sort each fact into the feature it belongs to.</p>
+  <div id="sorter"></div>
+  <div class="score" id="sorter-score"></div>
+</div>
+
+<div class="exercise">
+  <h3>Check 2 — the details that trip people up</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0">The <a href="../reference/onboarding.html">Onboarding Guide</a> §11.1
+  "AI call transcription" is the tight summary; then open <code>voip_ai/models/voip_call.py</code> and
+  trace how <code>transcription_state</code> is computed from the artifacts — it makes the "same model,
+  <code>is_stt</code> flag" point concrete.</p>
+</div>
+
+<div class="ask">
+  <b>Your teacher is an agent — interrupt it.</b> Ask it: "show me where <code>is_stt</code> is set",
+  "why is there no cron for stuck transcriptions?", "walk me from a greeting's text to Telnyx audio".
+  Poking the real code is how these two features stop blurring together.
+</div>
+
+<div class="links">
+  <a href="../reference/glossary.html#ai-transcription">📑 Glossary — AI transcription</a>
+  <a href="../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <a href="./0014-the-call-flow-editor.html"><span class="lbl">← Previous</span>Lesson 14 · The Call Flow editor</a>
+  <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
+  <a href="../index.html"><span class="lbl">🎓 Course complete</span>Back to the course home<br><span style="color:var(--faint);font-weight:400">you can now contribute to the VoIP team</span></a>
+</div>
+
+</div>
+
+<script>
+function makeSorter(containerId, scoreId, PLANES, ITEMS){
+  const sorter = document.getElementById(containerId);
+  let done = 0, right = 0;
+  ITEMS.forEach((it, i) => {
+    const row = document.createElement('div'); row.className='sorter-row';
+    const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+    const fb = document.createElement('div'); fb.className='fb';
+    PLANES.forEach(p => {
+      const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+      b.onclick=()=>{
+        if(row.dataset.done) return; row.dataset.done='1'; done++;
+        const ok = p.k===it.ans;
+        if(ok){b.classList.add('correct'); right++;}
+        else {b.classList.add('wrong');
+          [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+        }
+        [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+      };
+      row.appendChild(b);
+    });
+    row.appendChild(fb); sorter.appendChild(row);
+  });
+}
+function makeQuiz(containerId, scoreId, QUIZ){
+  const quizEl=document.getElementById(containerId); let done=0,right=0;
+  QUIZ.forEach((q,i)=>{
+    const wrap=document.createElement('div'); wrap.className='q';
+    const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+    const fb=document.createElement('div'); fb.className='fb';
+    q.choices.forEach(c=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+      b.onclick=()=>{
+        if(wrap.dataset.done) return; wrap.dataset.done='1'; done++;
+        if(c.ok){b.classList.add('correct'); right++;}
+        else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+        [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
+      };
+      wrap.appendChild(b);
+    });
+    wrap.appendChild(fb); quizEl.appendChild(wrap);
+  });
+}
+
+makeSorter('sorter','sorter-score',
+  [{k:'stt',label:'Transcription (voip_ai)'},{k:'tts',label:'Voices (voip.sound)'}],
+  [
+    {name:'OpenAI Whisper', ans:'stt', why:'<b>Transcription.</b> Whisper turns recorded speech into text; it is <code>voip_ai</code>.'},
+    {name:'Telnyx voices', ans:'tts', why:'<b>Voices.</b> TTS is a shop capability on <code>voip.sound</code> — Telnyx synthesises the audio.'},
+    {name:'mail.call.artifact', ans:'stt', why:'<b>Transcription.</b> Transcripts (and recordings) live on this model, flagged by <code>is_stt</code>.'},
+    {name:'transcription_policy', ans:'stt', why:'<b>Transcription.</b> The provider switch that turns Whisper on for everyone.'},
+    {name:'Filtered by language', ans:'tts', why:'<b>Voices.</b> The Telnyx voice picker is filtered against your <code>res.lang</code>.'},
+    {name:'No cron backstop', ans:'stt', why:'<b>Transcription.</b> A dropped trigger strands an artifact in <code>pending</code> with no retry.'},
+  ]
+);
+
+makeQuiz('quiz','quiz-score',[
+  {stem:'Where is a call’s transcript text actually stored?',
+   choices:[
+     {t:'On a mail.call.artifact row, flagged is_stt', ok:true},
+     {t:'On the voip.call record, in a transcript field', ok:false},
+     {t:'On the voip.provider, beside the OpenAI token', ok:false},
+     {t:'On a voip.sound row, next to the audio blob', ok:false},
+   ],
+   why:'Transcripts live on <code>mail.call.artifact</code> (with <code>is_stt=true</code>); <code>voip.call</code> only carries computed fields.'},
+  {stem:'A call is stuck showing "Awaiting transcription". Most likely cause?',
+   choices:[
+     {t:'A dropped trigger — there is no retry cron', ok:true},
+     {t:'The nightly transcription cron has not run yet', ok:false},
+     {t:'The Telnyx voice catalogue failed to download', ok:false},
+     {t:'The call flow compiled to the wrong PBX config', ok:false},
+   ],
+   why:'Transcription has <b>no cron backstop</b>; a lost trigger leaves the artifact <code>pending</code> with nothing to sweep it up.'},
+  {stem:'Which statement about the two AI features is correct?',
+   choices:[
+     {t:'Speaking is voip.sound/Telnyx; listening is voip_ai', ok:true},
+     {t:'Both speaking and listening live in the voip_ai module', ok:false},
+     {t:'Speaking is voip_ai; listening is voip.sound/Whisper', ok:false},
+     {t:'Both run on-prem with no external service involved', ok:false},
+   ],
+   why:'<b>Listening</b> (speech→text) is <code>voip_ai</code> + Whisper; <b>speaking</b> (text→speech) is <code>voip.sound</code> + Telnyx via the shop.'},
+]);
+</script>
+<script src="../vendor/mermaid.min.js"></script>
+<script>
+  if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'neutral', themeVariables: { fontFamily: 'ui-sans-serif, system-ui, sans-serif', fontSize: '14px' }}); }
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 · The two planes — signaling vs media</title>
+<style>
+  :root{
+    --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
+    --parrot:#1a7a4c; --parrot-deep:#0f5a37; --accent-bg:#eef3ec;
+    --sig:#1f6f8b; --sig-bg:#e8f1f4; --med:#b5532a; --med-bg:#f6ebe3;
+    --both:#5a4b86; --both-bg:#eee9f5; --cfg:#0f5a37; --cfg-bg:#eef3ec;
+    --good:#1a7a4c; --bad:#b23b2e;
+  }
+  *{box-sizing:border-box}
+  html{font-size:17px}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,sans-serif;line-height:1.58;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:3rem 1.4rem 5rem}
+  .kicker{font-family:ui-sans-serif,system-ui,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem;color:var(--parrot);font-weight:700}
+  h1{font-size:2.15rem;line-height:1.08;margin:.35rem 0 .5rem}
+  .lede{font-size:1.12rem;color:var(--muted);margin:.2rem 0 0}
+  .meta{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;color:var(--faint);margin-top:.9rem;display:flex;gap:1rem;flex-wrap:wrap}
+  header.lh{border-bottom:2px solid var(--ink);padding-bottom:1.1rem;margin-bottom:1.8rem}
+  h2{font-size:1.4rem;margin:2.6rem 0 .4rem;padding-top:.7rem;border-top:1px solid var(--rule)}
+  h3{font-size:1.05rem;margin:1.6rem 0 .2rem;font-family:ui-sans-serif,system-ui,sans-serif}
+  p{margin:.7rem 0}
+  a{color:var(--parrot-deep)}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.82em;background:#f0ece3;padding:.05rem .3rem;border-radius:4px}
+  .cite{font-size:.74rem;color:var(--faint);font-family:ui-sans-serif,system-ui,sans-serif;vertical-align:.3em;text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .big-idea{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--parrot);border-radius:6px;padding:1rem 1.2rem;margin:1.2rem 0}
+  .big-idea strong{color:var(--parrot-deep)}
+  .planes{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.84rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .plane{border-radius:6px;padding:.8rem .9rem}
+  .plane.sig{background:var(--sig-bg);border:1px solid #cfe0e6}
+  .plane.med{background:var(--med-bg);border:1px solid #ecd6c6}
+  .plane h4{margin:.1rem 0 .35rem;font-size:.92rem}
+  .plane.sig h4{color:var(--sig)} .plane.med h4{color:var(--med)}
+  .plane ul{margin:.2rem 0 0 .9rem;padding:0} .plane li{margin:.18rem 0}
+  figure{margin:1.4rem 0;text-align:center} figcaption{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin-top:.5rem}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pill{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .42rem;border-radius:99px;white-space:nowrap}
+  .p-sig{color:var(--sig);background:var(--sig-bg)} .p-med{color:var(--med);background:var(--med-bg)}
+  .p-both{color:var(--both);background:var(--both-bg)} .p-cfg{color:var(--cfg);background:var(--cfg-bg)}
+  /* interactive */
+  .exercise{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:1.2rem 1.3rem;margin:1.4rem 0}
+  .exercise h3{margin-top:0}
+  .sorter-row{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;padding:.6rem 0;border-bottom:1px dashed var(--rule)}
+  .sorter-row:last-of-type{border-bottom:0}
+  .item{font-weight:700;min-width:9.5rem;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.92rem}
+  .opt{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.78rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);
+    padding:.28rem .6rem;border-radius:99px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--parrot)}
+  .opt:disabled{cursor:default;opacity:.55}
+  .opt.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);opacity:1;font-weight:700}
+  .opt.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad);opacity:1}
+  .fb{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;color:var(--muted);width:100%;margin:.15rem 0 0;display:none}
+  .fb.show{display:block}
+  .fb b{color:var(--ink)}
+  .q{margin:1.1rem 0 0}
+  .q .stem{font-weight:700;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.94rem;margin-bottom:.45rem}
+  .q .choice{display:block;width:100%;text-align:left;font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;
+    border:1px solid var(--rule);background:var(--paper);color:var(--ink);padding:.5rem .7rem;border-radius:6px;margin:.32rem 0;cursor:pointer}
+  .q .choice:hover{border-color:var(--parrot)}
+  .q .choice:disabled{cursor:default}
+  .q .choice.correct{background:var(--accent-bg);border-color:var(--good);color:var(--good);font-weight:700}
+  .q .choice.wrong{background:#f6e7e4;border-color:var(--bad);color:var(--bad)}
+  .score{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--muted);margin-top:1rem;font-weight:700}
+  .callout{border-left:3px solid var(--med);background:var(--med-bg);padding:.7rem 1rem;border-radius:4px;margin:1.1rem 0;font-size:.96rem}
+  .source-rec{background:var(--accent-bg);border:1px solid #d4e3d6;border-radius:6px;padding:1rem 1.2rem;margin:1.6rem 0;font-size:.95rem}
+  .source-rec .kicker{color:var(--parrot-deep)}
+  .nav-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:2.4rem;padding-top:1.2rem;border-top:2px solid var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem}
+  .nav-foot a{display:block;text-decoration:none;border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem;background:#fff;min-width:13rem}
+  .nav-foot .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .ask{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;background:#fff;border:1px dashed var(--parrot);border-radius:8px;padding:.9rem 1.1rem;margin:1.8rem 0;color:var(--muted)}
+  .ask b{color:var(--parrot-deep)}
+  .links{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem}
+  @media (max-width:560px){.planes{grid-template-columns:1fr}.item{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;background:#fff7e6;border:1px solid #e6d8b8;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.4rem">📦 <b>Archived lesson</b> — kept from the pre-course personal arc; some facts predate the DB→IAP→WAZO refactor. The up-to-date version is <a href="../0002-two-planes-signaling-vs-media.html">Lesson 2 · The two planes: signaling vs media</a> · <a href="../../index.html">🦜 course home</a>.</div>
+
+<header class="lh">
+  <div class="kicker">🦜 Parrot VoIP · Lesson 1 of the arc</div>
+  <h1>The two planes: signaling vs media</h1>
+  <p class="lede">The one mental model that makes every box in our stack — Kamailio, Asterisk, rtpengine, Telnyx — snap into place.</p>
+  <div class="meta"><span>⏱ ~8 minutes</span><span>🎯 Mission: discuss &amp; change the stack confidently</span><span>🧩 Foundational spine</span></div>
+</header>
+
+<p>You already know the four players. What you're missing is the <em>lens</em> that explains why the
+switchboard is split into three different programs instead of one. That lens is the oldest idea in
+telephony, and once you have it you'll never be confused about "which box does what" again.</p>
+
+<div class="big-idea">
+  <strong>The big idea.</strong> A phone call is really <strong>two separate conversations</strong> that travel on
+  <strong>different paths</strong>:
+  <ul style="margin:.5rem 0 0 1rem">
+    <li><strong>Signaling</strong> — the negotiation: <em>"ring this person, here are my codecs, … they answered, … goodbye."</em> Small text messages. This is <strong>SIP</strong>.</li>
+    <li><strong>Media</strong> — the actual voice: a firehose of audio packets. This is <strong>RTP</strong> (encrypted: SRTP).</li>
+  </ul>
+  Keeping them separate is a deliberate design choice in the SIP standard itself.<a class="cite" href="https://www.rfc-editor.org/rfc/rfc3261.html" title="RFC 3261 — SIP">RFC&nbsp;3261</a>
+</div>
+
+<p>Think of an old hotel switchboard. The <strong>operator</strong> takes your request ("connect me to room 12")
+and plugs a cable — that's <strong>signaling</strong>. But your actual <em>voice</em> then travels down the
+copper wire she plugged — that's <strong>media</strong>. The operator never hears your conversation; she just
+sets up and tears down the path. SIP is the operator's clipboard; RTP is the copper.</p>
+
+<div class="planes">
+  <div class="plane sig">
+    <h4>◆ Signaling plane — SIP</h4>
+    <ul>
+      <li>"ring / who / what codec / bye"</li>
+      <li>tiny text messages, infrequent</li>
+      <li>routes <em>through</em> proxies</li>
+      <li>fine over TCP/443, like HTTPS</li>
+    </ul>
+  </div>
+  <div class="plane med">
+    <h4>● Media plane — RTP / SRTP</h4>
+    <ul>
+      <li>the real audio bytes</li>
+      <li>continuous stream, ~50 packets/sec</li>
+      <li>wants the <em>most direct</em> path</li>
+      <li>needs wide UDP range (10000–20000)</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Our stack, drawn on the two planes</h2>
+
+<figure>
+<svg viewBox="0 0 720 250" width="100%" role="img" aria-label="Two-lane diagram: signaling lane Browser to Kamailio to Asterisk; media lane Browser to rtpengine to Telnyx">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8a857c"/></marker>
+  </defs>
+  <!-- signaling lane -->
+  <rect x="8" y="20" width="704" height="86" rx="10" fill="#e8f1f4" stroke="#cfe0e6"/>
+  <text x="22" y="40" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" font-weight="700" fill="#1f6f8b">◆ SIGNALING (SIP) — the operator's clipboard</text>
+  <g font-family="ui-sans-serif,system-ui,sans-serif" font-size="12.5" text-anchor="middle">
+    <rect x="40" y="54" width="120" height="36" rx="7" fill="#fff" stroke="#1f6f8b"/><text x="100" y="77" fill="#13343f">Softphone</text>
+    <rect x="300" y="54" width="120" height="36" rx="7" fill="#fff" stroke="#1f6f8b"/><text x="360" y="77" fill="#13343f" font-weight="700">Kamailio</text>
+    <rect x="560" y="54" width="120" height="36" rx="7" fill="#fff" stroke="#1f6f8b"/><text x="620" y="77" fill="#13343f">Asterisk</text>
+    <line x1="162" y1="72" x2="298" y2="72" stroke="#8a857c" stroke-width="1.5" marker-end="url(#ah)"/>
+    <line x1="422" y1="72" x2="558" y2="72" stroke="#8a857c" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="230" y="66" font-size="10.5" fill="#6b655c">SIP / WSS</text>
+    <text x="490" y="66" font-size="10.5" fill="#6b655c">SIP</text>
+  </g>
+  <!-- media lane -->
+  <rect x="8" y="140" width="704" height="86" rx="10" fill="#f6ebe3" stroke="#ecd6c6"/>
+  <text x="22" y="160" font-family="ui-sans-serif,system-ui,sans-serif" font-size="12" font-weight="700" fill="#b5532a">● MEDIA (RTP/SRTP) — the copper wire</text>
+  <g font-family="ui-sans-serif,system-ui,sans-serif" font-size="12.5" text-anchor="middle">
+    <rect x="40" y="174" width="120" height="36" rx="7" fill="#fff" stroke="#b5532a"/><text x="100" y="197" fill="#5a2c16">Softphone</text>
+    <rect x="300" y="174" width="120" height="36" rx="7" fill="#fff" stroke="#b5532a"/><text x="360" y="197" fill="#5a2c16" font-weight="700">rtpengine</text>
+    <rect x="560" y="174" width="120" height="36" rx="7" fill="#fff" stroke="#b5532a"/><text x="620" y="197" fill="#5a2c16">Telnyx→PSTN</text>
+    <line x1="162" y1="192" x2="298" y2="192" stroke="#8a857c" stroke-width="1.5" marker-end="url(#ah)"/>
+    <line x1="422" y1="192" x2="558" y2="192" stroke="#8a857c" stroke-width="1.5" marker-end="url(#ah)"/>
+    <text x="230" y="186" font-size="10.5" fill="#6b655c">WebRTC audio</text>
+    <text x="490" y="186" font-size="10.5" fill="#6b655c">RTP</text>
+  </g>
+  <!-- the brain link -->
+  <line x1="620" y1="92" x2="620" y2="172" stroke="#5a4b86" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ah)"/>
+  <text x="628" y="135" font-family="ui-sans-serif,system-ui,sans-serif" font-size="10" fill="#5a4b86">Asterisk tells</text>
+  <text x="628" y="146" font-family="ui-sans-serif,system-ui,sans-serif" font-size="10" fill="#5a4b86">rtpengine what to do</text>
+</svg>
+<figcaption>Same call, two lanes. The browser and Telnyx sit on <em>both</em>. Kamailio lives only on the top lane; rtpengine only on the bottom. Asterisk is the brain that drives the media without carrying most of it.</figcaption>
+</figure>
+
+<table>
+  <thead><tr><th>Component</th><th>Plane</th><th>Its one job</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Kamailio</strong></td><td><span class="pill p-sig">signaling</span></td><td>The SIP <em>edge</em>: terminate browser WSS, handle registrations at scale, be the hardened front door. Never touches audio.</td></tr>
+    <tr><td><strong>Asterisk</strong></td><td><span class="pill p-both">both</span></td><td>The <em>call engine</em> (B2BUA): dialplan, IVR, voicemail, transfer, queues. Decides the call; delegates the audio.</td></tr>
+    <tr><td><strong>rtpengine</strong></td><td><span class="pill p-med">media</span></td><td>The audio relay: shuttles and transcodes RTP/SRTP. The only one that <em>touches your voice</em>.</td></tr>
+    <tr><td><strong>Softphone</strong></td><td><span class="pill p-both">both</span></td><td>Sends SIP-over-WSS <em>and</em> WebRTC audio. Your handset is on both lanes.</td></tr>
+    <tr><td><strong>Odoo / IAP</strong></td><td><span class="pill p-cfg">config</span></td><td>Not on the live call at all — they <em>configure</em> the call ahead of time and read reports after (REST + webhooks).</td></tr>
+  </tbody>
+</table>
+
+<h2>So <em>that's</em> why Kamailio isn't just "another Asterisk"</h2>
+<p>Your original question — "we already have a PBX, why a second SIP thing?" — dissolves once you see the planes.
+Asterisk is a brilliant <strong>call engine</strong> but a mediocre <strong>edge</strong>; Kamailio is the reverse. They're
+complementary, and the classic carrier pattern is <strong>Kamailio at the edge, Asterisk behind it</strong>.<a class="cite" href="https://nickvsnetworking.com/kamailio-vs-asterisk/" title="Kamailio vs Asterisk — Nick vs Networking">nickvsnetworking</a></p>
+<ul>
+  <li><strong>Scale:</strong> Kamailio is stateless-ish and does no media, so it routes thousands of SIP messages/sec and holds 100k+ registrations on modest hardware. Asterisk would choke on that churn.<a class="cite" href="https://www.kamailio.org/wikidocs/tutorials/faq/main/" title="Kamailio Wiki FAQ">kamailio FAQ</a></li>
+  <li><strong>Security:</strong> the public SIP port is hammered by scanners and toll-fraud bots 24/7. Kamailio is the bouncer — rate-limit, block, hide the internal Asterisk.</li>
+  <li><strong>Division of labour:</strong> Kamailio = traffic control (signaling). Asterisk = the call's actual features (media + logic). This is exactly how Wazo packages them.<a class="cite" href="https://wazo-platform.org/documentation/" title="Wazo Platform docs">wazo docs</a></li>
+</ul>
+
+<div class="callout"><strong>The payoff for our migration.</strong> Today the browser registers straight to <code>sip.telnyx.com</code> — Telnyx <em>is</em> our SIP edge. Bringing Wazo in-house means <strong>we</strong> now run that edge (Kamailio). That's not new work for its own sake — owning the signaling edge is what lets us give each customer their <em>own</em> SIP context (killing the cross-tenant caller-ID spoofing risk) and set caller-ID server-side instead of with the browser <code>P-Asserted-Identity</code> hack.</div>
+
+<!-- ============ INTERACTIVE 1 ============ -->
+<div class="exercise" id="ex-sort">
+  <h3>① Sort each component onto its plane</h3>
+  <p style="margin-top:.2rem;color:var(--muted);font-size:.92rem">Click the plane you think each one belongs to. Instant feedback — recall it, don't just re-read it.</p>
+  <div id="sorter"></div>
+  <div class="score" id="sort-score"></div>
+</div>
+
+<!-- ============ INTERACTIVE 2 ============ -->
+<div class="exercise" id="ex-quiz">
+  <h3>② Three to make it stick</h3>
+  <div id="quiz"></div>
+  <div class="score" id="quiz-score"></div>
+</div>
+
+<div class="source-rec">
+  <div class="kicker">📖 Primary source (read one thing)</div>
+  <p style="margin:.3rem 0 0"><a href="https://nickvsnetworking.com/kamailio-vs-asterisk/"><strong>"Kamailio vs Asterisk" — Nick vs Networking.</strong></a> Eight minutes, the clearest plain-English take on SIP-proxy vs B2BUA and why production stacks run both. If you want the canonical ground truth on the signaling/media split, skim <a href="https://www.rfc-editor.org/rfc/rfc3261.html">RFC&nbsp;3261 §1–2</a>.</p>
+</div>
+
+<div class="ask">
+  <b>I'm your teacher — interrupt me.</b> Anything fuzzy? Ask: "show me where Kamailio is configured in Wazo," "what exactly is in a SIP INVITE," "why does Asterisk delegate media to rtpengine instead of carrying it?", or "quiz me again, harder." That back-and-forth is where the learning compounds.
+</div>
+
+<div class="links">
+  <a href="../../reference/glossary.html">📑 Glossary (canonical vocabulary)</a>
+  <a href="../../reference/onboarding.html">📘 Onboarding Guide (rendered, with diagrams)</a>
+</div>
+
+<div class="nav-foot">
+  <span></span>
+  <a href="#" onclick="return false" title="Coming next session">
+    <span class="lbl">Next →</span>
+    Lesson 2 · The SIP call lifecycle<br><span style="color:var(--faint);font-weight:400">REGISTER → INVITE → 200 OK → ACK → BYE: what actually flows on the signaling lane.</span>
+  </a>
+</div>
+
+</div>
+
+<script>
+/* ---------- Interactive 1: plane sorter ---------- */
+const PLANES = [
+  {k:'sig', label:'Signaling'},
+  {k:'med', label:'Media'},
+  {k:'both', label:'Both'},
+  {k:'cfg', label:'Config (off-call)'}
+];
+const ITEMS = [
+  {name:'Kamailio', ans:'sig',  why:'<b>Signaling only.</b> A SIP proxy: it routes the messages and terminates browser WSS, but audio never passes through it.'},
+  {name:'rtpengine', ans:'med', why:'<b>Media only.</b> Its whole job is relaying (and transcoding) the RTP/SRTP audio packets.'},
+  {name:'Asterisk', ans:'both', why:'<b>Both.</b> As a B2BUA it sits in the signaling path (runs the dialplan/logic) and controls the media path — even though it delegates the heavy audio shuttling to rtpengine.'},
+  {name:'Softphone (browser)', ans:'both', why:'<b>Both.</b> It sends SIP over WSS (signaling) and the WebRTC/SRTP audio (media) at the same time.'},
+  {name:'Odoo voip module', ans:'cfg', why:'<b>Config, off the call.</b> Odoo never sits on a live call — it configures Wazo over REST beforehand and reads webhooks afterward. A great boundary to keep straight.'}
+];
+const sorter = document.getElementById('sorter');
+let sortDone = 0, sortRight = 0;
+ITEMS.forEach((it, i) => {
+  const row = document.createElement('div'); row.className='sorter-row';
+  const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
+  const fb = document.createElement('div'); fb.className='fb'; fb.id='sfb'+i;
+  PLANES.forEach(p => {
+    const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
+    b.onclick=()=>{
+      if(row.dataset.done) return; row.dataset.done='1'; sortDone++;
+      const ok = p.k===it.ans;
+      if(ok){b.classList.add('correct'); sortRight++;}
+      else {b.classList.add('wrong');
+        [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
+      }
+      [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
+      fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+      if(sortDone===ITEMS.length) document.getElementById('sort-score').textContent=`Score: ${sortRight}/${ITEMS.length}. `+(sortRight===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
+    };
+    row.appendChild(b);
+  });
+  row.appendChild(fb); sorter.appendChild(row);
+});
+
+/* ---------- Interactive 2: quiz ---------- */
+const QUIZ=[
+  {stem:'Why does Wazo run Kamailio in front of Asterisk instead of just Asterisk alone?',
+   choices:[
+     {t:'Kamailio scales SIP signaling and shields the edge; Asterisk runs the call logic', ok:true},
+     {t:'Kamailio records the call audio while Asterisk only stores the billing details', ok:false},
+     {t:'Kamailio is a newer drop-in that makes Asterisk completely unnecessary now here', ok:false},
+     {t:'Kamailio converts credits to minutes while Asterisk calls the Telnyx billing API', ok:false}
+   ],
+   why:'Edge/scale/security (signaling) vs call engine (media + logic) — complementary jobs on the two planes.'},
+  {stem:'A user reports "the call connects, but I hear nothing." Which plane do you suspect first?',
+   choices:[
+     {t:'The media plane — RTP/SRTP audio, NAT, ports, or a wrong public IP in SDP', ok:true},
+     {t:'The signaling plane — the INVITE and the 200 OK never reached the far party', ok:false},
+     {t:'The config plane — the DID was simply never assigned to the user in confd', ok:false},
+     {t:'The billing plane — the client quietly ran out of IAP credits during the call', ok:false}
+   ],
+   why:'"Connects but silent" = signaling succeeded, media failed. Classic media-plane symptom (often NAT / public-IP / ports).'},
+  {stem:'Today the browser registers SIP to sip.telnyx.com. After the Wazo migration it registers to…',
+   choices:[
+     {t:'Kamailio — the SIP edge bundled inside our own self-hosted Wazo PBX now', ok:true},
+     {t:'Asterisk directly, which from now on terminates every browser WSS socket', ok:false},
+     {t:'The IAP phone_service broker, which proxies the SIP onward to the Wazo box', ok:false},
+     {t:'rtpengine, since the browser audio must reach the media relay before anything', ok:false}
+   ],
+   why:'Registration is signaling, and Kamailio is the signaling edge we now own — the role Telnyx played for us before.'}
+];
+const quizEl=document.getElementById('quiz'); let qDone=0,qRight=0;
+QUIZ.forEach((q,i)=>{
+  const wrap=document.createElement('div'); wrap.className='q';
+  const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
+  const fb=document.createElement('div'); fb.className='fb'; fb.id='qfb'+i;
+  q.choices.forEach(c=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
+    b.onclick=()=>{
+      if(wrap.dataset.done) return; wrap.dataset.done='1'; qDone++;
+      if(c.ok){b.classList.add('correct'); qRight++;}
+      else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
+      [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
+      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent=`Score: ${qRight}/${QUIZ.length}. `+(qRight===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask me about it.');
+    };
+    wrap.appendChild(b);
+  });
+  wrap.appendChild(fb); quizEl.appendChild(wrap);
+});
+</script>
+</body>
+</html>
