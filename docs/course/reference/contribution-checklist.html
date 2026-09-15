@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contribution checklist — Odoo VoIP onboarding</title><link rel="stylesheet" href="../assets/course.css"><style>label{display:block;margin:.45rem 0}input{margin-right:.55rem}</style></head>
+<body><main class="wrap">
+<header class="lh"><div class="kicker">Reference · printable</div><h1>Contribution checklist</h1><p class="lede">A compact gate from issue to trustworthy handoff. Check only what you actually proved.</p></header>
+
+<h2>Understand</h2>
+<label><input type="checkbox">I reproduced the behavior on a named branch/SHA.</label>
+<label><input type="checkbox">I wrote expected and observed behavior in plain words.</label>
+<label><input type="checkbox">I traced all callers of the function/contract I will change.</label>
+<label><input type="checkbox">I named the narrowest owning repository, addon and boundary.</label>
+<label><input type="checkbox">I stated the invariant the change must preserve.</label>
+
+<h2>Prove before fixing</h2>
+<label><input type="checkbox">The smallest relevant check fails before my change.</label>
+<label><input type="checkbox">The test uses the existing local pattern and does not call real external services.</label>
+<label><input type="checkbox">For money/retry behavior, the check covers the stable local and remote idempotency keys.</label>
+<label><input type="checkbox">For security behavior, the check covers authentication, authorization and cross-owner access.</label>
+
+<h2>Implement</h2>
+<label><input type="checkbox">The fix is at the shared root cause, not one symptom caller.</label>
+<label><input type="checkbox">I reused the ORM/framework/native pattern before adding a helper or dependency.</label>
+<label><input type="checkbox">The diff contains no unrelated formatting, speculative retry machinery or future scaffolding.</label>
+<label><input type="checkbox">Batch recordsets, translations, access rules, cleanup and failure paths still work.</label>
+<label><input type="checkbox">Every external side effect has a named commit/retry contract and, where needed, a stable remote idempotency key.</label>
+
+<h2>Verify</h2>
+<label><input type="checkbox">The targeted test now passes.</label>
+<label><input type="checkbox">The relevant addon/sibling regression set passes.</label>
+<label><input type="checkbox">Relevant lint/static/frontend checks pass.</label>
+<label><input type="checkbox">A manual/shared-staging check was run only if the behavior required a real PBX/edge/carrier.</label>
+<label><input type="checkbox">I re-read the final diff and reran proof after any rebase/reset/concurrent change.</label>
+
+<h2>Hand off</h2>
+<label><input type="checkbox">I reported before/after behavior and exact commands/results.</label>
+<label><input type="checkbox">I named skipped checks and remaining risk.</label>
+<label><input type="checkbox">No secret, customer audio or sensitive payload appears in logs/screenshots/text.</label>
+<label><input type="checkbox">Relevant living docs/course twins were synchronized if architecture changed.</label>
+<label><input type="checkbox">I stopped before push, PR, comment, deployment or destructive shared action unless explicitly authorized.</label>
+
+<div class="big-idea"><strong>Reviewer test:</strong> would a careful teammate ask for a change before merge? Focus on concrete correctness, security, data loss and maintainability—not theoretical machinery without an observed gap.</div>
+<nav class="nav-foot"><a href="debugging-playbook.html"><span class="lbl">Previous reference</span>← Debugging playbook</a><a href="../index.html"><span class="lbl">Course</span>Course home →</a></nav>
+</main></body></html>

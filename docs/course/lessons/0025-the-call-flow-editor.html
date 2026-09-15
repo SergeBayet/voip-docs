@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 14 · The Call Flow editor — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 25 · The Call Flow editor — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -83,14 +84,14 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 14 of 15</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 7 — The Product · Lesson 25 of 28</div>
   <h1>The Call Flow editor</h1>
   <p class="lede">How an incoming number stops being a straight line to one desk and becomes a decision tree you draw on a canvas.</p>
-  <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: read &amp; reason about a call-flow graph</span><span>🧩 Builds on: <a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a></span></div>
+  <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: read &amp; reason about a call-flow graph</span><span>🧩 Builds on: <a href="./0022-desks-teams-and-waiting-rooms.html">Lesson 22</a></span></div>
 </header>
 
 <p>Until now, an incoming number went somewhere <em>simple</em>: a desk, a team, a waiting room
-(<a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a>). But real businesses want more:
+(<a href="./0016-inbound-the-world-calls-you.html">Lesson 16</a>). But real businesses want more:
 "during office hours, offer a menu — press 1 for sales, 2 for support; sales rings the sales
 queue; after hours, everything goes to voicemail." That is not one destination — it is a little
 <strong>map of decisions</strong>. The <strong>Call Flow editor</strong> is where you draw that map.</p>
@@ -130,13 +131,13 @@ table of "nodes" and "edges"; the canvas <em>is</em> the data.<a class="cite" hr
 <p>The important structural fact: <code>voip.call.flow</code> inherits
 <code>voip.pbx.destination.mixin</code>. That mixin is what makes something "a place a call can be
 sent." A desk (<code>voip.extension</code>) has it; a queue has it; and so does a whole Call Flow.
-So a <a href="./0005-inbound-the-world-calls-you.html">DID number</a> can set its destination to a
+So a <a href="./0016-inbound-the-world-calls-you.html">DID number</a> can set its destination to a
 Call Flow directly — the number rings, and the flowchart takes over.</p>
 
 <div class="big-idea">
   <strong>Why this matters.</strong> "A Call Flow is a destination" is the hinge of the whole feature.
   It means everything you already learned about pointing a number at a destination
-  (<a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a>) still applies — the destination is
+  (<a href="./0016-inbound-the-world-calls-you.html">Lesson 16</a>) still applies — the destination is
   just now a graph instead of a single desk.
 </div>
 
@@ -225,12 +226,12 @@ A menu node shows one output per keypad choice plus a "timeout" wire; a queue or
   <div class="kicker">📖 Primary source (read one thing)</div>
   <p style="margin:.3rem 0 0">The <a href="../reference/onboarding.html">Onboarding Guide</a> — §8
   (destinations &amp; routing) and the model itself, <code>voip/models/voip_call_flow.py</code>. Open
-  the file and find the node-type allow-list; seeing the eleven names in one <code>frozenset</code>
-  makes the "schedule isn't there" point unforgettable.</p>
+  the file and find <code>CALL_FLOW_RECORD_NODE_MODELS</code> plus the three structural literals;
+  seeing the eleven accepted types beside the validator makes the “schedule isn't there” point unforgettable.</p>
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me the node-type allow-list", "walk me through what
   <code>_get_pbx_destination</code> emits for a menu node", "quiz me on flow-owned vs standalone".
   The back-and-forth is where the learning compounds.
@@ -242,9 +243,9 @@ A menu node shows one output per keypad choice plus a "timeout" wire; a queue or
 </div>
 
 <div class="nav-foot">
-  <a href="./0013-following-the-money.html"><span class="lbl">← Previous</span>Lesson 13 · Following the money</a>
+  <a href="./0024-following-the-money.html"><span class="lbl">← Previous</span>Lesson 24 · Following the money</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="./0015-ai-transcription-and-voices.html"><span class="lbl">Next →</span>Lesson 15 · AI: transcription &amp; voices<br><span style="color:var(--faint);font-weight:400">calls become text; the shop speaks your greetings</span></a>
+  <a href="./0026-ai-transcription-and-voices.html"><span class="lbl">Next →</span>Lesson 26 · AI: transcription &amp; voices<br><span style="color:var(--faint);font-weight:400">calls become text; the shop speaks your greetings</span></a>
 </div>
 
 </div>
@@ -256,7 +257,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -267,7 +268,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -280,7 +281,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -288,7 +289,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);

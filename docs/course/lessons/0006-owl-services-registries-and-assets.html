@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 6 — Owl, services, registries and assets</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 2 · Writing Odoo code · Lesson 6 of 28</div><h1>Owl, services, registries &amp; assets</h1><p class="lede">The web client is a component tree with a toolbox: Owl renders state, services do shared work, and registries provide named extension points.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Place frontend behavior without fighting the framework</span></div></header>
+
+<figure><pre class="mermaid">flowchart TD
+  A[Manifest asset bundle] --> JS[JavaScript modules]
+  A --> XML[Owl templates]
+  A --> CSS[SCSS]
+  JS --> C[Owl component]
+  C -->|useService| S[orm / action / dialog / voip]
+  JS -->|registry.add| R[field / action / service / view]
+  C --> DOM[Rendered UI]</pre><figcaption>Assets make code available; registries make extensions discoverable at runtime.</figcaption></figure>
+
+<h2>One responsibility per mechanism</h2>
+<table><thead><tr><th>Mechanism</th><th>Use it for</th><th>Avoid</th></tr></thead><tbody>
+  <tr><td>Owl component</td><td>Local UI state, events and rendering</td><td>Global singleton state hidden in a component</td></tr>
+  <tr><td>Service</td><td>Long-lived shared capability or coordination</td><td>Directly importing another service's internal state</td></tr>
+  <tr><td>Registry</td><td>Named framework extension: field, action, view, service</td><td>A custom switch statement duplicating a registry</td></tr>
+  <tr><td>Patch</td><td>Extend code with no supported registry/subclass hook</td><td>Patching when a documented extension point exists</td></tr>
+  <tr><td>Asset bundle</td><td>Load JS/XML/SCSS for the right client surface</td><td>Files that are never declared and therefore never load</td></tr>
+</tbody></table>
+
+<div class="codehook"><div class="kicker">Trace the softphone</div><p><code>static/src/core/web/voip_service.js</code> registers the <code>voip</code> service and main components. <code>static/src/softphone/dialer.js</code> consumes it with <code>useService("voip")</code>. Their JS, XML and SCSS enter through bundles in <code>voip/__manifest__.py</code>.</p></div>
+
+<h2>Lifecycle in one sentence</h2>
+<p>Initialize hooks and services in <code>setup()</code>, derive rendering from reactive state, and clean up external listeners through lifecycle-aware hooks. Never use component constructors as an extension point.</p>
+
+<section class="exercise"><h3>Choose the native extension</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/frontend/owl_components.html">Owl components</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/frontend/services.html">services</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/frontend/registries.html">registries</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/frontend/assets.html">assets</a></p></div>
+<div class="ask"><b>Ask your agent:</b> “Map the <code>voip</code> browser service: registration, dependencies, consumers and teardown. Point out which state is local versus shared.”</div>
+<nav class="nav-foot"><a href="0005-data-views-actions-and-translations.html"><span class="lbl">Previous</span>← Data &amp; views</a><a class="home" href="../index.html">⌂</a><a href="0007-security-and-trust-boundaries.html"><span class="lbl">Next</span>Security &amp; trust boundaries →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"You are adding a reusable field widget. What should you look for first?",choices:[{text:"The fields registry",correct:true},{text:"A global DOM query",correct:false},{text:"A new framework",correct:false}],why:"The registry is Odoo's native extension point for field widgets."},
+{stem:"A JS file exists but never runs. What is the first structural check?",choices:[{text:"Whether its bundle includes it",correct:true},{text:"Whether PostgreSQL restarted",correct:false},{text:"Whether it has a Python model",correct:false}],why:"Browser code is unavailable until an active asset bundle loads it."}
+]);</script></body></html>

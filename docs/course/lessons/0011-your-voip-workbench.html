@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 11 — Your VoIP workbench</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 3 · Contribution loop · Lesson 11 of 28</div><h1>Your VoIP workbench</h1><p class="lede">You develop one local Odoo database against shared staging services. Know which boundary is local before blaming the wrong machine.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Choose the right module, environment and test</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  B[Local browser] --> D[Local Odoo DB<br/>Enterprise voip]
+  D -->|HTTPS| S[Shared staging<br/>phone_service]
+  B -->|SIP over WSS| E[Shared staging<br/>Kamailio edge]
+  E <-->|tenant-scoped SIP| W[Shared staging<br/>Wazo PBX]
+  S -->|management APIs| W
+  S -->|carrier API| T[Telnyx / carrier]
+  T <-->|SIP over TLS| E
+  B <-.->|WebRTC media| W
+  W <-.->|carrier media| T</pre><figcaption>Only the browser and Enterprise database are normally local in this workflow. The service, edge and PBX are shared resources; media bypasses the service and public edge.</figcaption></figure>
+
+<h2>Start in the narrowest addon</h2>
+<div class="repo-grid">
+  <article class="repo"><h3><code>voip</code></h3><p>Core softphone, provider, users/extensions, numbers, PBX routing, calls, queues, flows, voicemail and sounds.</p></article>
+  <article class="repo"><h3><code>voip_ai</code></h3><p>Recorded-call transcription and AI summary.</p></article>
+  <article class="repo"><h3>Integration addons</h3><p><code>voip_crm</code>, <code>voip_helpdesk</code>, <code>voip_project</code>, <code>voip_sale</code>, subscriptions, SMS, HR and recruitment.</p></article>
+  <article class="repo"><h3>Dashboard/storage addons</h3><p><code>spreadsheet_dashboard_voip</code> and <code>voip_cloud_storage_google</code>.</p></article>
+</div>
+
+<h2>Two provider modes</h2>
+<p><strong>Demo mode</strong> mocks call behavior so the UI is explorable without a PBX. It does not turn number purchase into fake data. <strong>Phone Service mode</strong> uses the real broker/edge/PBX integration and therefore needs the configured client identity, secret and shared environment.</p>
+
+<h2>Your first-day checks</h2>
+<ol>
+  <li>Verify Community and Enterprise baselines; use Enterprise <code>master</code>, not the historical Parrot feature branch.</li>
+  <li>Install/update <code>voip</code> in a disposable database and open the softphone in demo mode.</li>
+  <li>Run one Python test file and one filtered Hoot suite before changing code.</li>
+  <li>Follow <code>parrot-local-testing-guide.md</code> before connecting to shared staging. Treat it as other people's infrastructure.</li>
+  <li>Never paste secrets into logs, screenshots, lessons or commits.</li>
+</ol>
+
+<div class="codehook"><div class="kicker">Keep this beside you</div><p><a href="../reference/repo-module-map.html">Repository &amp; module map</a> answers “where?”; <a href="../reference/contribution-checklist.html">contribution checklist</a> answers “what proof?”; <code>parrot-local-testing-guide.md</code> answers “how do I connect?”</p></div>
+
+<section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><code>master/enterprise/voip/__manifest__.py</code> and sibling module manifests are the current module map. The maintained local setup source is <code>parrot-local-testing-guide.md</code>.</p></div>
+<div class="ask"><b>Ask your agent:</b> “Audit my local VoIP setup read-only. Verify branches, addon paths, installed module, provider mode and service endpoints without printing secrets.”</div>
+<nav class="nav-foot"><a href="0010-shipping-an-odoo-change.html"><span class="lbl">Previous</span>← Shipping a change</a><a class="home" href="../index.html">⌂</a><a href="0012-odoo-becomes-a-phone-company.html"><span class="lbl">Next</span>Odoo becomes a phone company →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"A CRM-only call action is wrong. Which addon is the first owner candidate?",choices:[{text:"voip_crm",correct:true},{text:"upgrade",correct:false},{text:"voip-infra",correct:false}],why:"The integration addon owns coupling between the VoIP and CRM domains."},
+{stem:"Demo mode is enabled. Does that make buy-number carrier operations fake?",choices:[{text:"Yes, every Phone Service action is mocked",correct:false},{text:"No; demo primarily mocks calling behavior",correct:true}],why:"Do not infer a fake purchase path from the softphone's demo call mode."}
+]);</script></body></html>

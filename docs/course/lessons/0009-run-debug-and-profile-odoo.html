@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 9 — Run, debug and profile Odoo</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 3 · Contribution loop · Lesson 9 of 28</div><h1>Run, debug &amp; profile Odoo</h1><p class="lede">Debugging gets fast when you know which kind of change needs a restart, a module upgrade, an asset refresh—or none of them.</p><div class="meta"><span>⏱ 10 min</span><span>🎯 Create a tight local feedback loop</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  C[Change] --> Q{What changed?}
+  Q -->|Python| R[Restart server]
+  Q -->|stored field / XML data| U[Upgrade module]
+  Q -->|JS / XML template / SCSS| A[Dev assets + reload]
+  Q -->|test only| T[Run focused test]
+  R --> T
+  U --> T
+  A --> T</pre><figcaption>Avoid “restart everything” debugging: it hides which dependency actually mattered.</figcaption></figure>
+
+<h2>The command shape</h2>
+<pre><code>./odoo-bin \
+  --addons-path=addons,/path/to/enterprise \
+  -d your_database \
+  -u voip \
+  --dev=all</code></pre>
+<p>Use the exact paths and database instructions for your checkout. For test runs, prefer a fresh test database and a focused tag/class before the full module. <code>--stop-after-init</code> is useful for install, upgrade and test-only commands.</p>
+
+<h2>Observe before changing</h2>
+<div class="path"><div><strong>1 · Reproduce</strong><br>Record inputs, user, database and expected/actual result.</div><div><strong>2 · Locate</strong><br>Use the traceback, network request, logs or failing assertion.</div><div><strong>3 · Instrument</strong><br>Add a breakpoint/log at the narrow boundary.</div><div><strong>4 · Prove</strong><br>Leave the smallest regression test.</div></div>
+
+<table><thead><tr><th>Symptom</th><th>First instrument</th></tr></thead><tbody>
+  <tr><td>Python exception / wrong record state</td><td>Traceback, debugger, focused model test</td></tr>
+  <tr><td>RPC fails</td><td>Browser Network response + controller/model log</td></tr>
+  <tr><td>UI state is stale</td><td>Hoot test, component/service state, asset bundle</td></tr>
+  <tr><td>Slow request</td><td>Odoo profiler / SQL query count before guessing</td></tr>
+  <tr><td>VoIP connects but no audio</td><td>Lesson 27's plane-based decision tree</td></tr>
+</tbody></table>
+
+<div class="codehook"><div class="kicker">Local playbook</div><p>Use <code>parrot-local-testing-guide.md</code> for the maintained VoIP command, configuration parameters and shared-staging boundaries. Do not copy an old branch hash into a new setup.</p></div>
+<section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/cli.html">Odoo CLI reference</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/backend/performance.html">performance and profiling</a></p></div>
+<div class="ask"><b>Ask your agent:</b> “From this changed file, give me the minimum restart/upgrade/test command for this checkout. Explain each flag and verify the module path.”</div>
+<nav class="nav-foot"><a href="0008-tests-python-hoot-and-tours.html"><span class="lbl">Previous</span>← Tests</a><a class="home" href="../index.html">⌂</a><a href="0010-shipping-an-odoo-change.html"><span class="lbl">Next</span>Shipping an Odoo change →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"You changed a stored field definition and its view. What is normally required?",choices:[{text:"Only a browser refresh",correct:false},{text:"Restart plus module upgrade",correct:true},{text:"Only rebuild translations",correct:false}],why:"Python must reload and the module upgrade must apply schema/data/view changes."},
+{stem:"A request is slow. What comes before an optimization?",choices:[{text:"A measured profile/query trace",correct:true},{text:"A cache class",correct:false},{text:"A queue",correct:false}],why:"Measure the actual bottleneck; otherwise complexity is guesswork."}
+]);</script></body></html>

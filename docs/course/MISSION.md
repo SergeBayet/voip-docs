@@ -1,34 +1,42 @@
-# Mission: The Parrot VoIP Course — team onboarding curriculum
+# Mission: Odoo VoIP team onboarding
 
-## Why (pivoted 2026-07-06, learner-approved)
-This workspace originally existed to tutor one engineer on the Parrot system. It now produces and
-maintains **a 13-lesson onboarding course for anyone joining the VoIP team**: a new team member who
-completes it should understand every layer of the system — enterprise `voip`, IAP `phone_service`,
-Wazo (Asterisk + Kamailio + rtpengine), Telnyx — and be ready to contribute: discuss architecture,
-place changes in the right layer, and trace any flow end to end.
+## Why
 
-The original learner remains learner #1 and continues through the same course; their personal
-progression lives in `learning-records/`, not in the lessons.
+This workspace is the onboarding course for an engineer joining Odoo's VoIP team. A graduate must
+be able to contribute inside the VoIP stack and still navigate ordinary Odoo work in another team.
+The course therefore starts with the Odoo platform and contribution loop before teaching telephony.
 
-## Success looks like (for any course graduate)
-- Given any component (Kamailio, Asterisk, rtpengine, Telnyx, IAP, the softphone), they can say
-  what it does, which **plane** it lives on, and who it talks to — from memory.
-- They can trace a real flow end-to-end (buy a number, place/receive a call, leave a voicemail,
-  get billed) and name every hop, protocol, and credential involved.
-- In a design discussion they can argue *where* a feature belongs (enterprise vs shop vs Wazo)
-  and state the trade-offs — including the golden rules (DB never talks to Telnyx **or** Wazo;
-  media is the one carve-out; tenancy is structural; idempotent robots everywhere).
-- They can read a bug report ("call connects but silent", "wrong caller-ID", "cost = 0",
-  "browser won't ring") and know which layer/plane to look in first.
+## Audience
 
-## Constraints
-- Audience: competent Odoo/Python developer, **zero telecom background** assumed.
-- Lessons are short (8–12 min), diagram-first, analogy-first, with retrieval interactives.
-- Ground everything in the living onboarding doc + the code at HEAD — never parametric memory.
-- The course must be regenerated when the PRs move substantially (same living-doc discipline as
-  `parrot-onboarding.md`); `index.html` header carries the sync date.
+A competent Python/JavaScript developer with **no Odoo knowledge and no telecom knowledge assumed**.
+Existing Odoo developers may use the accelerated path on the course home, but the lessons must never
+depend on private history or unexplained internal vocabulary.
 
-## Out of scope (for now)
-- Becoming a Kamailio/Asterisk *config* expert (a colleague owns the VPS setup).
-- Deep PSTN / SS7 carrier internals below Telnyx.
-- Building a softphone UI from scratch.
+## Success looks like
+
+A graduate can:
+
+- trace one Odoo request through controller, ORM, security, data/view, Owl service and tests;
+- choose the owning repository, addon and branch family for an ordinary Odoo or VoIP change;
+- run, debug, test and hand off a small change using Odoo's established extension patterns;
+- explain SIP signaling versus media and place the browser, Kamailio edge, Wazo and Telnyx correctly;
+- trace number purchase, regulatory requirements, IAP charging, provisioning, inbound/outbound calls,
+  events, queues, voicemail, Call Flows, call cost, transcription and TTS end to end;
+- diagnose a symptom by naming the failed boundary and following stable identifiers;
+- produce a minimal contribution with a failing check, root-cause fix and factual verification report.
+
+## Shape and teaching constraints
+
+- 28 short core lessons in 8 modules, plus focused field lessons for active work; roughly five hours
+  of core reading and exercises.
+- Diagram first, everyday analogy first, precise code contract second.
+- Each lesson has retrieval practice, primary sources, a code path and an “ask your agent” prompt.
+- Code at the verified checkout is authoritative. The rendered onboarding guide is a cross-system map,
+  not permission to repeat stale claims.
+- Security, money, ownership, accessibility and failure behavior are never simplified away.
+
+## Deliberate limits
+
+The course teaches enough PBX and carrier architecture to contribute safely; it is not operator
+certification for Asterisk, Kamailio, Telnyx, Kubernetes or the production network. Deep operational
+changes require the owning team's runbooks and supervision.

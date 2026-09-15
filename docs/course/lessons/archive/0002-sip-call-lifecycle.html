@@ -75,7 +75,7 @@
 <body>
 <div class="wrap">
 
-<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;background:#fff7e6;border:1px solid #e6d8b8;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.4rem">📦 <b>Archived lesson</b> — kept from the pre-course personal arc; some facts predate the DB→IAP→WAZO refactor. The up-to-date version is <a href="../0003-sip-call-lifecycle.html">Lesson 3 · The SIP call lifecycle</a> · <a href="../../index.html">🦜 course home</a>.</div>
+<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;background:#fff7e6;border:1px solid #e6d8b8;border-radius:8px;padding:.7rem 1rem;margin-bottom:1.4rem">📦 <b>Archived lesson</b> — kept from the pre-course personal arc; some facts predate the DB→IAP→WAZO refactor. The up-to-date version is <a href="../0014-sip-call-lifecycle.html">Lesson 14 · The SIP call lifecycle</a> · <a href="../../index.html">🦜 course home</a>.</div>
 
 <header class="lh">
   <div class="kicker">🦜 Parrot VoIP · Lesson 2 of the arc</div>
@@ -280,7 +280,7 @@ QUIZ.forEach((q,i)=>{
       if(c.ok){b.classList.add('correct'); qRight++;}
       else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
       [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
       if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent='Score: '+qRight+'/'+QUIZ.length+'. '+(qRight===QUIZ.length?'You can narrate a call now. 🦜':'Revisit the picture above for the one you missed.');
     };
     wrap.appendChild(b);

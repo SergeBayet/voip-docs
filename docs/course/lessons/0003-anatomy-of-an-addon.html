@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson 3 — Anatomy of an addon</title><link rel="stylesheet" href="../assets/course.css">
+</head><body><main class="wrap">
+  <header class="lh"><div class="kicker">Module 1 · Odoo as a platform · Lesson 3 of 28</div><h1>Anatomy of an addon</h1>
+    <p class="lede">An addon is a small vertical slice: Python behavior, declared data, browser code, permissions and tests packed behind one manifest.</p>
+    <div class="meta"><span>⏱ 10 min</span><span>🎯 Navigate an unfamiliar Odoo module</span></div></header>
+
+  <figure><pre class="mermaid">flowchart TD
+    MF[__manifest__.py] --> PY[models/ + controllers/]
+    MF --> XML[views/ + data/]
+    MF --> SEC[security/]
+    MF --> JS[static/src/]
+    MF --> T[tests/]
+    INIT[__init__.py] --> PY
+    DEP[depends] --> MF</pre><figcaption>The manifest declares what loads; <code>__init__.py</code> imports Python packages.</figcaption></figure>
+
+  <h2>Read an addon in this order</h2>
+  <ol>
+    <li><strong><code>__manifest__.py</code>:</strong> purpose, dependencies, loaded files, assets and install behavior.</li>
+    <li><strong>models:</strong> data ownership and invariants.</li>
+    <li><strong>security:</strong> who may access which records.</li>
+    <li><strong>views/data:</strong> UI, actions, menus, scheduled jobs and seed records.</li>
+    <li><strong><code>static/src</code>:</strong> Owl components, services, patches and browser assets.</li>
+    <li><strong>tests:</strong> the most executable statement of intended behavior.</li>
+  </ol>
+
+  <div class="codehook"><div class="kicker">Read the real module</div><p>Open <code>master/enterprise/voip/__manifest__.py</code>. Its <code>depends</code> list tells you which framework concepts are prerequisites; its asset bundles tell you where softphone code enters the web client. Then inspect <code>models/__init__.py</code> and <code>tests/__init__.py</code>.</p></div>
+
+  <h2>Dependencies are architecture</h2>
+  <p>When addon B declares a dependency on addon A, B may extend A's models and load after it. Avoid adding a dependency merely to import one convenience: it increases installation coupling for every database. Integration addons such as <code>voip_crm</code> keep CRM-specific behavior out of the core <code>voip</code> addon.</p>
+
+  <table><thead><tr><th>If you need…</th><th>Look first in…</th></tr></thead><tbody>
+    <tr><td>A stored field or business action</td><td><code>models/</code></td></tr>
+    <tr><td>A menu, form or automated record</td><td><code>views/</code> or <code>data/</code></td></tr>
+    <tr><td>A softphone interaction</td><td><code>static/src/</code></td></tr>
+    <tr><td>Permissions</td><td><code>security/ir.model.access.csv</code> and record-rule XML</td></tr>
+    <tr><td>The intended edge case</td><td><code>tests/</code></td></tr>
+  </tbody></table>
+
+  <section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+  <div class="source-rec"><div class="kicker">Primary source</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/backend/module.html">Odoo module manifests reference</a> and the <a href="https://www.odoo.com/documentation/master/developer/tutorials/server_framework_101.html">server framework tutorial</a>.</p></div>
+  <div class="ask"><b>Ask your agent:</b> “Give me a guided code tour of one addon outside VoIP. Start at the manifest and explain only the files that participate in one user story.”</div>
+  <nav class="nav-foot"><a href="0002-repositories-and-branch-families.html"><span class="lbl">Previous</span>← Repositories</a><a class="home" href="../index.html" aria-label="Course home">⌂</a><a href="0004-orm-recordsets-and-inheritance.html"><span class="lbl">Next</span>ORM, recordsets &amp; inheritance →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>
+initializeCourseDiagrams();makeQuiz("quiz","score",[
+  {stem:"What is the fastest honest entry point into an unfamiliar addon?",choices:[{text:"Read every file alphabetically",correct:false},{text:"Read its manifest, then follow one behavior",correct:true},{text:"Start by changing a view",correct:false}],why:"The manifest exposes dependencies and loaded surfaces; one vertical trace supplies context."},
+  {stem:"Why put CRM-specific behavior in voip_crm?",choices:[{text:"To keep optional coupling out of core voip",correct:true},{text:"Because models cannot inherit",correct:false},{text:"Only for naming",correct:false}],why:"An integration addon depends on both domains without forcing the core addon to depend on CRM."}
+]);</script></body></html>

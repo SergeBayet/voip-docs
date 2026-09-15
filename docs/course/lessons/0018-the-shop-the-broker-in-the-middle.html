@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 7 · The shop: the broker in the middle — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 18 · The shop: the broker in the middle — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,7 +91,7 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 7 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 6 — The Machine Rooms · Lesson 18 of 28</div>
   <h1>The shop: the broker in the middle</h1>
   <p class="lede">Why every road goes through one Odoo-run broker — and how to talk to it without ever seeing a Telnyx or Wazo key.</p>
   <div class="meta"><span>⏱ ~11 minutes</span><span>🎯 Goal: know which side of the counter any given change belongs on</span><span>🧩 Builds on: Lessons 1, 6</span></div>
@@ -102,7 +103,7 @@
 <pre class="mermaid">
 flowchart LR
   subgraph ENT["🏠 Customer Odoo DB"]
-    API["PhoneServiceAPI<br/>slips signed with:<br/>client_id · client_secret<br/>account_token · db_uuid"]
+    API["PhoneServiceAPI<br/>request identity:<br/>client_uuid · client_secret<br/>account_token · db_uuid"]
   end
   subgraph SHOP["🏪 The shop — IAP phone_service"]
     BIZ["Business routes<br/>/api/phone_service/1/&amp;lt;name&amp;gt;<br/>search · order · requirements · coverage"]
@@ -116,11 +117,11 @@ flowchart LR
 <figcaption>Two families of request slips, one counter. The keys to Telnyx and Wazo never leave the shop.<a class="cite" href="../reference/onboarding.html">onboarding §2</a></figcaption>
 </figure>
 
-<p>Every slip your DB writes lands on one of <strong>two route families</strong>. <em>Business routes</em> (<code>/api/phone_service/1/&lt;name&gt;</code>) are about numbers and paperwork: search, order, requirements, coverage — the Lesson-6 story. <em>PBX ops</em> (<code>/api/phone_service/1/pbx/&lt;op&gt;</code>) are about your floor in the switchboard: sync a user's extension, route an incall, set up a voicemail. Both go through the same client, <code>PhoneServiceAPI</code>, which stamps the same four credentials onto every call: <code>client_id</code>, <code>client_secret</code>, <code>account_token</code> (your IAP credits account) and <code>db_uuid</code>.</p>
+<p>Every slip your DB writes lands on one of <strong>two route families</strong>. <em>Business routes</em> (<code>/api/phone_service/1/&lt;name&gt;</code>) are about numbers and paperwork: search, order, requirements, coverage — the Lesson 21 story. <em>PBX ops</em> (<code>/api/phone_service/1/pbx/&lt;op&gt;</code>) are about your floor in the switchboard: sync a user's extension, route an incall, set up a voicemail. Both go through <code>PhoneServiceAPI</code>, which attaches <code>client_uuid</code>, <code>client_secret</code>, <code>account_token</code> (the IAP account) and <code>db_uuid</code>.</p>
 
 <h2>Getting a counter account — no signup form</h2>
-<p>Nobody types a Telnyx key into Odoo settings, and nobody types a shop password either. The first time your DB talks to the shop, <code>PhoneServiceAPI</code> <strong>auto-registers</strong> (<code>register_client</code>): it generates a random <code>client_id</code> and <code>client_secret</code> locally and presents them. The shop, crucially, <strong>never stores your secret</strong> — only an HMAC <em>hash</em> of it (<code>client_secret_hash</code>), checked with a constant-time compare on every request. If a call ever comes back <code>authentication_failed</code>, the client re-registers once and retries — self-healing, no human involved.<a class="cite" href="../reference/onboarding.html">onboarding §14</a></p>
-<p>That "hash only" choice has a neat consequence. The shop also sends <em>you</em> webhooks (the doorbell you met in <a href="./0005-inbound-the-world-calls-you.html">Lesson 5</a> — <a href="./0009-doorbells-and-robots.html">Lesson 9</a> goes deep), and it must sign them — but with what? It can't sign with your secret; it only kept the fingerprint. So at registration it <strong>derives</strong> a purpose-bound signing key — <code>HMAC(client_secret, "iap-phone-service-webhook-signing")</code> — and stores <em>that</em>. Both sides can compute it; nobody else can. The old signing key was <code>client_id</code>… which travels in the body of <em>every request</em>. A key that rides on the outside of the envelope is not a key.</p>
+<p>Nobody types a Telnyx key or shop password into settings. The database mints canonical UUIDv4 values for <code>client_uuid</code> and <code>client_secret</code>, then registers them with its account token, database UUID and fixed event callback. The shop stores only <code>client_secret_hash = hash_iap(client_secret)</code> and compares it in constant time. If an ordinary call returns <code>authentication_failed</code>, Enterprise registers once and retries once.<a class="cite" href="../reference/onboarding.html">onboarding §14</a></p>
+<p>The same verifier also protects callbacks. The shop places the complete event envelope inside a short-lived, purpose-scoped signed token; Enterprise recomputes the verifier from its local secret and verifies the token. There is no unsigned body beside it that can drift from the signature, and a token minted for one client cannot verify for another.</p>
 
 <h2>The big idea: ask for outcomes, not for objects</h2>
 <div class="big-idea"><strong>The PBX API is capability-style.</strong> Your DB asks the shop for an <em>outcome</em> — <code>sync_user_extension</code>, <code>sync_incall</code>, <code>sync_voicemail</code> — and the shop's private <code>_op_*</code> methods perform the Wazo choreography: which confd objects to create, in what order, under what names. The customer side never learns any of it.</div>
@@ -131,10 +132,10 @@ flowchart LR
 <div class="warnbox"><strong>If you ever match on an error message string, you've built a bug.</strong> Messages get reworded, translated, and improved without notice — that's the whole point of keeping them out of the contract. Raw server text is never shown to a user and never parsed by code. Branch on <code>error_key</code>, render locally, always.</div>
 
 <h2>Whose number is it anyway? Ownership &amp; the two ledgers</h2>
-<p>The shop serves <em>many</em> customer DBs out of one Telnyx account — so what stops client A from releasing client B's number? Every Telnyx resource the shop creates is stamped <code>customer_reference = client_id</code>, and that stamp is the <strong>sole ownership marker</strong>. The doctrine comment atop <code>phone_service_number.py</code> puts it plainly:</p>
+<p>The shop serves <em>many</em> customer DBs out of one Telnyx account — so what stops client A from releasing client B's number? Every Telnyx resource the shop creates is stamped <code>customer_reference = client_uuid</code>, and that stamp is the <strong>sole number-ownership marker</strong>. The doctrine comment atop <code>phone_service_number.py</code> puts it plainly:</p>
 <blockquote style="border-left:3px solid var(--rule);margin:1rem 0;padding:.2rem 1rem;color:var(--muted);font-size:.94rem"><em>"That reference is the ONLY thing that marks a Telnyx number as ours: every Telnyx lookup on the release/reconcile paths filters on it server-side AND re-checks it locally."</em><a class="cite" href="../reference/onboarding.html">phone_service_number.py:22–109</a></blockquote>
 <p>Controllers enforce the same rule at the counter: the <code>_assert_owns</code> / <code>_create_owned</code> helpers check every incoming resource id against <code>phone_service.client_external_resource</code> before touching it — a slip naming someone else's resource is refused, not forwarded. That's the anti-IDOR line: you can't even <em>ask about</em> what isn't yours.</p>
-<p>And a rule you'll lean on in <a href="./0010-buying-a-number-end-to-end.html">Lesson 10</a>: a number lives in <strong>two ledgers at once</strong> — <code>voip.did.number</code> in your DB, <code>phone_service.number</code> in the shop. Neither is authoritative alone. Webhooks push changes to you, hourly polls pull what webhooks missed, and a daily reconcile <em>tears down</em> drift (never re-provisions — creating is the ordering saga's job).</p>
+<p>And a rule you'll lean on in <a href="./0021-buying-a-number-end-to-end.html">Lesson 21</a>: a number lives in <strong>two ledgers at once</strong> — <code>voip.did.number</code> in your DB, <code>phone_service.number</code> in the shop. Neither is authoritative alone. Webhooks push changes to you, hourly polls pull what webhooks missed, and a daily reconcile <em>tears down</em> drift (never re-provisions — creating is the ordering saga's job).</p>
 
 <div class="codehook">
   <div class="kicker">🔌 Where this lives in our code</div>
@@ -165,7 +166,7 @@ flowchart LR
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
   code path for Y". The back-and-forth is where the learning compounds.
 </div>
@@ -176,9 +177,9 @@ flowchart LR
 </div>
 
 <div class="nav-foot">
-  <a href="0006-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">← Previous</span>Lesson 6 · From Telnyx-direct to our own switchboard</a>
+  <a href="0017-from-telnyx-direct-to-our-own-switchboard.html"><span class="lbl">← Previous</span>Lesson 17 · From Telnyx-direct to our own switchboard</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0008-your-floor-tenancy-and-provisioning.html"><span class="lbl">Next →</span>Lesson 8 · Your floor: tenancy &amp; provisioning<br><span style="color:var(--faint);font-weight:400">11 idempotent bricks and a doorbell — tenancy you can't escape.</span></a>
+  <a href="0019-your-floor-tenancy-and-provisioning.html"><span class="lbl">Next →</span>Lesson 19 · Your floor: tenancy &amp; provisioning<br><span style="color:var(--faint);font-weight:400">11 idempotent bricks and a doorbell — tenancy you can't escape.</span></a>
 </div>
 
 </div>
@@ -191,7 +192,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -202,7 +203,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -215,7 +216,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -223,7 +224,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -236,29 +237,29 @@ function makeQuiz(containerId, scoreId, QUIZ){
 makeSorter('sorter','sorter-score',
   [{k:'ent',label:'Enterprise'},{k:'shop',label:'Shop'},{k:'wazo',label:'Wazo'},{k:'telnyx',label:'Telnyx'}],
   [
-    {name:'Holds the Telnyx API key', ans:'shop', why:'<b>Shop.</b> The one and only holder — enterprise never sees a carrier credential, only its own client_id/secret.'},
+    {name:'Holds the Telnyx API key', ans:'shop', why:'<b>Shop.</b> The one and only holder — Enterprise never sees a carrier credential, only its own client_uuid/secret.'},
     {name:'Decides a user’s SIP username', ans:'shop', why:'<b>Shop.</b> Naming conventions live in the private _op_* layer (phone_service_pbx_tenant_ops.py) — enterprise never constructs a Wazo name.'},
     {name:'Stores the markup percentage', ans:'shop', why:'<b>Shop.</b> Prices cross the counter already marked-up, in credits; raw Telnyx cost_information is stripped before the response leaves.'},
     {name:'Translates insufficient_credits', ans:'ent', why:'<b>Enterprise.</b> The shop sends the stable key; _phone_service_error_message renders it as a translated sentence in the user’s language.'},
     {name:'Renders the buy-number wizard', ans:'ent', why:'<b>Enterprise.</b> All UI lives in the customer DB — the shop is a headless counter with no screens at all.'},
-    {name:'Owns the number itself', ans:'telnyx', why:'<b>Telnyx.</b> The carrier owns it and bills the shop monthly; customer_reference = client_id merely marks which client it belongs to.'},
+    {name:'Owns the number itself', ans:'telnyx', why:'<b>Telnyx.</b> The carrier owns it and bills the shop monthly; customer_reference = client_uuid marks which shop client it belongs to.'},
     {name:'Rings desk 1001 on an incoming call', ans:'wazo', why:'<b>Wazo.</b> Live call handling is the switchboard’s job — the shop only configured the incall route beforehand.'}
   ]);
 
 makeQuiz('quiz','quiz-score',[
-  {stem:'The shop signs its webhooks to your DB with a key DERIVED from client_secret. Why was signing with client_id a bug?',
+  {stem:'Why can client_uuid identify a database but not authenticate a callback?',
    choices:[
-    {t:'client_id travels in the body of every request, so it was never a secret at all', ok:true},
-    {t:'client_id is too short to seed an HMAC, so signatures could be brute-forced fast', ok:false},
-    {t:'client_id changes whenever the client re-registers, invalidating old signatures', ok:false}],
-   why:'A signing key must be known only to the two parties — client_id rides in every call, effectively public. And why <i>derive</i> instead of using client_secret directly? The shop keeps only a <b>hash</b> of the secret, so it stores the purpose-bound derived key (HMAC(client_secret, "iap-phone-service-webhook-signing")) at registration instead.'},
+    {t:'It is a public identifier; the client-secret hash signs and verifies the scoped token', ok:true},
+    {t:'It changes on every request, so the receiver cannot compare it reliably', ok:false},
+    {t:'It identifies the Wazo line rather than the customer database', ok:false}],
+   why:'The UUID answers “which client?” but proves nothing. The shop stores hash_iap(client_secret), signs the complete event envelope with that verifier, and Enterprise recomputes it from its local secret.'},
   {stem:'What does the stable error_key buy that the human-readable error_msg cannot?',
    choices:[
     {t:'Code can branch on it (not_found ⇒ heal) while the prose stays free to change', ok:true},
     {t:'It shrinks the payload, because keys cost fewer bytes than full error sentences', ok:false},
     {t:'It spares the shop from translating, since keys render directly in the client UI', ok:false}],
    why:'Keys are the frozen machine contract; wording is generated and translated on the enterprise side. That is why raw server text is never shown to users and never parsed by code — reword a message and nothing breaks.'},
-  {stem:'Why does the shop stamp customer_reference = client_id on every Telnyx resource it creates?',
+  {stem:'Why does the shop stamp customer_reference = client_uuid on every Telnyx resource it creates?',
    choices:[
     {t:'It is the sole ownership marker — release and reconcile only touch what bears it', ok:true},
     {t:'Telnyx refuses any order that arrives without a unique customer reference field', ok:false},

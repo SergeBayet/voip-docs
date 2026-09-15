@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 10 — Shipping an Odoo change</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 3 · Contribution loop · Lesson 10 of 28</div><h1>Shipping an Odoo change</h1><p class="lede">A contribution is not the diff. It is a claim about behavior, backed by a focused test and placed on the correct version line.</p><div class="meta"><span>⏱ 12 min</span><span>🎯 Prepare a reviewable, upgrade-safe change</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  R[Reproduce] --> O[Find owner + oldest affected line]
+  O --> F[Small root-cause fix]
+  F --> T[Focused regression test]
+  T --> C[Style + relevant suite]
+  C --> D[Review data/security/upgrade impact]
+  D --> P[Commit / PR with why + proof]
+  P --> FW[Forward-port when applicable]</pre><figcaption>The exact branch/forward-port flow depends on whether the change is a fix or a feature. Confirm it before publishing.</figcaption></figure>
+
+<h2>Fix, feature or migration?</h2>
+<ul>
+  <li><strong>Bug fix:</strong> establish the regression and target the oldest maintained version where the bug exists, following team policy; later lines are typically forward-ported.</li>
+  <li><strong>Feature:</strong> target <code>master</code> unless the owning team explicitly decides otherwise.</li>
+  <li><strong>Stored data/schema change:</strong> ask how existing databases reach the new shape. An install test on an empty database is not an upgrade proof.</li>
+  <li><strong>Cross-repository API change:</strong> identify deployment order and backward compatibility before either side merges.</li>
+</ul>
+
+<h2>What a reviewer needs</h2>
+<div class="card-grid">
+  <div class="card"><h3>Why</h3><p>One concrete before/after story, not a tour of every edited line.</p></div>
+  <div class="card"><h3>Scope</h3><p>The owner module and why sibling callers remain correct.</p></div>
+  <div class="card"><h3>Proof</h3><p>Exact automated tests plus any unavoidable manual check.</p></div>
+  <div class="card"><h3>Risk</h3><p>Security, money, data migration, concurrency and external contracts.</p></div>
+</div>
+
+<div class="callout"><strong>Review standard:</strong> separate “I can imagine a problem” from “I would ask the author to change this before merge.” Reproduce or trace a concrete path before calling something blocking.</div>
+
+<div class="codehook"><div class="kicker">Practice outside VoIP</div><p>Pick a small recent change in any addon. From its manifest and tests, infer the owning team, affected branch family, upgrade risk and minimum verification. This skill transfers across Odoo.</p></div>
+<section class="exercise"><h3>Put the contribution loop in order</h3><div id="order"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/contributing/development.html">Development contribution</a> · <a href="https://www.odoo.com/documentation/master/contributing/development/coding_guidelines.html">coding guidelines</a> · <a href="https://www.odoo.com/documentation/master/contributing/development/git_guidelines.html">Git guidelines</a></p></div>
+<div class="ask"><b>Ask your agent:</b> “Review this proposed change as an Odoo maintainer. Confirm the branch, owner, regression test, security and upgrade implications; omit speculative findings.”</div>
+<nav class="nav-foot"><a href="0009-run-debug-and-profile-odoo.html"><span class="lbl">Previous</span>← Run &amp; debug</a><a class="home" href="../index.html">⌂</a><a href="0011-your-voip-workbench.html"><span class="lbl">Next</span>Your VoIP workbench →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeOrderer("order","score",["Reproduce and capture expected versus actual behavior","Trace the shared owner and affected branch","Write the smallest root-cause fix","Add the focused regression test","Run style and relevant suites","Document proof, risk and upgrade/deployment impact"]);</script></body></html>

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 2 · The two planes — signaling vs media — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 13 · The two planes — signaling vs media — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -84,13 +85,13 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 1 — The Map · Lesson 2 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Map · Lesson 13 of 28</div>
   <h1>The two planes: signaling vs media</h1>
   <p class="lede">The one mental model that makes every box in our stack — Kamailio, Asterisk, rtpengine, Telnyx — snap into place.</p>
-  <div class="meta"><span>⏱ ~8 minutes</span><span>🎯 Goal: place any component on its plane, from memory</span><span>🧩 Builds on: Lesson 1 (the four players)</span></div>
+  <div class="meta"><span>⏱ ~8 minutes</span><span>🎯 Goal: place any component on its plane, from memory</span><span>🧩 Builds on: Lesson 12 (the system map)</span></div>
 </header>
 
-<p>Lesson 1 gave you the four players and the golden rules. What you need next is the <em>lens</em> that explains why the
+<p>Lesson 12 gave you the players and the golden rules. What you need next is the <em>lens</em> that explains why the
 switchboard is split into three different programs instead of one. That lens is the oldest idea in
 telephony, and once you have it you'll never be confused about "which box does what" again.</p>
 
@@ -172,7 +173,7 @@ sets up and tears down the path. SIP is the operator's clipboard; RTP is the cop
 <table>
   <thead><tr><th>Component</th><th>Plane</th><th>Its one job</th></tr></thead>
   <tbody>
-    <tr><td><strong>Kamailio</strong></td><td><span class="pill p-sig">signaling</span></td><td>The SIP <em>edge</em>: terminate browser WSS, handle registrations at scale, be the hardened front door. Never touches audio.</td></tr>
+    <tr><td><strong>Public Kamailio edge</strong></td><td><span class="pill p-sig">signaling</span></td><td>The separate SIP receptionist in <code>voip-infra</code>: terminate browser WSS, route carrier/browser traffic to the correct Wazo, and never touch audio.</td></tr>
     <tr><td><strong>Asterisk</strong></td><td><span class="pill p-both">both</span></td><td>The <em>call engine</em> (B2BUA): dialplan, IVR, voicemail, transfer, queues. Decides the call; delegates the audio.</td></tr>
     <tr><td><strong>rtpengine</strong></td><td><span class="pill p-med">media</span></td><td>The audio relay: shuttles and transcodes RTP/SRTP. The only one that <em>touches your voice</em>.</td></tr>
     <tr><td><strong>Softphone</strong></td><td><span class="pill p-both">both</span></td><td>Sends SIP-over-WSS <em>and</em> WebRTC audio. Your handset is on both lanes.</td></tr>
@@ -180,21 +181,21 @@ sets up and tears down the path. SIP is the operator's clipboard; RTP is the cop
   </tbody>
 </table>
 
-<h2>So <em>that's</em> why Kamailio isn't just "another Asterisk"</h2>
+<h2>So <em>that's</em> why the public edge isn't “another Asterisk”</h2>
 <p>The natural question — "we already have a PBX, why a second SIP thing?" — dissolves once you see the planes.
 Asterisk is a brilliant <strong>call engine</strong> but a mediocre <strong>edge</strong>; Kamailio is the reverse. They're
-complementary, and the classic carrier pattern is <strong>Kamailio at the edge, Asterisk behind it</strong>.<a class="cite" href="https://nickvsnetworking.com/kamailio-vs-asterisk/" title="Kamailio vs Asterisk — Nick vs Networking">nickvsnetworking</a></p>
+complementary: the separately deployed Odoo edge routes public SIP, while Wazo/Asterisk runs the call.</p>
 <ul>
-  <li><strong>Scale:</strong> Kamailio is stateless-ish and does no media, so it routes thousands of SIP messages/sec and holds 100k+ registrations on modest hardware. Asterisk would choke on that churn.<a class="cite" href="https://www.kamailio.org/wikidocs/tutorials/faq/main/" title="Kamailio Wiki FAQ">kamailio FAQ</a></li>
-  <li><strong>Security:</strong> the public SIP port is hammered by scanners and toll-fraud bots 24/7. Kamailio is the bouncer — rate-limit, block, hide the internal Asterisk.</li>
-  <li><strong>Division of labour:</strong> Kamailio = traffic control (signaling). Asterisk = the call's actual features (media + logic). This is exactly how Wazo packages them.<a class="cite" href="https://wazo-platform.org/documentation/" title="Wazo Platform docs">wazo docs</a></li>
+  <li><strong>Routing:</strong> the edge uses Phone Service lookups to select the home Wazo for a user or DID.</li>
+  <li><strong>Security:</strong> the public SIP surface can classify sources, rate-limit, reject spoofed identities and hide internal PBX targets.</li>
+  <li><strong>Division of labour:</strong> edge = public traffic control; Wazo/Asterisk = tenant call logic; rtpengine = media relay.</li>
 </ul>
 
 <div class="callout"><strong>Why owning the edge matters.</strong> In the <em>old</em> Telnyx-direct softphone, the browser registered
 straight to <code>sip.telnyx.com</code> — the carrier <em>was</em> our SIP edge, and caller-ID had to be stamped by browser
-JavaScript (a hack with a security smell you'll meet in <a href="./0004-outbound-calling-the-world.html">Lesson 4</a>). Parrot brought the edge in-house: the browser now
-registers to <strong>our own</strong> Wazo, whose front door is Kamailio. Owning the signaling edge is what makes
-per-customer SIP isolation and server-side caller-ID possible — <a href="./0006-from-telnyx-direct-to-our-own-switchboard.html">Lesson 6</a> tells the whole story.</div>
+JavaScript (a hack with a security smell you'll meet in <a href="./0015-outbound-calling-the-world.html">Lesson 15</a>). Parrot brought the edge in-house: the browser now
+registers through <strong>our separate Kamailio edge</strong> to its home Wazo. Owning the signaling edge is what makes
+per-customer SIP isolation and server-side caller-ID possible — <a href="./0017-from-telnyx-direct-to-our-own-switchboard.html">Lesson 17</a> tells the whole story.</div>
 
 <p>One diagnostic superpower falls out of this lesson for free: <em>"the call connects but I hear nothing"</em> means
 signaling succeeded and <strong>media</strong> failed (NAT, ports, a wrong public IP in the SDP). <em>"It never rings at
@@ -218,12 +219,12 @@ you open a single log file.</p>
 
 <div class="source-rec">
   <div class="kicker">📖 Primary source (read one thing)</div>
-  <p style="margin:.3rem 0 0"><a href="https://nickvsnetworking.com/kamailio-vs-asterisk/"><strong>"Kamailio vs Asterisk" — Nick vs Networking.</strong></a> Eight minutes, the clearest plain-English take on SIP-proxy vs B2BUA and why production stacks run both. If you want the canonical ground truth on the signaling/media split, skim <a href="https://www.rfc-editor.org/rfc/rfc3261.html">RFC&nbsp;3261 §1–2</a>.</p>
+  <p style="margin:.3rem 0 0"><a href="https://www.rfc-editor.org/rfc/rfc3261.html"><strong>RFC 3261 §1–2</strong></a> is the canonical SIP overview. For this deployment, read <code>voip-infra/README.md</code> and its small functional suites: they prove the edge's registration, inbound, outbound, IAP and security planes without pretending to test audio.</p>
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask anything fuzzy:
-  "show me where Kamailio is configured in Wazo," "what exactly is in a SIP INVITE," "why does Asterisk delegate media
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask anything fuzzy:
+  "show me where the separate Kamailio edge is configured," "what exactly is in a SIP INVITE," "why does Asterisk delegate media
   to rtpengine instead of carrying it?", or "quiz me again, harder." That back-and-forth is where the learning compounds.
 </div>
 
@@ -233,9 +234,9 @@ you open a single log file.</p>
 </div>
 
 <div class="nav-foot">
-  <a href="./0001-odoo-becomes-a-phone-company.html"><span class="lbl">← Previous</span>Lesson 1 · Odoo becomes a phone company</a>
+  <a href="./0012-odoo-becomes-a-phone-company.html"><span class="lbl">← Previous</span>Lesson 12 · Odoo becomes a phone company</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="./0003-sip-call-lifecycle.html"><span class="lbl">Next →</span>Lesson 3 · The SIP call lifecycle<br><span style="color:var(--faint);font-weight:400">REGISTER → INVITE → 200 OK → ACK → BYE: what actually flows on the signaling lane.</span></a>
+  <a href="./0014-sip-call-lifecycle.html"><span class="lbl">Next →</span>Lesson 14 · The SIP call lifecycle<br><span style="color:var(--faint);font-weight:400">REGISTER → INVITE → 200 OK → ACK → BYE: what actually flows on the signaling lane.</span></a>
 </div>
 
 </div>
@@ -260,7 +261,7 @@ let sortDone = 0, sortRight = 0;
 ITEMS.forEach((it, i) => {
   const row = document.createElement('div'); row.className='sorter-row';
   const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-  const fb = document.createElement('div'); fb.className='fb'; fb.id='sfb'+i;
+  const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite'); fb.id='sfb'+i;
   PLANES.forEach(p => {
     const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
     b.onclick=()=>{
@@ -271,7 +272,7 @@ ITEMS.forEach((it, i) => {
         [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
       }
       [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-      fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+      fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
       if(sortDone===ITEMS.length) document.getElementById('sort-score').textContent=`Score: ${sortRight}/${ITEMS.length}. `+(sortRight===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
     };
     row.appendChild(b);
@@ -281,14 +282,14 @@ ITEMS.forEach((it, i) => {
 
 /* ---------- Interactive 2: quiz ---------- */
 const QUIZ=[
-  {stem:'Why does Wazo run Kamailio in front of Asterisk instead of just Asterisk alone?',
+  {stem:'Why do we deploy a separate public Kamailio edge in front of Wazo?',
    choices:[
      {t:'Kamailio scales SIP signaling and shields the edge; Asterisk runs the call logic', ok:true},
      {t:'Kamailio records the call audio while Asterisk only stores the billing details', ok:false},
      {t:'Kamailio is a newer drop-in that makes Asterisk completely unnecessary now here', ok:false},
      {t:'Kamailio converts credits to minutes while Asterisk calls the Telnyx billing API', ok:false}
    ],
-   why:'Edge/scale/security (signaling) vs call engine (media + logic) — complementary jobs on the two planes.'},
+   why:'Public signaling routing/security vs tenant call engine/media control — complementary jobs on the two planes.'},
   {stem:'A user reports "the call connects, but I hear nothing." Which plane do you suspect first?',
    choices:[
      {t:'The media plane — RTP/SRTP audio, NAT, ports, or a wrong public IP in SDP', ok:true},
@@ -299,18 +300,18 @@ const QUIZ=[
    why:'"Connects but silent" = signaling succeeded, media failed. Classic media-plane symptom (often NAT / public-IP / ports).'},
   {stem:'When the Parrot softphone sends its SIP REGISTER, the box that terminates that WSS connection is…',
    choices:[
-     {t:'Kamailio — the SIP edge at the front door of our own self-hosted Wazo PBX', ok:true},
+     {t:'The separate Kamailio edge, which routes it onward to the user’s home Wazo', ok:true},
      {t:'Asterisk — the engine itself terminates every browser WebSocket in Parrot', ok:false},
      {t:'The IAP phone_service broker, which proxies the SIP onward to the Wazo box', ok:false},
      {t:'rtpengine — since the browser audio must reach the media relay before SIP', ok:false}
    ],
-   why:'Registration is signaling, and Kamailio is the signaling edge — the hardened front door of the PBX we now own.'}
+   why:'Registration is signaling. The separate Odoo edge terminates WSS and routes the request; Wazo remains the registrar/authenticator behind it.'}
 ];
 const quizEl=document.getElementById('quiz'); let qDone=0,qRight=0;
 QUIZ.forEach((q,i)=>{
   const wrap=document.createElement('div'); wrap.className='q';
   const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-  const fb=document.createElement('div'); fb.className='fb'; fb.id='qfb'+i;
+  const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite'); fb.id='qfb'+i;
   q.choices.forEach(c=>{
     const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
     b.onclick=()=>{
@@ -318,7 +319,7 @@ QUIZ.forEach((q,i)=>{
       if(c.ok){b.classList.add('correct'); qRight++;}
       else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
       [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-      fb.innerHTML='→ '+q.why; fb.classList.add('show');
+      fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
       if(qDone===QUIZ.length) document.getElementById('quiz-score').textContent=`Score: ${qRight}/${QUIZ.length}. `+(qRight===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
     };
     wrap.appendChild(b);

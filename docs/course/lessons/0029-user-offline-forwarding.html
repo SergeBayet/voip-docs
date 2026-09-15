@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Field lesson — When the user is offline</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body><main class="wrap">
+<header class="lh">
+  <div class="kicker">Module 8 · Shipping VoIP work · Field lesson</div>
+  <h1>When the user is not connected</h1>
+  <p class="lede">Understand why one small product rule crosses Odoo, Phone Service, Wazo configuration, Asterisk routing and event reporting.</p>
+  <div class="meta"><span>⏱ 20 min</span><span>🎯 Review the offline-forwarding feature without guessing</span><span>🧩 Zero PBX knowledge assumed</span></div>
+</header>
+
+<figure><pre class="mermaid">flowchart LR
+  E["🏠 Enterprise Odoo<br/>chooses the backup number"] -- "HTTPS request" --&gt; I["🏪 IAP Phone Service<br/>trusted Wazo operator"]
+  I -- "store user routing" --&gt; C["🗃️ wazo-confd<br/>configuration clerk"]
+  I -- "remove/restore wakeup token" --&gt; A["🎟️ wazo-auth<br/>badge office"]
+  T["🌍 Telnyx / caller"] -- "incoming SIP call" --&gt; K["🚪 Kamailio<br/>front door"] --&gt; S["☎️ Asterisk<br/>live switchboard"]
+  C -. "rules prepared earlier" .-&gt; S
+  A -. "wakeable or not" .-&gt; S
+  S -- "online" --&gt; B["🖥️ browser contact"]
+  S -- "offline + backup" --&gt; X["📱 external number"]
+  S -. "events" .-&gt; D["📋 wazo-calld / webhookd"] -. "IAP callback" .-&gt; E</pre>
+<figcaption>There are three jobs: prepare the rules, execute the call, and report what happened. Different programs own each job.</figcaption></figure>
+
+<div class="big-idea"><strong>The durable idea:</strong> <code>confd</code> writes the switchboard's instructions; Asterisk follows them during the live call; events tell Odoo what happened afterward. A routing success is not automatically a call-history success.</div>
+
+<h2>First, the school-office story</h2>
+<p>Imagine a school office trying to reach a teacher. The teacher can have several classroom phones. The office keeps a card saying: “try every classroom phone; if none is connected, call this mobile number.”</p>
+<table>
+  <thead><tr><th>Story character</th><th>Real component</th><th>Job</th></tr></thead>
+  <tbody>
+    <tr><td>Teacher's profile</td><td>Enterprise Odoo</td><td>Stores <code>mobile_phone</code> and <code>phone</code> and decides which valid number is preferred.</td></tr>
+    <tr><td>Trusted administrator</td><td>IAP Phone Service</td><td>Has the master credentials and asks Wazo to change one customer's configuration.</td></tr>
+    <tr><td>Filing clerk</td><td><code>wazo-confd</code></td><td>Provides the REST API for users, lines and fallbacks. It records the instructions; it does not answer calls.</td></tr>
+    <tr><td>Badge office</td><td><code>wazo-auth</code></td><td>Creates and removes tokens, including the token that says a disconnected app may be awakened.</td></tr>
+    <tr><td>Switchboard operator</td><td>Asterisk inside Wazo</td><td>Runs the dialplan and creates the real call channels.</td></tr>
+    <tr><td>Incident reporter</td><td><code>wazo-calld</code> + <code>wazo-webhookd</code></td><td>Observes live calls and sends events toward Phone Service and Odoo.</td></tr>
+  </tbody>
+</table>
+
+<h2>What “connected” means</h2>
+<p>A browser says “I can receive calls here” by sending a SIP <code>REGISTER</code>. A registered device becomes a <strong>contact</strong> on the user's PJSIP <strong>AOR</strong>—the user's phone address book entry inside Asterisk.</p>
+<ul>
+  <li>One open registered tab means at least one contact is available.</li>
+  <li>Several tabs may mean several contacts, but it is still one user.</li>
+  <li>“Offline” for this rule means <strong>all applicable contacts are unavailable</strong>. It is not a green-dot presence status.</li>
+  <li>Closing a tab may leave its contact visible until its registration expires.</li>
+</ul>
+
+<h2>The old behavior: wait and wake the browser</h2>
+<p>A disconnected browser might come back after receiving a push notification. Wazo's <code>dial_mobile</code> path therefore keeps the call alive while a notification tries to wake the device.</p>
+<p>The <strong>wakeup token</strong> is like a note saying: “do not give up immediately; this user has an app that may wake up.” With that token present, “no current contact” does not immediately use the ordinary Fail Destination.</p>
+
+<h2>The new product rule</h2>
+<figure><pre class="mermaid">flowchart TD
+  N["Choose backup number"] --&gt; M{"valid mobile_phone?"}
+  M -- "yes" --&gt; VM["use normalized mobile_phone"]
+  M -- "no" --&gt; P{"valid phone?"}
+  P -- "yes" --&gt; VP["use normalized phone"]
+  P -- "no" --&gt; NONE["no external Fail Destination"]
+  VM --&gt; F["store Wazo Fail Destination<br/>then revoke wakeup token"]
+  VP --&gt; F
+  NONE --&gt; W["keep/restore wakeup token<br/>so push behavior remains"]</pre><figcaption>The phone fields decide configuration before any call arrives.</figcaption></figure>
+
+<table>
+  <thead><tr><th>Contacts now</th><th>Valid backup number</th><th>Expected call behavior</th></tr></thead>
+  <tbody>
+    <tr><td>At least one</td><td>Yes or no</td><td>Ring the available SIP/browser contacts normally.</td></tr>
+    <tr><td>None</td><td>Yes</td><td>Asterisk gets <code>CHANUNAVAIL</code> and immediately calls the Fail Destination.</td></tr>
+    <tr><td>None</td><td>No</td><td>Keep the old <code>dial_mobile</code> push-wakeup behavior.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout"><strong>Why remove the token only when a backup exists?</strong> Removing it allows immediate failure routing. Removing it when no backup exists would throw away the only mechanism that can wake a disconnected browser.</div>
+
+<h2>Why this crosses Enterprise and IAP</h2>
+<p>Enterprise owns the employee/user fields and therefore knows the intended backup number. It normalizes the value to E.164 form and prefers <code>mobile_phone</code>, then <code>phone</code>.</p>
+<p>Enterprise must not receive Wazo's master credential. It asks Phone Service for the outcome “update this user's routing.” Phone Service validates the request, scopes it to the customer's Wazo tenant, calls Confd to store <code>fail_destination</code>, and calls Wazo Auth to revoke or restore the wakeup token.</p>
+
+<div class="codehook"><div class="kicker">Where the committed application work lives</div><ul>
+  <li><code>enterprise/voip/models/res_users.py</code> — choose valid <code>mobile_phone</code>, then <code>phone</code>.</li>
+  <li><code>enterprise/voip/models/res_users_settings.py</code> — send the Fail Destination or restore wakeup behavior.</li>
+  <li><code>iap_services/phone_service/controllers/pbx_controller.py</code> — accept only an external <code>outcall</code> as a Fail Destination.</li>
+  <li><code>iap_services/phone_service/models/phone_service_pbx_tenant_ops.py</code> — update Wazo fallbacks and revoke the wakeup token after the route is stored.</li>
+</ul></div>
+
+<h2>Confd versus SSH</h2>
+<div class="card-grid">
+  <article class="card"><h3>Confd API: change one user's data</h3><p>“For user 42, use this mobile number as the Fail Destination.” This is normal application behavior and is performed by Phone Service over HTTPS.</p></article>
+  <article class="card"><h3>SSH: change the server's rulebook</h3><p>“Whenever any offline Fail Destination is used, stamp the outgoing channel with this correlation header.” That custom dialplan file lives on the Wazo machine.</p></article>
+</div>
+<p><strong>SSH</strong> means Secure Shell: an encrypted remote terminal into another computer. It is the maintenance door, not part of a customer's call. We need it for the experiment because the custom Asterisk dialplan file belongs to the Wazo server filesystem, not to a user record managed by Confd.</p>
+
+<h3>Do not confuse SSH with your development tunnel</h3>
+<table>
+  <thead><tr><th>Connection</th><th>Direction</th><th>Why it exists</th></tr></thead>
+  <tbody>
+    <tr><td>Enterprise on <code>8870</code> → IAP on <code>8470</code></td><td>Local application request</td><td>Your customer database asks your local Phone Service to change routing.</td></tr>
+    <tr><td>Public dev tunnel → local IAP <code>8470</code></td><td>Remote Wazo enters your computer</td><td>Wazo webhooks need a public HTTPS address; they cannot call <code>localhost</code> on your machine.</td></tr>
+    <tr><td>Your terminal → Wazo 02 over SSH</td><td>You enter the remote server</td><td>An operator inspects Asterisk and installs the temporary custom dialplan file.</td></tr>
+  </tbody>
+</table>
+<p>The tunnel does not grant shell access to Wazo, and SSH does not deliver Wazo events to your local IAP. A full test needs both directions working.</p>
+
+<div class="warnbox"><strong>SSH has a larger blast radius.</strong> A file under the Wazo server can affect every tenant hosted there. It requires privileged access, can break routing if its syntax is wrong, may disappear when a lab is rebuilt, and exposes sensitive logs. That is why the experiment belongs on Wazo 02, uses one guarded file, has a rollback, and must later become managed infrastructure or a Wazo plugin.</div>
+
+<h2>Why the conversation header is needed</h2>
+<p>One human call creates several technical channels: caller → Wazo, Wazo → browser, or Wazo → external mobile. Each channel can have its own SIP Call-ID. Asterisk's <code>linkedid</code> is the family name tying those channels together, and Wazo exposes it as <code>conversation_id</code>.</p>
+<p>The old <code>dial_mobile</code> path stamped <code>X-Odoo-Conversation-Id</code> while waking the browser. Immediate Fail Destination routing bypasses that path, so a Wazo pre-dial handler must stamp the external outgoing PJSIP channel instead.</p>
+<pre><code>[xivo-subrfwd-extension]
+exten = s,1,NoOp(Odoo offline Fail Destination)
+same  =   n,GotoIf($["${WAZO_FWD_TYPE}" != "USER_CHANUNAVAIL"]?return)
+same  =   n,GoSub(wazo-add-pre-dial-hook,s,1(odoo-set-conversation-id-header))
+same  =   n(return),Return()
+
+[odoo-set-conversation-id-header]
+exten = s,1,Set(PJSIP_HEADER(add,X-Odoo-Conversation-Id)=${CHANNEL(linkedid)})
+same  =   n,Return()</code></pre>
+<p>The guard means “do this only because the user's devices were unavailable.” The pre-dial handler means “run on the newly created external channel.” No new identifier is generated.</p>
+
+<h2>The Wazo 02 experiment, with reasons</h2>
+<ol>
+  <li><strong>Check the Wazo version.</strong> The hook order above was verified against 26.07; another version may have different contexts.</li>
+  <li><strong>Search for an existing hook.</strong> Two owners defining the same <code>xivo-subrfwd-extension</code> priority would conflict.</li>
+  <li><strong>Add one file under <code>/etc/asterisk/extensions_extra.d/</code>.</strong> This is Wazo's supported custom-dialplan directory; do not edit package-generated dialplan files.</li>
+  <li><strong>Run <code>dialplan reload</code>.</strong> This reloads routing instructions without rebooting the whole server.</li>
+  <li><strong>Test three states.</strong> Online contact, offline with valid backup, and offline without valid backup.</li>
+  <li><strong>Follow one ID.</strong> Compare Asterisk <code>linkedid</code>, the outbound header, Wazo event <code>conversation_id</code>, the IAP webhook and Odoo records.</li>
+  <li><strong>Roll back the one file.</strong> Restore the user's original token/fallback using the Odoo synchronization path.</li>
+</ol>
+
+<h2>The unfinished proof</h2>
+<p>The external telephone ringing proves the switchboard route. It does not prove that the Odoo call log is correct.</p>
+<p>When <code>dial_mobile</code> is bypassed, there may be no user softphone leg and no enriched push event. We still need a real Wazo 02 trace—or the private plugin contract—to show which event carries both the target user and the shared conversation ID into Odoo. Without that evidence, the product may forward the call correctly while creating only technical conversation/leg records and no user-facing <code>voip.call</code>.</p>
+
+<div class="big-idea"><strong>Two acceptance gates:</strong> Gate 1 is “the correct external phone rings immediately.” Gate 2 is “Odoo receives enough correctly correlated events to create exactly the intended call history.” Never report Gate 2 from Gate 1 evidence.</div>
+
+<h2>Your review checklist</h2>
+<ol>
+  <li>Does the state matrix above hold for all three cases?</li>
+  <li>Is only valid normalized <code>mobile_phone</code>, then <code>phone</code>, used?</li>
+  <li>Is the fallback stored before the wakeup token is revoked?</li>
+  <li>Is the existing wakeup behavior restored when no valid backup exists?</li>
+  <li>Is the Wazo hook restricted to <code>USER_CHANUNAVAIL</code>?</li>
+  <li>Does an online contact avoid the external Fail Destination?</li>
+  <li>Does one <code>linkedid</code> survive the SIP header, Wazo event, IAP webhook and Odoo records?</li>
+  <li>Do multiple tabs and redelivered events still result in one visible notification and one intended call record?</li>
+  <li>Is the direct Wazo file treated as a lab experiment until a durable deployment owner is agreed?</li>
+</ol>
+
+<section class="exercise"><h3>Check your mental model</h3><div id="quiz"></div><div id="quiz-score" class="score"></div></section>
+
+<div class="source-rec"><div class="kicker">Primary sources</div><p>
+  <a href="https://github.com/wazo-platform/wazo-confd">Wazo Confd</a> defines itself as the REST configuration service.
+  <a href="https://beta.wazo-platform.org/uc-doc/api_sdk/subroutine">Wazo's subroutine guide</a> documents <code>extensions_extra.d</code> and pre-dial hooks.
+  <a href="https://docs.asterisk.org/Latest_API/API_Documentation/Dialplan_Functions/PJSIP_HEADER/">Asterisk's PJSIP_HEADER reference</a> explains why outbound headers must be written on the callee channel.</p></div>
+
+<div class="ask"><strong>Your teacher is an agent—interrupt it.</strong> Ask: “Give me one incoming-call scenario, let me predict every component and state transition, then correct my explanation.” Do not move to server commands until the three-job diagram feels obvious.</div>
+
+<nav class="nav-foot">
+  <a href="0028-your-first-contribution.html"><span class="lbl">Previous</span>← Your first contribution</a>
+  <a class="home" href="../index.html">⌂</a>
+  <a href="../reference/glossary.html"><span class="lbl">Reference</span>Open the VoIP glossary →</a>
+</nav>
+</main>
+<script src="../vendor/mermaid.min.js"></script>
+<script src="../assets/interactions.js"></script>
+<script>
+initializeCourseDiagrams();
+makeQuiz("quiz", "quiz-score", [
+  {stem:"What does wazo-confd do in this feature?",choices:[{text:"Confd stores PBX configuration through a REST API",correct:true},{text:"Asterisk executes live routing through its dialplan rules",correct:false}],why:"Confd is the configuration clerk. Asterisk is the live switchboard."},
+  {stem:"Why might an engineer use SSH for this experiment?",choices:[{text:"Because this hook changes server-wide Asterisk dialplan behavior",correct:true},{text:"Because every fallback change requires remote shell maintenance",correct:false}],why:"Ordinary per-user fallbacks use Confd. SSH is only for the machine-level custom rule."},
+  {stem:"No contacts exist, but the user has a valid external fallback. What should happen?",choices:[{text:"Forward immediately to the configured valid external number",correct:true},{text:"Wait for browser push before trying that number",correct:false}],why:"The valid external fallback intentionally replaces the push-wakeup wait for this state."},
+  {stem:"The external phone rings and the SIP header is present. Is the whole feature proven?",choices:[{text:"We still need event-to-record proof inside Odoo too",correct:true},{text:"The header alone guarantees every Odoo call record",correct:false}],why:"Routing and reporting are different gates. Odoo needs a correlated event that identifies the user."}
+]);
+</script>
+</body></html>

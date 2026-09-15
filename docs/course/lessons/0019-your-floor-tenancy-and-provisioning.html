@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 8 · Your floor: tenancy &amp; provisioning — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 19 · Your floor: tenancy &amp; provisioning — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,14 +91,14 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 3 — The Machine Rooms · Lesson 8 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 6 — The Machine Rooms · Lesson 19 of 28</div>
   <h1>Your floor: tenancy &amp; provisioning</h1>
   <p class="lede">How the shop builds each customer an isolated floor of the switchboard — brick by idempotent brick — and why nobody can wander onto someone else's.</p>
   <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: explain structural tenancy and resume-anywhere provisioning from memory</span><span>🧩 Builds on: Lessons 1, 7</span></div>
 </header>
 
 <p>Picture a hotel that builds a whole floor for every new guest. The crew keeps a <b>construction diary</b>: every time a brick is finished, they write it down and put the pencil away. If the power cuts out mid-wall, nobody panics — tomorrow they open the diary, see "wall three: done", and continue from brick four. Never from scratch, never a duplicate wall.</p>
-<p>And the room keys? Your floor number isn't <i>assigned</i> — it's <b>computed from your name</b>. The front desk can always re-derive it, so it can never be lost; and since no two guests have the same name, no two guests can ever compute the same floor. You never say "floor 12, please" — you show your ID, and the desk works out which floor is yours. That hotel is exactly how the shop (IAP <code>phone_service</code>, <a href="./0007-the-shop-the-broker-in-the-middle.html">Lesson 7</a>) builds your tenant on the Wazo switchboard.</p>
+<p>And the room keys? At registration, your database mints one canonical UUID4 identity: <code>client_uuid</code>. The front desk stores that exact same value as the floor key, <code>wazo_tenant_uuid</code>; it does not derive or translate a second identifier. You never say “floor 12, please” on a PBX operation — you authenticate as the client, and the desk selects the one matching floor. That hotel is exactly how the shop (IAP <code>phone_service</code>, <a href="./0018-the-shop-the-broker-in-the-middle.html">Lesson 18</a>) builds your tenant on the Wazo switchboard.</p>
 
 <h2>The build, as a picture</h2>
 
@@ -105,7 +106,7 @@
 <pre class="mermaid">
 flowchart LR
     subgraph P1["Phase 1 · The floor"]
-        S1["tenant<br/>uuid = UUID(hex=client_id)"]
+        S1["tenant<br/>uuid = client_uuid"]
     end
     subgraph P2["Phase 2 · The rooms"]
         S2["incall<br/>context"] --> S3["outcall<br/>context"] --> S4["internal<br/>context"] --> S5["attach outcall<br/>to internal"]
@@ -117,11 +118,10 @@ flowchart LR
         S11["webhookd subscription<br/>(per-tenant secret)"]
     end
     P1 --> P2 --> P3 --> P4 --> R(["READY ✅"])
-    R <--> D["disabled<br/>(budget-gated)"]
     R -.-> REL["released"]
     P3 -.->|"any step stuck<br/>past the TTL"| F["failed"]
 </pre>
-<figcaption>The 11-step build in 4 phases: the floor, the rooms (dialplan contexts, Lessons 4–5), the door to the street (the Telnyx trunk), and finally the doorbell — the wire that lets the switchboard report events back to the shop.</figcaption>
+<figcaption>The 11-step build in 4 phases: the floor, the dialplan contexts, the door to the street (the Telnyx trunk), and finally the doorbell — the wire that lets the switchboard report events back to the shop.</figcaption>
 </figure>
 
 <p>The shop's <code>phone_service.pbx_tenant</code> walks a <b>linear state machine</b> — 11 forward steps, then <code>ready</code>:<a class="cite" href="../reference/onboarding.html">§7</a></p>
@@ -129,8 +129,8 @@ flowchart LR
 → internal_context_created → outcall_context_attached_to_internal_context
 → trunk_sip_endpoint_created → trunk_created → trunk_attached_to_sip_endpoint
 → outcall_created → trunk_bound → ready</code></pre>
-<p>Plus three side exits: <code>ready ↔ disabled</code> (billing suspension — the floor exists, the door is locked), <code>released</code> (floor demolished), and <code>failed</code> when a tenant sits stuck past the provisioning TTL — <b>2 hours at HEAD</b> (<code>PROVISIONING_TTL</code>; older docs still say 24 h).<span class="cite">pbx_tenant.py:42,741</span></p>
-<p>The last brick deserves a second look: phase 4 registers <b>one Wazo webhookd subscription</b> for the whole tenant — call created/answered/ended, push and push-cancel, voicemail events — pointing back at the shop, authenticated by a freshly minted per-tenant <code>wazo_webhook_secret</code>. The doorbell wire is part of the building, not an afterthought: a tenant is not <code>ready</code> until the switchboard can talk back.<span class="cite">_step_create_webhook_subscriptions</span></p>
+<p>Plus two terminal exits: <code>released</code> (floor demolished) and <code>failed</code> when a tenant sits stuck past the provisioning TTL — <b>2 hours</b>. Billing suspension is now <code>phone_service.client.disabled</code>, read by the edge to block trunk-crossing calls; it is not a tenant state.<span class="cite">phone_service_pbx_tenant.py · phone_service_client.py</span></p>
+<p>The last brick deserves a second look: phase 4 registers <b>one Wazo webhookd subscription</b> for the whole tenant — call created/answered/updated/ended, push and push-cancel, and both voicemail-message variants — pointing back at the shop, authenticated by a freshly minted per-tenant <code>wazo_webhook_secret</code>. The doorbell wire is part of the building, not an afterthought: a tenant is not <code>ready</code> until the switchboard can talk back.<span class="cite">_step_create_webhook_subscriptions</span></p>
 
 <h2>Lay every brick twice, safely</h2>
 <p>Every step follows the same discipline, and it's the diary from the hook:</p>
@@ -142,18 +142,18 @@ flowchart LR
 <div class="big-idea"><strong>Every brick can be laid twice safely.</strong> Idempotent steps + commit-per-step + a dumb retry cron is the whole resilience story. No rollback logic, no "undo half a floor" — the saga only ever moves forward or re-lays the same brick.</div>
 
 <h2>The big idea: nobody names their floor</h2>
-<p>Here is the design decision this lesson exists for. The tenant is a <b>pure function of the authenticated client</b>: <code>wazo_tenant_uuid = UUID(hex=client_id)</code>. The customer database <i>never sends a tenant id</i> — it just authenticates, and the shop derives which floor is theirs. You can't ask for someone else's floor, because you never ask for a floor at all.<a class="cite" href="../reference/onboarding.html">§7</a></p>
+<p>Here is the design decision this lesson exists for. The tenant is the authenticated client's canonical UUID directly: <code>wazo_tenant_uuid == client_uuid</code>. PBX routes never accept an arbitrary tenant id — the shop resolves the authenticated client and uses its tenant. You cannot ask for someone else's floor because the operation contract has no “choose tenant” field.<a class="cite" href="../reference/onboarding.html">§7</a></p>
 <p>The shop enforces this at its own boundary too. Every shop→Wazo request goes through <code>wazo_api.pbx_request</code>, which demands <b>exactly one</b> of <code>tenant_uuid=…</code> or <code>master_scoped=True</code>. Declare neither, or both, and you get a hard <code>ValueError</code> at the call site — not a silent write into the master tenant. And the derived <code>Wazo-Tenant</code> header is written <i>after</i> merging caller headers, so nothing a caller supplies can override the scope.<span class="cite">wazo_api.py:121-126</span></p>
-<div class="big-idea"><strong>Cross-tenant access is impossible by construction, not by ACL diligence.</strong> There is no permission an admin could misconfigure, no token a customer could leak, no header an attacker could inject. The isolation is structural: wrong tenant ids simply cannot be expressed.</div>
-<p>It wasn't always like this. The old design gave each tenant an ACL policy, an API user, and scoped Wazo tokens that were handed to the customer's database. All of it is <b>deleted</b>. Today customers hold <b>zero Wazo credentials</b> — the only thing that ever touches Wazo directly is the browser's SIP/WSS media leg (<a href="./0001-odoo-becomes-a-phone-company.html">Lesson 1</a>), because audio can't transit a JSON API.<a class="cite" href="../reference/onboarding.html">§7</a></p>
+<div class="big-idea"><strong>Cross-tenant PBX management is blocked by construction, not by a caller-chosen ACL.</strong> A customer request carries no Wazo management token or separate tenant selector. Authentication resolves one <code>client_uuid</code>, and that identity selects exactly one tenant.</div>
+<p>It wasn't always like this. The old design handed scoped Wazo API credentials to customer databases. That management path is <b>deleted</b>: customer databases hold no Wazo API URL, master token or tenant selector. They do store per-user SIP username/secret returned by provisioning; the browser uses those through the public edge, while its media follows the negotiated PBX path.<a class="cite" href="../reference/onboarding.html">§7</a></p>
 
 <h2>The gate on every operation</h2>
-<p>Every <code>/pbx/&lt;op&gt;</code> route passes through one gate, <code>_require_active_tenant</code>, before anything runs:<span class="cite">pbx_controller.py:154-178</span></p>
+<p>Every <code>/pbx/&lt;op&gt;</code> route passes through one gate, <code>_require_ready_tenant</code>, before anything runs:<span class="cite">pbx_controller.py</span></p>
 <table>
   <tr><th>Situation</th><th>Answer</th><th>Meaning</th></tr>
   <tr><td>No tenant <i>and</i> no orderable number</td><td><span class="pill p-med">403</span></td><td>You never engaged the PBX. Go buy a number first.</td></tr>
   <tr><td>Tenant exists but is still building</td><td><span class="pill p-sig">503</span></td><td>Kick the provisioning cron, tell the client to retry. Its next attempt eventually succeeds.</td></tr>
-  <tr><td>Tenant <code>ready</code> (or <code>disabled</code>)</td><td><span class="pill p-cfg">run</span></td><td>The op executes, tenant-scoped.</td></tr>
+  <tr><td>Tenant <code>ready</code></td><td><span class="pill p-cfg">run</span></td><td>The op executes, tenant-scoped.</td></tr>
 </table>
 <div class="callout"><b>503 means "come back in a minute", not "broken".</b> While the floor is under construction, every PBX call both nudges the build forward and politely refuses. The client's ordinary retry loop is the waiting room — no special "provisioning pending" protocol exists, and none is needed.</div>
 
@@ -161,9 +161,9 @@ flowchart LR
 <b>The 401-vs-404 trap.</b> Wazo answers <b>401</b> — not 404 — for an <i>unknown</i> <code>Wazo-Tenant</code>. So a bare 401 is ambiguous: expired credential, or a floor that vanished behind our back? On 401 the shop probes tenant existence with an explicit <b>master-scoped</b> check: confirmed gone → re-plan the tenant and answer 503 (the rebuild self-heals, the retry succeeds); still there → surface a real auth error (502). <b>Never rebuild on a bare 401</b> — or a transient auth blip would bulldoze and rebuild customer floors.<span class="cite">_reprovision_if_tenant_gone · pbx_controller.py:181-204</span>
 </div>
 
-<h2>Healing on the Odoo side (a preview of <a href="./0011-desks-teams-and-waiting-rooms.html">Lesson 11</a>)</h2>
-<p>The shop heals its floor; the customer database heals its <i>occupants</i> with the same philosophy — <b>level-triggered, not event-triggered</b>. A checklist (<code>_filter_under_provisioned</code>) defines what a fully provisioned user looks like: SIP credentials, PBX ids, wakeup token, incall ids. Events merely trigger <i>checks</i>; a 30-minute heal cron plus a 60-second post-failure retrigger re-drive whatever is missing.<span class="cite">voip_did_number.py:501-541</span></p>
-<p>And when ids were lost mid-crash (Wazo objects created, Odoo transaction rolled back), the retry hits a create-conflict — and <b>adopts the orphan</b>: it finds the Wazo object by its <i>deterministic name</i>, re-owns it, and re-issues its secrets. Deterministic naming is the same trick as the deterministic tenant UUID, one level down.</p>
+<h2>Healing on the Odoo side (a preview of <a href="./0022-desks-teams-and-waiting-rooms.html">Lesson 22</a>)</h2>
+<p>The shop heals its floor; the customer database heals its <i>occupants</i> with the same philosophy — <b>level-triggered, not event-triggered</b>. A checklist (<code>_filter_under_provisioned</code>) defines completeness: SIP credentials, PBX user/line/extension ids and, for active DIDs, incall ids. A 30-minute safety-net cron plus a 60-second post-failure trigger re-drives only missing state.<span class="cite">voip_did_number.py</span></p>
+<p>And when ids were lost mid-crash (Wazo objects created, Odoo transaction rolled back), the retry hits a create-conflict — and <b>adopts the orphan</b>: it finds the Wazo object by its deterministic name, re-owns it, and re-issues its secrets. Stable object names solve the lower-level lookup problem; the tenant itself uses the stored <code>client_uuid</code> verbatim.</p>
 
 <div class="codehook">
   <div class="kicker">🔩 Where this lives in the code</div>
@@ -171,7 +171,7 @@ flowchart LR
     <li><code>iap-apps/…/phone_service/models/phone_service_pbx_tenant.py</code> — <code>STATE_SEQUENCE</code>, the saga comment block (l. 47–126), <code>_advance_until_blocked</code>, <code>_step_create_webhook_subscriptions</code>, <code>_reprovision_if_tenant_gone</code></li>
     <li><code>…/phone_service_pbx_tenant_ops.py</code> — the <code>_op_*</code> methods (full confd/calld sequences), server-side naming conventions (l. 47–61), <code>INTERACTIVE_RETRIES = 2</code> so interactive ops can't outlive the client's HTTP timeout</li>
     <li><code>…/models/wazo_api.py</code> — <code>pbx_request</code> scoping guard (exactly one of <code>tenant_uuid</code> / <code>master_scoped</code>)</li>
-    <li><code>…/controllers/pbx_controller.py</code> — <code>_require_active_tenant</code>, <code>_map_wazo_error</code></li>
+    <li><code>…/controllers/pbx_controller.py</code> — <code>_require_ready_tenant</code>, <code>_map_wazo_error</code></li>
     <li><code>enterprise/voip/models/voip_did_number.py</code> — <code>_cron_heal_provisioning</code>, <code>_filter_under_provisioned</code>, <code>_schedule_provisioning_retry</code></li>
   </ul>
 </div>
@@ -195,7 +195,7 @@ flowchart LR
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
   code path for Y". The back-and-forth is where the learning compounds.
 </div>
@@ -206,9 +206,9 @@ flowchart LR
 </div>
 
 <div class="nav-foot">
-  <a href="0007-the-shop-the-broker-in-the-middle.html"><span class="lbl">← Previous</span>Lesson 7 · The shop: the broker in the middle</a>
+  <a href="0018-the-shop-the-broker-in-the-middle.html"><span class="lbl">← Previous</span>Lesson 18 · The shop: the broker in the middle</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0009-doorbells-and-robots.html"><span class="lbl">Next →</span>Lesson 9 · Doorbells &amp; robots<br><span style="color:var(--faint);font-weight:400">three webhook flavours, one dedup discipline, and the crons that heal everything.</span></a>
+  <a href="0020-doorbells-and-robots.html"><span class="lbl">Next →</span>Lesson 20 · Doorbells &amp; robots<br><span style="color:var(--faint);font-weight:400">three webhook flavours, one dedup discipline, and the crons that heal everything.</span></a>
 </div>
 
 </div>
@@ -223,7 +223,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
   ITEMS.forEach((it, i) => {
     const row = document.createElement('div'); row.className='sorter-row';
     const name = document.createElement('span'); name.className='item'; name.textContent=it.name; row.appendChild(name);
-    const fb = document.createElement('div'); fb.className='fb';
+    const fb = document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     PLANES.forEach(p => {
       const b=document.createElement('button'); b.className='opt'; b.textContent=p.label;
       b.onclick=()=>{
@@ -234,7 +234,7 @@ function makeSorter(containerId, scoreId, PLANES, ITEMS){
           [...row.querySelectorAll('.opt')].forEach(o=>{ if(o.textContent===PLANES.find(x=>x.k===it.ans).label) o.classList.add('correct'); });
         }
         [...row.querySelectorAll('.opt')].forEach(o=>o.disabled=true);
-        fb.innerHTML=(ok?'✓ ':'✗ ')+it.why; fb.classList.add('show');
+        fb.innerHTML=(ok?'Correct. ':'Incorrect. Correct answer: '+PLANES.find(x=>x.k===it.ans).label+'. ')+it.why; fb.classList.add('show');
         if(done===ITEMS.length) document.getElementById(scoreId).textContent=`Score: ${right}/${ITEMS.length}. `+(right===ITEMS.length?'Locked in. 🦜':'Re-read the row you missed — that boundary is the lesson.');
       };
       row.appendChild(b);
@@ -249,7 +249,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -257,7 +257,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -287,21 +287,21 @@ function makeOrderer(containerId, scoreId, STEPS){
 }
 
 makeOrderer('orderer', 'orderer-score', [
-  'The floor — create the Wazo tenant, uuid = UUID(hex=client_id)',
+  'The floor — create the Wazo tenant, uuid = client_uuid',
   'The rooms — incall, outcall, internal contexts; attach outcall to internal',
   'The door — SIP endpoint, trunk, attach, outcall routes _X. / _+X., bind trunk',
   'The doorbell — webhookd subscription carrying the per-tenant secret',
-  'READY — the only state (with disabled) that serves /pbx/<op> traffic',
+  'READY — the only tenant state that serves /pbx/<op> traffic',
 ]);
 
 makeQuiz('quiz', 'quiz-score', [
-  {stem:'Why is the tenant UUID computed as UUID(hex=client_id) instead of stored after Wazo assigns one?',
+  {stem:'Why is the tenant UUID exactly the authenticated client_uuid instead of caller-selected?',
    choices:[
-     {t:'So a retry can always re-derive its own floor — the id can never be lost, and no two clients can ever collide', ok:true},
+     {t:'So a retry reuses the same client identity — there is no second tenant id to lose or accidentally select', ok:true},
      {t:'So the shop can avoid one database column — recomputing the id on demand is cheaper than persisting the value', ok:false},
      {t:'So Wazo can validate the format on arrival — it only accepts UUIDs that derive from a registered client secret', ok:false},
    ],
-   why:'<b>Deterministic ids make retries converge.</b> The tenant uuid is a pure function of client_id (which is also the Telnyx customer_reference) — provisioning always finds its own bricks, and the three identities line up by construction.'},
+   why:'<b>One stable identity makes retries converge.</b> The client, tenant and Telnyx customer reference line up; callers cannot select a neighbour’s floor.'},
   {stem:'A tenant-scoped Wazo call returns 401. What must the shop do before anything else?',
    choices:[
      {t:'Probe tenant existence with a master-scoped check; only a confirmed 404 there may re-plan, else it is an auth error', ok:true},
@@ -309,13 +309,13 @@ makeQuiz('quiz', 'quiz-score', [
      {t:'Refresh the master token and retry the same call at once, because a 401 always means the credential just expired', ok:false},
    ],
    why:'<b>Wazo answers 401 — not 404 — for an unknown tenant</b>, so a bare 401 is ambiguous. Confirmed gone → re-plan + 503 (self-healing). Still there → real auth error. Rebuilding on a bare 401 would bulldoze floors on every auth blip.'},
-  {stem:'Why do customer databases hold zero Wazo credentials in the current design?',
+  {stem:'Which Wazo credentials are deliberately absent from customer databases?',
    choices:[
-     {t:'Tenancy is structural — the shop derives the tenant from the authenticated client, so there is no token to leak or mis-scope', ok:true},
+     {t:'Wazo management URLs/tokens and tenant selectors; per-user SIP credentials still exist', ok:true},
      {t:'Wazo dropped its scoped-token API in an upgrade — the shop was forced to keep every credential on its own side of the wall', ok:false},
      {t:'Customers found scoped tokens too confusing to rotate — support asked for the credential screens to simply be removed', ok:false},
    ],
-   why:'<b>The old per-tenant ACL policy, API user, and scoped tokens were deleted</b> — isolation moved from "diligent permissions" to "impossible by construction". The single remaining direct link is the browser\'s SIP/WSS media leg.'},
+   why:'<b>The old management credentials were deleted.</b> The browser still needs a per-user SIP identity, routed through the edge; that is not a Wazo API/master credential.'},
 ]);
 </script>
 <script src="../vendor/mermaid.min.js"></script>

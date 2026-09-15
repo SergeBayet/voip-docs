@@ -1,47 +1,67 @@
-# Parrot VoIP System Resources
+# Odoo VoIP onboarding resources
 
-## Knowledge
+Primary sources are ordered from our implementation outward. Source code wins when a lesson and a
+document disagree.
 
-### Our own docs (primary — grounds everything in *our* system)
-- [Parrot Onboarding Guide](/home/odoo/Data/Dev/Odoo/parrot-onboarding.md) — canonical at Obsidian vault `VoIP/parrot/parrot-onboarding.md`.
-  The living source of truth: the four players, the buy / requirements / provisioning / inbound / outbound / billing stories, data shapes, crons, file map. Use for: how *our* system actually behaves.
-- Wazo Architecture Session note — Obsidian vault `VoIP/parrot/Wazo Architecture Session.md`.
-  Working notes on the Wazo migration: components, credential chain, dialplan compile-vs-interpret, decisions A–J, glossary, the silent-call failure mode. Use for: the *why* behind the migration.
-- [Onboarding Excalidraw diagrams](/home/odoo/Data/Dev/Odoo/master-parrot/voip-wazo-onboarding/)
-  12 diagrams: high-level overview, current-vs-future, inbound/outbound sequences, control plane, ports, credential chain, dialplan compile, tenancy. Use for: visual mental models. ⚠️ Predates the DB→IAP→WAZO refactor in places — trust the onboarding guide when they disagree.
-- [Wazo internal DID routing note](/home/odoo/Data/Dev/Odoo/wazo-internal-did-routing.md) (2026-06-23)
-  Why dialing a colleague's public DID is resolved to their extension before the INVITE (the softphone short-circuit). Use for: L04/L05 depth.
-- `pr-107700-diagrams-updated.md` — deep-dive twin of the onboarding doc. ⚠️ **Stale** (pre-refactor, 2026-06-09); update or retire before citing.
+## Current local implementation
 
-### SIP / signaling (the control plane)
-- [RFC 3261 — SIP: Session Initiation Protocol](https://www.rfc-editor.org/rfc/rfc3261.html)
-  The canonical SIP spec. The control-plane / media-plane separation is foundational. Use for: ground-truth on SIP methods, proxies, dialogs.
-- [Wikipedia: Session Initiation Protocol](https://en.wikipedia.org/wiki/Session_Initiation_Protocol)
-  Accessible overview of SIP and the signaling-vs-media split. Use for: a readable first pass.
+- `master/odoo` — Community framework and addons: HTTP, ORM, security, web client, mail, IAP client.
+- `master/enterprise` — Enterprise addons; `voip/` is the core product and `voip_ai/` adds call
+  transcription. Integration addons include CRM, Helpdesk, Project, Sales, Subscriptions, SMS, HR
+  and Recruitment.
+- `master/iap-apps/iap_services/phone_service` — hosted broker, Telnyx integration, Wazo
+  provisioning, events, number lifecycle, regulatory resources, TTS and billing.
+- `master/iap-apps/iap_odoo` — shared IAP transaction server, including keyed
+  `/iap/1/authorize_capture`.
+- `upgrade` — migrations for modules such as `voip`, `voip_crm`, `crm_voip`, `voip_hr` and legacy
+  `voip_onsip`.
+- `voip-infra` — versioned Kamailio edge configuration and test harness.
+- [`parrot-onboarding.md`](/home/odoo/Data/Dev/Odoo/parrot-onboarding.md) — living cross-system map;
+  canonical twin in the Obsidian vault.
+- [`parrot-local-testing-guide.md`](/home/odoo/Data/Dev/Odoo/parrot-local-testing-guide.md) — local
+  Enterprise plus shared-staging workflow and triage guide.
 
-### Kamailio (the SIP edge)
-- [Kamailio vs Asterisk — Nick vs Networking](https://nickvsnetworking.com/kamailio-vs-asterisk/)
-  Clear, trusted explanation of SIP-proxy vs B2BUA and why you run both. Use for: the Kamailio/Asterisk division of labour.
-- [Kamailio Wiki — FAQ](https://www.kamailio.org/wikidocs/tutorials/faq/main/)
-  Official project FAQ. Use for: authoritative "what Kamailio is / isn't".
+## Official Odoo developer documentation
 
-### Wazo (our PBX)
-- [Wazo Platform — docs](https://wazo-platform.org/documentation/)
-  The PBX we're adopting: Asterisk + Kamailio + rtpengine + Python microservices (confd, calld, auth, webhookd). Use for: component roles and REST APIs.
-- [Wazo Platform C4 overview](https://beta.wazo-platform.org/blog/wazo-platform-c4-overview)
-  Architecture-level view of the layers and services. Use for: how the microservices fit together.
+- [Developer documentation](https://www.odoo.com/documentation/master/developer.html)
+- [Server framework 101](https://www.odoo.com/documentation/master/developer/tutorials/server_framework_101.html)
+- [Backend ORM reference](https://www.odoo.com/documentation/master/developer/reference/backend.html)
+- [Web framework reference](https://www.odoo.com/documentation/master/developer/reference/frontend.html)
+- [Security reference](https://www.odoo.com/documentation/master/developer/reference/backend/security.html)
+- [Testing reference](https://www.odoo.com/documentation/master/developer/reference/backend/testing.html)
+- [Contributing](https://www.odoo.com/documentation/master/contributing.html)
 
-### WebRTC / media (the media plane)
+## Telecom and provider primary sources
+
+- [RFC 3261 — SIP](https://www.rfc-editor.org/rfc/rfc3261.html)
 - [RFC 7118 — SIP over WebSocket](https://www.rfc-editor.org/rfc/rfc7118.html)
-  How browsers carry SIP (the WSS transport our softphone uses). Use for: browser ↔ Kamailio signaling.
-- [MDN — WebRTC API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
-  The browser media stack (ICE / STUN / TURN, DTLS-SRTP). Use for: the media leg + NAT / "silent call" issues.
+- [MDN WebRTC API](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
+- [Kamailio documentation](https://www.kamailio.org/w/documentation/)
+- [Wazo Platform documentation](https://wazo-platform.org/documentation/)
+- [Wazo source organization](https://github.com/wazo-platform)
+- [Wazo Confd](https://github.com/wazo-platform/wazo-confd)
+  Configuration service and REST API. Use for: distinguishing stored PBX intent from live call
+  execution.
+- [Wazo subroutines and pre-dial handlers](https://beta.wazo-platform.org/uc-doc/api_sdk/subroutine)
+  Supported Asterisk extension points. Use for: custom dialplan behavior and outbound SIP headers.
+- [Asterisk PJSIP_HEADER](https://docs.asterisk.org/Latest_API/API_Documentation/Dialplan_Functions/PJSIP_HEADER/)
+  Authoritative channel/header semantics. Use for: proving why an outbound header belongs in a
+  pre-dial handler.
+- [Telnyx number orders](https://developers.telnyx.com/docs/numbers/phone-numbers/number-orders)
+- [Telnyx advanced orders](https://developers.telnyx.com/docs/numbers/phone-numbers/advanced-orders)
+- [Telnyx regulatory requirements](https://developers.telnyx.com/docs/numbers/phone-numbers/regulatory-requirements/index)
+- [Telnyx SIP trunking](https://developers.telnyx.com/docs/voice/sip-trunking/get-started)
+- [Telnyx webhooks](https://developers.telnyx.com/docs/voice/programmable-voice/voice-api-webhooks)
 
-## Wisdom (Communities)
-- [Kamailio users mailing list](https://lists.kamailio.org/) — high-signal; core devs answer. Use for: SIP-edge routing/config questions.
-- [Asterisk Community forum](https://community.asterisk.org/) — Use for: dialplan, PJSIP, ARI questions.
-- [Wazo Platform community](https://wazo-platform.org/) (forum/chat linked from the site) — Use for: Wazo provisioning / REST questions.
-- *(Learner has not opted out of communities — surface these when a question needs practitioner wisdom.)*
+## Practitioner communities
 
-## Gaps
-- No single authoritative doc yet for *our exact* Wazo dialplan-compile mapping (Odoo 20 Callflow → wazo-confd). Will need to read the code once that lands; for now the Wazo session note §6 is the best we have.
+- [Kamailio mailing lists](https://lists.kamailio.org/)
+- [Asterisk Community](https://community.asterisk.org/)
+- [Wazo community links](https://wazo-platform.org/)
+
+## Known evidence gaps
+
+- Automated edge tests prove signaling configuration; real audio still needs an integration call.
+- Shared staging proves the configured environment at one moment, not production readiness.
+- IAP Phone Service release/merge status is changeable; verify the current remote state before making
+  an external status claim.

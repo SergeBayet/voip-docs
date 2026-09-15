@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 5 — Data, views, actions and translations</title><link rel="stylesheet" href="../assets/course.css"></head><body><main class="wrap">
+<header class="lh"><div class="kicker">Module 2 · Writing Odoo code · Lesson 5 of 28</div><h1>Data, views, actions &amp; translations</h1><p class="lede">Python supplies behavior; XML connects that behavior to the database and user interface.</p><div class="meta"><span>⏱ 10 min</span><span>🎯 Trace a menu to its model and data</span></div></header>
+
+<figure><pre class="mermaid">flowchart LR
+  MENU[Menu item] --> ACT[Window / client action]
+  ACT --> VIEW[View architecture]
+  VIEW --> MOD[Model + fields]
+  XID[External ID] -. stable name .-> MENU
+  XID -. stable name .-> ACT
+  XID -. stable name .-> VIEW
+  PO[i18n/*.po] -. translates .-> VIEW</pre><figcaption>External IDs such as <code>voip.voip_provider_action</code> let modules refer to declared records across installs and upgrades.</figcaption></figure>
+
+<h2>XML is installation code</h2>
+<p>An XML <code>&lt;record&gt;</code> creates or updates a database record when the module loads. File order in the manifest matters: a referenced external ID must already exist. Use <code>noupdate="1"</code> only when an administrator should own later edits; it also means future module upgrades will not normally overwrite the record.</p>
+
+<h2>Views do not secure data</h2>
+<p><code>invisible</code>, <code>readonly</code> and button visibility shape the experience. They are not authorization. Real protection comes from model access, record rules, field groups and server-side checks (next lesson).</p>
+
+<div class="codehook"><div class="kicker">Trace a real screen</div><p>Start at <code>master/enterprise/voip/views/voip_provider_views.xml</code>. Find its action and model, then locate the model in <code>models/voip_provider.py</code> and its access entry in <code>security/ir.access.csv</code>.</p></div>
+
+<h2>Translations are part of the feature</h2>
+<p>Write user-facing Python strings with <code>_()</code> and translatable XML normally; Odoo extracts them into PO catalogs. Do not build translated sentences by concatenating fragments—the translator needs the complete sentence and placeholders.</p>
+
+<section class="exercise"><h3>Quick check</h3><div id="quiz"></div><div id="score" class="score"></div></section>
+<div class="source-rec"><div class="kicker">Primary sources</div><p><a href="https://www.odoo.com/documentation/master/developer/reference/backend/data.html">Data files</a> · <a href="https://www.odoo.com/documentation/master/developer/reference/user_interface/view_records.html">View records</a> · <a href="https://www.odoo.com/documentation/master/developer/howtos/translations.html">translations</a></p></div>
+<div class="ask"><b>Ask your agent:</b> “Starting from this Odoo menu label, trace the menu, action, view, model, access rule and translation source. Give me exact external IDs.”</div>
+<nav class="nav-foot"><a href="0004-orm-recordsets-and-inheritance.html"><span class="lbl">Previous</span>← ORM</a><a class="home" href="../index.html">⌂</a><a href="0006-owl-services-registries-and-assets.html"><span class="lbl">Next</span>Owl, services &amp; registries →</a></nav>
+</main><script src="../vendor/mermaid.min.js"></script><script src="../assets/interactions.js"></script><script>initializeCourseDiagrams();makeQuiz("quiz","score",[
+{stem:"A field is invisible in the form. Is its data protected?",choices:[{text:"Yes, invisibility is authorization",correct:false},{text:"No, secure it on the server",correct:true}],why:"Other views, RPC, imports or crafted requests can still reach data unless server rules deny them."},
+{stem:"Why avoid concatenating translated fragments?",choices:[{text:"It breaks database indexes",correct:false},{text:"Translators need sentence-level context and word order",correct:true}],why:"Languages reorder words; complete strings with placeholders preserve context."}
+]);</script></body></html>

@@ -20,6 +20,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Block publication of internal documentation
+        run: |
+          echo "::error::Pages publication is disabled until the repository and hosting destination have an approved access policy."
+          exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -28,7 +33,7 @@ jobs:
 
       - run: pip install mkdocs-material mkdocs-include-markdown-plugin
 
-      - run: mkdocs build
+      - run: mkdocs build --strict
 
       - uses: actions/upload-pages-artifact@v3
         with:

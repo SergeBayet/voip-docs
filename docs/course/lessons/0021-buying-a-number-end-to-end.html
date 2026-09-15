@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lesson 10 · Buying a number, end to end — Parrot VoIP Course</title>
+<link rel="stylesheet" href="../assets/course.css">
+<title>Lesson 21 · Buying a number, end to end — Parrot VoIP Course</title>
 <style>
   :root{
     --ink:#1c1a17; --muted:#6b655c; --faint:#9a948a; --rule:#e4ded3; --paper:#fbf9f4;
@@ -90,10 +91,10 @@
 <div class="wrap">
 
 <header class="lh">
-  <div class="kicker">🦜 Parrot VoIP Course · Module 4 — The Product · Lesson 10 of 13</div>
+  <div class="kicker">🦜 Parrot VoIP Course · Module 7 — The Product · Lesson 21 of 28</div>
   <h1>Buying a number, end to end</h1>
   <p class="lede">Click Pay, go home — the shop, the paperwork office and five robots finish the purchase without you.</p>
-  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: trace a purchase through both databases and know every state on the way</span><span>🧩 Builds on: Lessons 7, 9</span></div>
+  <div class="meta"><span>⏱ ~12 minutes</span><span>🎯 Goal: trace a purchase through both databases and know every state on the way</span><span>🧩 Builds on: Lessons 18 and 20</span></div>
 </header>
 
 <h2>The shop window</h2>
@@ -102,9 +103,9 @@ actually have stock <em>for your country</em> — no French mobile shelf if Fran
 mobiles. Some purchases need paperwork ("show us who you are first"), and the paperwork office
 keeps your file so you fill it in <em>once</em>, not once per number. And when you pay, you don't
 wait at the counter: your receipt just says <b>ordering</b>, you go home, and the goods arrive by
-doorbell — the webhook you met in <a href="./0009-doorbells-and-robots.html">Lesson 9</a>. The window is <b>coverage</b>, the office is
+doorbell — the webhook you met in <a href="./0020-doorbells-and-robots.html">Lesson 20</a>. The window is <b>coverage</b>, the office is
 <b>requirements</b>, the receipt is a state machine, the doorbell is a signed
-<code>phone_number.status</code> event. Here is the trip, drawn.</p>
+<code>phone_number_status</code> event. Here is the trip, drawn.</p>
 
 <figure>
 <pre class="mermaid">
@@ -129,8 +130,10 @@ sequenceDiagram
     Note over S,T: ⏱ async — robots take over, you go home
     S->>S: authorize prorated first month (a hold)
     S->>T: POST /number_orders (Idempotency-Key)
-    T-->>S: webhook: order complete ✅
-    S->>S: capture the hold, number → active
+    T-->>S: order accepted + carrier order id
+    S->>S: capture hold, number → pending
+    T-->>S: later webhook: order complete ✅
+    S->>S: number → active (or suspended if client disabled)
     S-->>D: 🔔 signed webhook: phone_number.status = active
     D->>D: state → active, chatter, bus toast,<br/>provision the user
 </pre>
@@ -138,22 +141,83 @@ sequenceDiagram
 </figure>
 
 <div class="big-idea"><strong>Big idea: Pay doesn't buy anything.</strong> Clicking Pay writes
-local <code>ordering</code> rows and returns. The money hold, the Telnyx order and the activation
+local <code>ordering</code> rows and returns. The money authorization, Telnyx submission and activation
 all happen later, in broker crons — and the truth comes back by doorbell, never by the wizard
 waiting on a carrier.</div>
+
+<div class="callout"><b>Two different request actions.</b> A regular user with no personal DID can
+choose <b>Request a number</b> in the softphone status menu. That sends an optional comment to every
+active internal VoIP administrator, with a link back to <b>Buy Number</b>; it grants no purchasing
+access. The admin-only <b>Request Numbers</b> flow below is different: it asks Number Ops to source
+inventory that search could not find. If the buy action reaches an invalid database subscription,
+its error explicitly tells the administrator to activate the database.</div>
+
+<h2>When the shelf is empty: request first, number later</h2>
+<p>The footer keeps one contextual primary action. <b>Search</b> is primary initially or after an
+error; <b>Request Numbers</b> is primary after empty inventory; <b>Buy Credits</b> is primary when
+results are unaffordable; and <b>Pay</b> or <b>Continue</b> is primary for affordable results.
+<b>Search</b> remains as a secondary retry only after empty or unaffordable results. Phone Service
+also maps the provider's typed no-number response to the same empty result. The admin can then give
+an optional numeric prefix (at most three
+digits) and a quantity from 1 to 50. Enterprise first persists a pending
+<code>voip.did.number.request</code> with a stable UUID, then sends that UUID to Phone Service, which
+creates a Telnyx Advanced Order with no upfront IAP charge and <code>auto_proceed=false</code>. The
+same UUID produces the same provider idempotency key on every retry. Phone Service can deduplicate a
+request it already committed; if only the carrier committed, duplicate-free recovery still depends on
+Telnyx's undocumented Advanced Order replay semantics. The carrier ID and initial status
+are filled when acknowledged or by the next Enterprise sync; submission opens the saved form, and it remains
+available under <b>Phone Numbers → Number Requests</b>. The UUID is a secondary copyable
+<b>Request Reference</b> rather than the page title. Area Code appears beneath Quantity in the left
+column, while Requested On appears above Requested By in the right column. The
+provider-neutral <b>Contact Odoo's Phone Carrier</b> composer explains that the user is communicating
+with Odoo's phone carrier and can eventually confirm the order. It calls the carrier API and records
+the outbound message in chatter; provider-originated entries appear as OdooBot without employee
+email addresses. Its text-only <b>Send Message</b> action uses a proof-of-address update placeholder and
+button reacts while the field remains focused, enabling as soon as content is entered and disabling
+again when it is cleared. The normal chatter composer remains separate because
+it keeps its Odoo follower/email semantics. There is no <code>voip.did.number</code> yet because nobody
+knows the digits.</p>
+<table>
+<tr><th>Request state</th><th>What it means in Odoo</th></tr>
+<tr><td><code>pending</code> / <code>processing</code></td><td>Number Ops is working on the request</td></tr>
+<tr><td><code>exception</code></td><td>Customer action is needed; read and answer the Telnyx thread</td></tr>
+<tr><td><code>hold</code></td><td>Number Ops is handling the request manually; review proposed digits and reply</td></tr>
+<tr><td><code>ordered</code></td><td>Telnyx fulfilled the request; charging and child-order adoption now begin</td></tr>
+<tr><td><code>failed</code></td><td>The sourcing request ended without completion</td></tr>
+</table>
+<p>The status bar always shows the common <code>pending</code>/<code>processing</code> path and adds an
+exceptional or terminal state only while that state is current, instead of pretending every state
+is one linear sequence.</p>
+<p>Status and comment webhooks travel Telnyx → Phone Service → the signed Enterprise callback.
+Enterprise escapes and deduplicates the full comment history, notifies the requester for important
+states, and lets a VoIP administrator reply through an ownership-checked broker route. On
+<code>hold</code>, Phone Service reads the Advanced Order's linked Number Order UUIDs and forwards
+their exact digits for review without creating a DID. Only <code>ordered</code> adopts those child
+orders into the ordinary billing pipeline; each later phone-number event carries the request UUID
+so the DID links back to its request. This is why an Advanced Order model is useful: the proposal
+and conversation exist before any owned number record can exist.</p>
+<p>Webhooks are the fast path, not the only path. Every 15 minutes Phone Service polls open Advanced
+Orders for provider state, proposed digits and generated child orders; Enterprise separately retries
+unacknowledged submissions and pulls current request state/comments. A failure can therefore delay
+the update, but it does not strand the request. Recent terminal requests stay eligible for comment
+sync for one day so a final explanation that appears just after the terminal status is still collected.</p>
+<div class="warnbox"><b>The review gate is conversational.</b> Telnyx confirmed that its backend
+accepts <code>auto_proceed=false</code>, although public OpenAPI still omits it. There is no public
+accept/reject endpoint: the administrator approves, rejects, or clarifies through comments, and
+Number Ops advances the status. An unresolved <code>exception</code>/<code>hold</code> auto-cancels
+after five business days; Odoo does not call Telnyx's private extension action.</div>
 
 <h2>The window only shows stocked shelves (coverage)</h2>
 <p>When the wizard opens, it needs to know which countries sell which number types. Naive design:
 ask the shop per country, per open. Actual design: <code>get_all_country_coverage()</code> fetches
 Telnyx's <em>entire</em> coverage table through the shop in <b>one</b> call, and the wizard caches
 it — with a trick worth stealing:</p>
-<pre><code>@api.ormcache("day", "is_demo")
-def _get_coverage_map(self, day, is_demo):
-    return get_phone_service_api(self.env).get_all_country_coverage()</code></pre>
-<p>Both arguments exist <em>only to key the cache</em>. <code>day</code> is
+<pre><code>@api.ormcache("day")
+def _get_coverage_map(self, day):
+    return PhoneServiceAPI(self.env).get_all_country_coverage()</code></pre>
+<p>The argument exists <em>only to key the cache</em>. <code>day</code> is
 <code>fields.Date.today()</code>: tomorrow the key changes, so yesterday's entry is simply never
-hit again — a daily-TTL cache with <b>zero invalidation code</b>. <code>is_demo</code> keeps the
-demo and real maps apart so toggling test mode never serves the wrong one.<a class="cite" href="../reference/onboarding.html" title="voip/wizards/voip_did_number_search_wizard.py — _get_coverage_map">§5</a></p>
+hit again — a daily-TTL cache with <b>zero invalidation code</b>.<a class="cite" href="../reference/onboarding.html" title="voip/wizards/voip_did_number_search_wizard.py — _get_coverage_map">§5</a></p>
 <p>That map drives the whole form. The country dropdown is domain-filtered to covered countries
 (<code>country_id_domain</code>); the type dropdown is a <code>filterable_selection</code> widget
 whitelisted by <code>available_did_number_type_codes</code>. The sellable types are
@@ -180,7 +244,7 @@ you complete the verification.</p>
 <div class="callout"><b>The shared-group warning.</b> Because the group is shared, resubmitting
 its papers affects <em>every</em> pending order of that country+type — so the submit form warns
 when <code>shared_pending_count</code> &gt; 1. Active numbers keep their approved papers.</div>
-<p>One refinement over <a href="./0007-the-shop-the-broker-in-the-middle.html">Lesson 7</a>'s version: addresses are validated <b>at write time</b>, field by
+<p>One refinement over <a href="./0018-the-shop-the-broker-in-the-middle.html">Lesson 18</a>'s version: addresses are validated <b>at write time</b>, field by
 field — format checks, then the broker's <code>validate_address</code>, with Telnyx's numeric
 error codes translated into per-field messages. Your postcode is wrong while you type it, not at
 submit.</p>
@@ -195,7 +259,7 @@ one-to-one:<a class="cite" href="../reference/onboarding.html" title="Onboarding
 <tr><td><code>pending</code></td><td><code>pending</code></td><td>Telnyx is working on it (or an <code>action</code> paper is missing)</td></tr>
 <tr><td><code>active</code></td><td><code>active</code></td><td>yours, ringing, billed monthly</td></tr>
 <tr><td><code>suspended</code></td><td><code>suspended</code></td><td>cut for non-payment — reversible, still owned (and still paid for)</td></tr>
-<tr><td><code>failure</code></td><td><code>failure</code></td><td>order failed for good; the credit hold is released</td></tr>
+<tr><td><code>failure</code></td><td><code>failure</code></td><td>order failed; a still-open authorization is cancelled, but failures after carrier acceptance carry no blanket “not charged” promise</td></tr>
 <tr><td><code>released</code></td><td><code>released</code></td><td>given back; anyone may buy it now</td></tr>
 </table>
 <p>Shop-side constants make the two families explicit: <code>CHARGEABLE_STATES =
@@ -205,7 +269,7 @@ released)</code> — "re-orderable" means precisely "we don't currently own it o
 <code>UNIQUE(did_number)</code>, so re-buying a released or failed number cannot create a fresh
 row — it would crash at Pay. Instead <code>_create_or_reuse_for_order</code> <em>flips the old row
 back to</em> <code>ordering</code>: chatter history preserved, the previous order's per-DID
-<code>action</code> requirements wiped, and <code>extension_id</code> was already force-cleared
+<code>action</code> requirements wiped, and <code>destination_ref</code> was already force-cleared
 when the row entered released/failure. Never assume a purchase produces fresh ids — not in tests,
 not in UIs.</div>
 
@@ -217,13 +281,13 @@ would refire on every onchange, and each recompute is a full IAP round-trip. Sna
 costs one call; the price is mild staleness, which guard 3 covers anyway.</p>
 <p><b>2. The prorated hold.</b> You never prepay a full month for a number bought on the 28th. At
 order time the shop <b>authorizes</b> a prorated first month (remaining days × monthly price),
-then <b>captures</b> on Telnyx success or cancels on failure — like a hotel deposit.</p>
+then <b>captures immediately after Telnyx accepts the order request</b>. Carrier activation can remain pending afterward. A rejection before any order lands cancels the authorization.</p>
 <p><b>3. The shop's authorize is the authoritative check.</b> The wizard's balance gate is
 courtesy UX; the hold either succeeds or the order fails with a keyed, translated error —
 <code>insufficient_credits</code> comes back through the doorbell and is rendered in the DID's
 chatter in your language, not as raw broker text.</p>
 <p>And the ownership doctrine, in two lines: the shop stamps <code>customer_reference =
-client_id</code> on every Telnyx order — the <b>sole</b> marker that a Telnyx number is ours.
+client_uuid</code> on every Telnyx order — the <b>sole</b> marker that a Telnyx number is ours.
 A daily reconcile compares the two ledgers and is <b>tear-down only</b>: it releases drift, it
 never re-provisions. The ~90-line comment atop the shop's number model is the canon.</p>
 
@@ -240,6 +304,10 @@ never re-provisions. The ~90-line comment atop the shop's number model is the ca
   <code>_create_or_reuse_for_order</code> (the resurrection) and <code>_handle_status_event</code>
   (the doorbell handler: payload guard, state validated against the selection, write under
   <code>voip_skip_pbx_sync</code>, bus notify, then best-effort PBX sync).</p>
+  <p style="margin:.4rem 0 0"><code>voip/models/voip_did_number_request.py</code> — the request state,
+  comment deduplication, requester notifications and reply action before DIDs exist.</p>
+  <p style="margin:.4rem 0 0"><code>iap_services/phone_service/models/phone_service_order.py</code>
+  — both Advanced Order webhook handling and adoption of its structured child Number Orders.</p>
   <p style="margin:.4rem 0 0"><code>iap_services/phone_service/models/phone_service_number.py</code>
   (iap-apps repo) — the doctrine comment: two ledgers, <code>customer_reference</code> ownership,
   tear-down-only reconcile.</p>
@@ -263,11 +331,12 @@ never re-provisions. The ~90-line comment atop the shop's number model is the ca
   <div class="kicker">📖 Primary source (read one thing)</div>
   <p style="margin:.3rem 0 0">Onboarding Guide <b>§5 (Story 1 — Buying a phone number)</b> and
   <b>§6 (Story 2 — Papers, please)</b>: the same trip with every grown-up detail — quote TTLs,
-  the idempotency key, the install-todo entry point, and the requirement webhooks.</p>
+  the Advanced Order thread, the idempotency key, the install-todo entry point, and the requirement
+  webhooks.</p>
 </div>
 
 <div class="ask">
-  <b>Your teacher is an agent — interrupt it.</b> Open a Claude Code session in the repo and ask
+  <b>Your teacher is an agent — interrupt it.</b> Open an agent session in the repo and ask
   anything fuzzy: "show me where X is configured", "quiz me again, harder", "walk me through the
   code path for Y". The back-and-forth is where the learning compounds.
 </div>
@@ -278,9 +347,9 @@ never re-provisions. The ~90-line comment atop the shop's number model is the ca
 </div>
 
 <div class="nav-foot">
-  <a href="0009-doorbells-and-robots.html"><span class="lbl">← Previous</span>Lesson 9 · Doorbells &amp; robots</a>
+  <a href="0020-doorbells-and-robots.html"><span class="lbl">← Previous</span>Lesson 20 · Doorbells &amp; robots</a>
   <a class="home" href="../index.html" title="Course home">🦜 Course home</a>
-  <a href="0011-desks-teams-and-waiting-rooms.html"><span class="lbl">Next →</span>Lesson 11 · Desks, teams &amp; waiting rooms<br><span style="color:var(--faint);font-weight:400">users become Wazo users; queues get agents with priorities.</span></a>
+  <a href="0022-desks-teams-and-waiting-rooms.html"><span class="lbl">Next →</span>Lesson 22 · Desks, teams &amp; waiting rooms<br><span style="color:var(--faint);font-weight:400">users become Wazo users; queues get agents with priorities.</span></a>
 </div>
 
 </div>
@@ -294,7 +363,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
   QUIZ.forEach((q,i)=>{
     const wrap=document.createElement('div'); wrap.className='q';
     const stem=document.createElement('div'); stem.className='stem'; stem.textContent=(i+1)+'. '+q.stem; wrap.appendChild(stem);
-    const fb=document.createElement('div'); fb.className='fb';
+    const fb=document.createElement('div'); fb.className='fb'; fb.setAttribute('aria-live','polite');
     q.choices.forEach(c=>{
       const b=document.createElement('button'); b.className='choice'; b.textContent=c.t;
       b.onclick=()=>{
@@ -302,7 +371,7 @@ function makeQuiz(containerId, scoreId, QUIZ){
         if(c.ok){b.classList.add('correct'); right++;}
         else{b.classList.add('wrong'); [...wrap.querySelectorAll('.choice')].forEach(o=>{ if(q.choices.find(x=>x.t===o.textContent).ok) o.classList.add('correct'); });}
         [...wrap.querySelectorAll('.choice')].forEach(o=>o.disabled=true);
-        fb.innerHTML='→ '+q.why; fb.classList.add('show');
+        fb.innerHTML=(c.ok?'Correct. ':'Incorrect. Correct answer: '+q.choices.find(x=>x.ok).t+'. ')+q.why; fb.classList.add('show');
         if(done===QUIZ.length) document.getElementById(scoreId).textContent=`Score: ${right}/${QUIZ.length}. `+(right===QUIZ.length?'You can hold this in a design discussion. 🦜':'Look again at the one you missed, then ask your agent about it.');
       };
       wrap.appendChild(b);
@@ -337,8 +406,9 @@ makeOrderer('orderer','orderer-score',[
   'Pay writes local ordering rows, reusing any released or failed row',
   'The shop authorizes a prorated first month of credits as a hold',
   'The shop places the Telnyx order, stamped with an idempotency key',
-  'A Telnyx webhook tells the shop the order has completed carrier-side',
-  'The hold is captured, the number turns active, a signed event rings you'
+  'Telnyx accepts the order; the shop captures the hold and marks it pending',
+  'A later Telnyx webhook completes the order and the number turns active',
+  'A signed phone_number_status event updates your database'
 ]);
 
 makeQuiz('quiz','quiz-score',[

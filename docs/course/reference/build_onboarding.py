@@ -50,8 +50,8 @@ TEMPLATE = r"""<!DOCTYPE html>
   <header class="doc">
     <div class="kicker">🦜 Parrot VoIP · Reference</div>
     <h1>Onboarding Guide</h1>
-    <p class="sub">Rendered snapshot of <code>parrot-onboarding.md</code> (canonical: Obsidian vault + <code>Data/Dev/Odoo/</code>). Mermaid diagrams render below. Regenerate with <code>reference/build_onboarding.py</code> when the doc changes. · snapshot __DATE__</p>
-    <p class="backlink"><a href="../index.html">🦜 ← Course home</a> · <a href="./glossary.html">📑 Glossary</a> · <a href="../lessons/0001-odoo-becomes-a-phone-company.html">▶ Start Lesson 1</a></p>
+    <p class="sub">Rendered view of <code>parrot-onboarding.md</code> (canonical: Obsidian vault + <code>Data/Dev/Odoo/</code>). Mermaid diagrams render below. Regenerate with <code>reference/build_onboarding.py</code> when the doc changes. · generated __DATE__</p>
+    <p class="backlink"><a href="../index.html">🦜 ← Course home</a> · <a href="./glossary.html">📑 Glossary</a> · <a href="../lessons/0001-one-odoo-request.html">▶ Start Lesson 1</a></p>
   </header>
   <article id="out" class="md">Rendering… (the Mermaid &amp; Markdown libraries load from the local <code>vendor/</code> folder — works offline).</article>
 </div>
